@@ -1,0 +1,48 @@
+import { ethers } from "ethers";
+import { contractAddress, contractABI } from "./contractConfig";
+
+// ── Wallet-connected contract (requires MetaMask) ──────────
+export const connectWallet = async (forcePrompt = false) => {
+    if (!window.ethereum) {
+        alert("Please install the MetaMask extension to access the transparency system.");
+        throw new Error("MetaMask not installed");
+    }
+
+    try {
+        if (forcePrompt) {
+            await window.ethereum.request({
+                method: "wallet_requestPermissions",
+                params: [{ eth_accounts: {} }]
+            });
+        }
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        console.log("Wallet successfully connected:", await signer.getAddress());
+        return { provider, signer, contract };
+    } catch (error) {
+        console.error("Error connecting to wallet:", error);
+        throw error;
+    }
+};
+
+// ── Silent Contract Hydration ──────────────────────────────
+export const hydrateContract = async () => {
+    if (!window.ethereum) return null;
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    return new ethers.Contract(contractAddress, contractABI, signer);
+};
+
+// ── Read-only contract (no MetaMask required) ──────────────
+// Used by the public LandingView to display campaigns without
+// requiring the visitor to connect a wallet.
+export const getReadOnlyContract = () => {
+    const provider = new ethers.JsonRpcProvider(
+        "https://ethereum-sepolia-rpc.publicnode.com"
+    );
+    return new ethers.Contract(contractAddress, contractABI, provider);
+};
