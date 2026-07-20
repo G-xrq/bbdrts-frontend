@@ -101,22 +101,24 @@ export default function AuthView({ onLoginSuccess }) {
 
           <div className="login-group">
             <div className="login-header-modern">
-              <h2>{isRegistering ? 'Create Account' : 'Welcome Back'}</h2>
-              <p>{isRegistering ? 'Sign up to access the ledger' : 'Log in to access your portal'}</p>
+              <h2>{isRegistering ? 'Create Account' : (role === 'admin' ? 'Administrator Portal' : 'Welcome Back')}</h2>
+              <p>{isRegistering ? 'Sign up to access the ledger' : (role === 'admin' ? 'Secure System Management Access' : 'Log in to access your portal')}</p>
             </div>
 
-            <div className="role-selector">
-              <div className={`role-option ${role === 'donor' ? 'active' : ''}`} onClick={() => setRole('donor')}>
-                <div className="role-icon"><i className="material-symbols-outlined">person_outline</i></div>
-                <span>Individual</span>
-                <div className="role-check"><i className="material-symbols-outlined">check_circle</i></div>
+            {role !== 'admin' && (
+              <div className="role-selector">
+                <div className={`role-option ${role === 'donor' ? 'active' : ''}`} onClick={() => setRole('donor')}>
+                  <div className="role-icon"><i className="material-symbols-outlined">person_outline</i></div>
+                  <span>Individual</span>
+                  <div className="role-check"><i className="material-symbols-outlined">check_circle</i></div>
+                </div>
+                <div className={`role-option ${role === 'organization' ? 'active' : ''}`} onClick={() => setRole('organization')}>
+                  <div className="role-icon"><i className="material-symbols-outlined">domain</i></div>
+                  <span>Organization</span>
+                  <div className="role-check"><i className="material-symbols-outlined">check_circle</i></div>
+                </div>
               </div>
-              <div className={`role-option ${role === 'organization' ? 'active' : ''}`} onClick={() => setRole('organization')}>
-                <div className="role-icon"><i className="material-symbols-outlined">domain</i></div>
-                <span>Organization</span>
-                <div className="role-check"><i className="material-symbols-outlined">check_circle</i></div>
-              </div>
-            </div>
+            )}
 
             <form className="modern-login-form" onSubmit={handleSubmit}>
               {isRegistering && (
@@ -185,10 +187,12 @@ export default function AuthView({ onLoginSuccess }) {
               </p>
               <a href="#" className="admin-link-modern" onClick={(e) => { 
                 e.preventDefault(); 
-                alert("The Admin Dashboard is integrated into the standard login flow.\n\nPlease type the system administrator email (admin@gmail.com) into the login form. The server will automatically detect your role and route you to the Admin Portal."); 
+                setRole(role === 'admin' ? 'donor' : 'admin');
+                setIsRegistering(false);
+                setError('');
               }}>
                 <i className="material-symbols-outlined">settings</i>
-                <span>Admin Access</span>
+                <span>{role === 'admin' ? 'Return to User Login' : 'Admin Access'}</span>
               </a>
             </div>
           </div>
