@@ -52,6 +52,15 @@ export default function AuthView({ onLoginSuccess }) {
         <div className="login-glass-card">
 
           <div className="login-brand-side">
+            <div className="login-header">
+              <div className="brand-logo">
+                <img src="/logo.png" alt="BBDRTS Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', animation: 'logoFloat 3s ease-in-out infinite' }} />
+              </div>
+              <div className="login-subtitle">
+                <h1 className="brand-title">BBDRTS</h1>
+                <p className="brand-tagline">Blockchain-Based Donation<br></br>& Relief Transparency System</p>
+              </div>
+            </div>
             
 
             <div className="brand-content">
