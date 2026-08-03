@@ -90,20 +90,24 @@ export default function AuthView({ onLoginSuccess }) {
 
           <div className="login-group">
             <div className="login-header-modern">
-              <h2>{isRegistering ? 'Create Account' : (role === 'admin' ? 'Administrator Portal')}</h2>
-              <p>{isRegistering ? 'Sign up to access the ledger' : (role === 'admin' ? 'Secure System Management Access' : 'Log in to access your portal')}</p>
+              <h2>{isRegistering ? 'Create Account' : (role === 'admin' ? 'Administrator Portal' : (role === 'organization' ? 'NGO Portal Login' : 'Donor Portal Login'))}</h2>
+              <p>
+                {isRegistering 
+                  ? (role === 'organization' ? 'Register your Non-Governmental Organization (NGO)' : 'Sign up as an Individual Donor')
+                  : (role === 'admin' ? 'Secure System Management Access' : 'Log in to access your portal')}
+              </p>
             </div>
 
             {role !== 'admin' && (
               <div className="role-selector">
                 <div className={`role-option ${role === 'donor' ? 'active' : ''}`} onClick={() => setRole('donor')}>
                   <div className="role-icon"><i className="material-symbols-outlined">person_outline</i></div>
-                  <span>Donor</span>
+                  <span>Individual Donor</span>
                   <div className="role-check"><i className="material-symbols-outlined">check_circle</i></div>
                 </div>
                 <div className={`role-option ${role === 'organization' ? 'active' : ''}`} onClick={() => setRole('organization')}>
                   <div className="role-icon"><i className="material-symbols-outlined">domain</i></div>
-                  <span>NGO</span>
+                  <span>NGO / Relief Org</span>
                   <div className="role-check"><i className="material-symbols-outlined">check_circle</i></div>
                 </div>
               </div>
@@ -112,19 +116,31 @@ export default function AuthView({ onLoginSuccess }) {
             <form className="modern-login-form" onSubmit={handleSubmit}>
               {isRegistering && (
                 <div className="input-group-modern">
-                  <label>{role === 'donor' ? 'FULL NAME' : 'NGO NAME'}</label>
+                  <label>{role === 'donor' ? 'FULL NAME' : 'OFFICIAL NGO NAME'}</label>
                   <div className="input-container">
                     <i className="material-symbols-outlined">{role === 'donor' ? 'person' : 'domain'}</i>
-                    <input type="text" placeholder={role === 'donor' ? "e.g., Gester Macaldo" : "e.g., Red Cross"} value={name} onChange={e => setName(e.target.value)} required />
+                    <input 
+                      type="text" 
+                      placeholder={role === 'donor' ? "e.g., Gester Macaldo" : "e.g., Philippine Red Cross / Caritas"} 
+                      value={name} 
+                      onChange={e => setName(e.target.value)} 
+                      required 
+                    />
                   </div>
                 </div>
               )}
 
               <div className="input-group-modern">
-                <label>EMAIL ADDRESS</label>
+                <label>{role === 'organization' ? 'OFFICIAL NGO EMAIL' : 'EMAIL ADDRESS'}</label>
                 <div className="input-container">
                   <i className="material-symbols-outlined">mail</i>
-                  <input type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                  <input 
+                    type="email" 
+                    placeholder={role === 'organization' ? "contact@ngo-organization.org" : "you@email.com"} 
+                    value={email} 
+                    onChange={e => setEmail(e.target.value)} 
+                    required 
+                  />
                 </div>
               </div>
 
@@ -137,6 +153,12 @@ export default function AuthView({ onLoginSuccess }) {
                     <i className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</i>
                   </button>
                 </div>
+                {isRegistering && role === 'organization' && (
+                  <div className="input-hint" style={{ color: '#38bdf8', marginTop: '6px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="material-symbols-outlined" style={{ fontSize: '14px' }}>info</i>
+                    <span>NGO accounts are submitted for Admin verification before campaign creation is unlocked.</span>
+                  </div>
+                )}
                 {!isRegistering && <div className="input-hint">Default password is provided by your admin</div>}
               </div>
 
