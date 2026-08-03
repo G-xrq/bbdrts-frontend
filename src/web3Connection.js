@@ -1,6 +1,42 @@
 import { ethers } from "ethers";
 import { contractAddress, contractABI } from "./contractConfig";
 
+// ── Chain / Network Switch Guard ──────────────────────────────
+export const ensureSepoliaNetwork = async () => {
+    if (!window.ethereum) return false;
+    try {
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chainId !== '0xaa36a7') {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0xaa36a7' }]
+                });
+                return true;
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0xaa36a7',
+                            chainName: 'Sepolia Test Network',
+                            rpcUrls: ['https://ethereum-sepolia-rpc.publicnode.com'],
+                            nativeCurrency: { name: 'Sepolia Ether', symbol: 'ETH', decimals: 18 },
+                            blockExplorerUrls: ['https://sepolia.etherscan.io']
+                        }]
+                    });
+                    return true;
+                }
+                return false;
+            }
+        }
+        return true;
+    } catch (err) {
+        console.warn('Network verification error:', err);
+        return false;
+    }
+};
+
 // ── Wallet-connected contract (requires MetaMask) ──────────
 export const connectWallet = async (forcePrompt = false) => {
     if (!window.ethereum) {
@@ -9,6 +45,7 @@ export const connectWallet = async (forcePrompt = false) => {
     }
 
     try {
+        await ensureSepoliaNetwork();
         if (forcePrompt) {
             await window.ethereum.request({
                 method: "wallet_requestPermissions",

@@ -174,8 +174,8 @@ export default function AuthView({ onLoginSuccess }) {
                   {isRegistering ? "Log In" : "Sign Up"}
                 </a>
               </p>
-              <a href="#" className="admin-link-modern" onClick={(e) => { 
-                e.preventDefault(); 
+              <a href="#" className="admin-link-modern" onClick={(e) => {
+                e.preventDefault();
                 setRole(role === 'admin' ? 'donor' : 'admin');
                 setIsRegistering(false);
                 setError('');

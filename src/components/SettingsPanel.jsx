@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import './SettingsPanel.css';
 import { ROLES, ROLE_META } from '../roleConfig';
 import { shortAddr } from './CampaignCard';
 
@@ -8,129 +9,131 @@ export default function SettingsPanel({ contract, currentUser, walletAddress, ha
   const roleMeta = ROLE_META[currentUser.role] || ROLE_META[ROLES.PUBLIC];
 
   return (
-    <div className="card fade-in">
-      <div className="section-header">
-        <h2 className="section-title">
-          <span className="section-title-icon">⚙️</span> Profile Settings
+    <div className="settings-glass-container fade-in">
+      
+      <div className="section-header" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem' }}>
+        <h2 className="settings-section-header">
+          <span className="material-symbols-outlined">account_circle</span> Profile Settings
         </h2>
-        <span className="badge" style={{ color: roleMeta.color, borderColor: roleMeta.color }}>
-          <span className="material-symbols-outlined" style={{ verticalAlign: 'middle', marginRight: '6px' }}>{roleMeta.icon}</span> {roleMeta.label}
+        <span className="badge" style={{ color: roleMeta.color, borderColor: roleMeta.color, background: `${roleMeta.color}15`, padding: '6px 12px', fontSize: '0.85rem' }}>
+          <span className="material-symbols-outlined" style={{ verticalAlign: 'middle', marginRight: '6px', fontSize: '1rem' }}>{roleMeta.icon}</span> 
+          {roleMeta.label}
         </span>
       </div>
 
-      <div className="settings-grid" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         
-        {/* Account Details */}
-        <div style={{ padding: '16px', background: 'var(--surface-light)', borderRadius: 'var(--radius-md)' }}>
-          <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--text-secondary)' }}>Account Details</h3>
-          <div className="form-row">
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Username / Email</label>
-              <div style={{ padding: '10px 14px', background: 'var(--bg-dark)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-                {currentUser.name}
-              </div>
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Role</label>
-              <div style={{ padding: '10px 14px', background: 'var(--bg-dark)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-                <span style={{ textTransform: 'capitalize' }}>{currentUser.role}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Verification Status (Orgs only) */}
         {currentUser.role === 'organization' && (
-          <div style={{ padding: '16px', background: 'var(--surface-light)', borderRadius: 'var(--radius-md)', borderLeft: `4px solid ${currentUser.verification_status === 'Approved' ? 'var(--success)' : 'var(--warning)'}` }}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>Organization Verification</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-              Your current approval status defines whether you can deploy campaigns on-chain.
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'var(--bg-dark)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-              <span>Status:</span>
-              <strong style={{ color: currentUser.verification_status === 'Approved' ? 'var(--success)' : 'var(--warning)' }}>
+          <div className="settings-section-glass" style={{ borderLeft: `4px solid ${currentUser.verification_status === 'Approved' ? 'var(--success)' : 'var(--warning)'}` }}>
+            <h3 className="settings-section-header">Organization Verification</h3>
+            <p className="settings-section-desc">Your current approval status defines whether you can deploy campaigns on-chain. Approvals are strictly monitored by administration.</p>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '10px 18px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Blockchain Authority Status:</span>
+              <strong style={{ color: currentUser.verification_status === 'Approved' ? 'var(--success)' : 'var(--warning)', letterSpacing: '1px', textTransform: 'uppercase' }}>
                 {currentUser.verification_status || 'Pending'}
               </strong>
             </div>
           </div>
         )}
 
+        {/* Account Details */}
+        <div className="settings-section-glass">
+          <h3 className="settings-section-header">Decentralized Identifier</h3>
+          <p className="settings-section-desc">This is your core operational identity registered inside the Web2 database matrix before bridging to Web3.</p>
+          <div className="profile-data-row">
+            <div className="profile-data-box">
+              <label className="profile-data-label"><i className="material-symbols-outlined" style={{fontSize: '1rem'}}>mail</i> Username / Email</label>
+              <div className="profile-data-value">{currentUser.name}</div>
+            </div>
+            <div className="profile-data-box">
+              <label className="profile-data-label"><i className="material-symbols-outlined" style={{fontSize: '1rem'}}>admin_panel_settings</i> Authorization Tier</label>
+              <div className="profile-data-value" style={{ color: roleMeta.color }}>{currentUser.role}</div>
+            </div>
+          </div>
+        </div>
+
         {/* Web3 Wallet Association */}
-        <div style={{ padding: '16px', background: 'var(--surface-light)', borderRadius: 'var(--radius-md)' }}>
-          <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--text-secondary)' }}>Web3 Integration</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-            The MetaMask wallet currently linked your session. This wallet is used as the cryptographic signature for all your transactions.
-          </p>
+        <div className="settings-section-glass">
+          <h3 className="settings-section-header">Web3 Authentication Key</h3>
+          <p className="settings-section-desc">The cryptographic MetaMask signature registered to authorize your smart contract transactions.</p>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             {walletAddress ? (
-              <div style={{ padding: '10px 16px', background: contract ? 'rgba(57, 255, 20, 0.1)' : 'rgba(255, 150, 0, 0.1)', border: `1px solid ${contract ? 'var(--success)' : 'var(--warning)'}`, borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-                <span style={{ fontSize: '1.2rem' }}>🦊</span>
+              <div className={`wallet-conn-box ${contract ? 'connected' : 'mismatch'}`}>
+                <span className="wallet-icon">🦊</span>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: contract ? 'var(--success)' : 'var(--warning)' }}>
-                     {contract ? 'Connected Wallet' : 'Database Locked (Mismatch Found)'}
+                  <div className={`wallet-status ${contract ? 'connected' : 'mismatch'}`}>
+                     {contract ? 'Secure Link Established' : 'Access Key Mismatch'}
                   </div>
-                  <strong style={{ fontFamily: 'var(--font-mono)' }}>{walletAddress}</strong>
+                  <strong className="wallet-address">{walletAddress}</strong>
                   {!contract && (
-                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                        Your MetaMask needs to be set to this account to transact.
+                     <div style={{ fontStyle: 'italic', fontSize: '0.8rem', color: 'var(--warning)', marginTop: '4px' }}>
+                        Your installed MetaMask wallet currently does not match this registered key.
                      </div>
                   )}
                 </div>
               </div>
             ) : (
-              <div style={{ padding: '10px 16px', background: 'rgba(255, 78, 106, 0.05)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', flex: 1 }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--danger)' }}>No Web3 wallet connected.</div>
+              <div className="wallet-conn-box disconnected">
+                <span className="wallet-icon" style={{ filter: 'grayscale(100%)' }}>🦊</span>
+                <div>
+                  <div className="wallet-status disconnected">No Cryptographic Key</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>You must bind a wallet to interact with the ledger.</div>
+                </div>
               </div>
             )}
             
             {walletAddress && !contract && (
-              <button className="btn btn-primary glow pulse" onClick={() => handleConnectWallet(true)} style={{ flexShrink: 0 }}>
-                🔄 Sync MetaMask
+              <button className="btn btn-primary glow pulse" onClick={() => handleConnectWallet(true)} style={{ flexShrink: 0, padding: '1.25rem' }}>
+                <span className="material-symbols-outlined">sync</span> Sync Signature
               </button>
             )}
 
             {walletAddress ? (
               <button className="btn btn-outline" onClick={async () => {
-                if(window.confirm("Are you sure you want to unbind this MetaMask wallet from your profile?")) {
+                if(window.confirm("CRITICAL WARNING: Unbinding this wallet revokes your ability to broadcast smart contracts. Proceed?")) {
                   if (updateDbWallet) {
                     await updateDbWallet('');
                     window.location.reload();
                   }
                 }
-              }} style={{ flexShrink: 0, borderColor: 'var(--warning)', color: 'var(--warning)' }}>
-                ✖ Disconnect
+              }} style={{ flexShrink: 0, borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444', padding: '1.25rem' }}>
+                <span className="material-symbols-outlined">link_off</span> Sever Link
               </button>
             ) : (
-              <button className="btn btn-outline" onClick={() => handleConnectWallet(true)} style={{ flexShrink: 0 }}>
-                🔗 Connect MetaMask (Switch Account)
+              <button className="btn btn-primary glow" onClick={() => handleConnectWallet(true)} style={{ flexShrink: 0, padding: '1.25rem' }}>
+                <span className="material-symbols-outlined">link</span> Bind MetaMask Key
               </button>
             )}
           </div>
           
-          <div style={{ padding: '16px', background: 'var(--bg-dark)', borderRadius: 'var(--radius-sm)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-             <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Manual System Override (Defense Test Mode)</label>
-             <div style={{ display: 'flex', gap: '8px' }}>
-                <input type="text" className="input" placeholder="Paste 0x... address to manually bind" value={manualWallet} onChange={e => setManualWallet(e.target.value)} style={{ flex: 1 }} />
-                <button className="btn btn-primary" onClick={async () => {
+          <div className="terminal-sandbox">
+             <div style={{ color: '#38bdf8', fontSize: '0.85rem', marginBottom: '10px' }}>&gt; AWAITING MANUAL OVERRIDE PROTOCOL...</div>
+             <p style={{ fontSize: '0.75rem', color: 'rgba(56,189,248,0.7)', marginBottom: '0' }}>Inject a generic 0x hex string to force Web3 database binding during offline defense simulations.</p>
+             <div className="terminal-input-group">
+                <input type="text" className="terminal-input" placeholder="0x..." value={manualWallet} onChange={e => setManualWallet(e.target.value)} />
+                <button className="terminal-btn" onClick={async () => {
                   if (manualWallet.startsWith('0x')) {
                      if(updateDbWallet) { 
                        await updateDbWallet(manualWallet.trim()); 
                        window.location.reload(); 
                      }
                   } else {
-                     alert("Invalid format: Wallet addresses must start with 0x");
+                     alert("ERROR: Sequence must initiate with 0x");
                   }
-                }}>Link Manually</button>
+                }}>Execute [Enter]</button>
              </div>
           </div>
         </div>
 
         {/* Danger Zone */}
-        <div style={{ padding: '16px', border: '1px solid rgba(255, 78, 106, 0.3)', borderRadius: 'var(--radius-md)' }}>
-          <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--danger)' }}>Session Management</h3>
-          <button className="btn btn-primary" onClick={handleLogout} style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}>
-            Sign Out of Account
+        <div className="settings-section-glass settings-danger-zone">
+          <h3 className="settings-section-header" style={{color: '#ef4444'}}>Session Termination</h3>
+          <p className="settings-section-desc" style={{color: 'rgba(239, 68, 68, 0.7)'}}>Securely close the database connection and erase localized cache tokens.</p>
+          <button className="settings-btn-danger" onClick={handleLogout}>
+            <span className="material-symbols-outlined" style={{verticalAlign: 'bottom', marginRight: '6px'}}>logout</span>
+            Terminate Session
           </button>
         </div>
 
