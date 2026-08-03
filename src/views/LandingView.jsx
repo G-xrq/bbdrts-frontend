@@ -1,14 +1,25 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { getReadOnlyContract } from '../web3Connection';
-import CampaignCard, { progressPct } from '../components/CampaignCard';
+import CampaignCard from '../components/CampaignCard';
 import { ROLES } from '../roleConfig';
+import './AuthView.css'; // Inherit floating shapes, glass cards, & design system
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export default function LandingView({ onConnect, hasMetaMask }) {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ donors: '0', orgs: '0', campaigns: '0' });
 
   useEffect(() => {
+    // Fetch DB Public Stats
+    fetch(`${API_URL}/api/public-stats`)
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(err => console.error('Failed to fetch public stats:', err));
+
+    // Fetch Real-time Blockchain Campaigns
     const load = async () => {
       try {
         const contract = getReadOnlyContract();
@@ -27,7 +38,7 @@ export default function LandingView({ onConnect, hasMetaMask }) {
         }
         setCampaigns(fetched);
       } catch (err) {
-        console.error('Public fetch error:', err);
+        console.error('Public blockchain fetch error:', err);
       } finally {
         setLoading(false);
       }
@@ -38,146 +49,280 @@ export default function LandingView({ onConnect, hasMetaMask }) {
   const totalRaised = campaigns
     .reduce((s, c) => s + parseFloat(c.currentAmount || 0), 0)
     .toFixed(4);
-  const activeCampaigns = campaigns.filter((c) => c.isActive).length;
 
   return (
-    <>
-      {/* ─── Hero ─── */}
-      <section className="hero">
-        <div className="container">
-          <div className="hero-eyebrow">
-            <span>🔗</span> Powered by Ethereum Blockchain · Sepolia Testnet
+    <div style={{ background: '#0a0e1a', color: '#fff', minHeight: '100vh', overflowX: 'hidden', position: 'relative' }}>
+      
+      {/* ─── Hero Section ─── */}
+      <section style={{
+        position: 'relative',
+        padding: '100px 20px 80px',
+        background: 'radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.12) 0%, rgba(10, 14, 26, 0.95) 70%)',
+        textAlign: 'center'
+      }}>
+        {/* Floating Animated Shapes from AuthView */}
+        <div className="floating-shapes">
+          <div className="shape shape-1" style={{ opacity: 0.15 }}></div>
+          <div className="shape shape-2" style={{ opacity: 0.15 }}></div>
+          <div className="shape shape-3" style={{ opacity: 0.15 }}></div>
+          <div className="shape shape-4" style={{ opacity: 0.15 }}></div>
+        </div>
+
+        <div className="container" style={{ position: 'relative', zIndex: 2, maxWidth: '1100px', margin: '0 auto' }}>
+          
+          {/* Eyebrow Badge */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '30px',
+            padding: '6px 18px',
+            fontSize: '0.85rem',
+            color: '#38bdf8',
+            marginBottom: '28px',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <i className="material-symbols-outlined" style={{ fontSize: '18px', color: '#38bdf8' }}>verified_user</i>
+            <span>Ethereum Blockchain Powered · Sepolia Testnet</span>
           </div>
 
-          <h1 className="hero-title">
-            Transparent Relief,{' '}
-            <span className="gradient-text">Verified On-Chain</span>
+          {/* Hero Title & Subtitle */}
+          <h1 style={{
+            fontSize: '3.2rem',
+            fontWeight: 800,
+            lineHeight: 1.15,
+            letterSpacing: '-1px',
+            marginBottom: '20px',
+            background: 'linear-gradient(135deg, #ffffff 0%, #94a3b8 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            Transparent Relief,<br />
+            <span style={{
+              background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>Verified On-Chain</span>
           </h1>
 
-          <p className="hero-subtitle">
-            The <strong>Blockchain-Based Donation and Relief Transparency System (BBDRTS)</strong>{' '}
-            is a decentralized web platform enabling NGOs and student organizations to create
-            relief campaigns and receive wallet-to-wallet donations — every peso permanently
-            and publicly verifiable on the blockchain.
+          <p style={{
+            fontSize: '1.1rem',
+            color: '#94a3b8',
+            maxWidth: '750px',
+            margin: '0 auto 40px',
+            lineHeight: 1.7,
+            fontWeight: 400
+          }}>
+            The <strong>Blockchain-Based Donation & Relief Transparency System (BBDRTS)</strong> connects donors directly to verified NGOs. Every single peso and ETH contributed is recorded immutably on the Ethereum ledger for 100% public accountability.
           </p>
 
-          {/* Live stats (public, read-only) */}
-          {!loading && campaigns.length > 0 && (
-            <div className="hero-live-stats">
-              <div className="hero-live-stat">
-                <span className="hero-live-value">{campaigns.length}</span>
-                <span className="hero-live-label">Campaigns on Ledger</span>
-              </div>
-              <div className="hero-live-stat">
-                <span className="hero-live-value">{activeCampaigns}</span>
-                <span className="hero-live-label">Active Now</span>
-              </div>
-              <div className="hero-live-stat">
-                <span className="hero-live-value accent">{totalRaised} ETH</span>
-                <span className="hero-live-label">Total Raised On-Chain</span>
-              </div>
+          {/* Action CTA Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '60px' }}>
+            <button 
+              className="btn-modern-primary" 
+              onClick={onConnect}
+              style={{
+                width: 'auto',
+                padding: '14px 32px',
+                fontSize: '1rem',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #38bdf8 0%, #2563eb 100%)',
+                color: '#fff',
+                boxShadow: '0 8px 25px rgba(56, 189, 248, 0.35)',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <i className="material-symbols-outlined">login</i>
+              <span>Access Portal & Log In</span>
+            </button>
+
+            <a 
+              href="#campaigns" 
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '14px 28px',
+                fontSize: '1rem',
+                borderRadius: '12px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: '#fff',
+                textDecoration: 'none',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <i className="material-symbols-outlined">explore</i>
+              <span>Explore Campaigns</span>
+            </a>
+          </div>
+
+          {/* Live Public Stats Bar (Glassmorphism Cards) */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px',
+            maxWidth: '900px',
+            margin: '0 auto'
+          }}>
+            <div className="stat-bubble" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div className="stat-value" style={{ fontSize: '2rem', color: '#38bdf8' }}>{stats.donors}</div>
+              <div className="stat-labels" style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Active Donors</div>
             </div>
-          )}
 
-          {/* Web3 Sign-In Portal */}
-          <div className="login-portal card glow fade-in" style={{ maxWidth: '600px', margin: '40px auto 0', textAlign: 'left' }}>
-            <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.4rem' }}>🔐</span> Secure Web3 Sign-In
-            </h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '24px' }}>
-              BBDRTS uses <strong>blockchain wallet authentication</strong> instead of traditional passwords. 
-              Your role is automatically detected based on your wallet address:
-            </p>
-            
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <li style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                <span className="role-badge" style={{ color: 'var(--warning)', borderColor: 'var(--warning)', minWidth: '95px', justifyContent: 'center' }}>⚡ Admin</span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', paddingTop: '3px' }}>Contract deployer. Can register NGOs.</span>
-              </li>
-              <li style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                <span className="role-badge" style={{ color: 'var(--info)', borderColor: 'var(--info)', minWidth: '95px', justifyContent: 'center' }}>🏛️ NGO</span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', paddingTop: '3px' }}>Registered NGO. Can create campaigns.</span>
-              </li>
-              <li style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                <span className="role-badge" style={{ color: 'var(--accent)', borderColor: 'var(--accent)', minWidth: '95px', justifyContent: 'center' }}>💙 Donor</span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', paddingTop: '3px' }}>Any connected wallet. Can donate.</span>
-              </li>
-            </ul>
+            <div className="stat-bubble" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div className="stat-value" style={{ fontSize: '2rem', color: '#4ade80' }}>{stats.orgs}</div>
+              <div className="stat-labels" style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Verified NGOs</div>
+            </div>
 
-            {!hasMetaMask ? (
-              <div className="no-metamask" style={{ width: '100%', boxSizing: 'border-box' }}>
-                <span>⚠️</span>
-                <span>
-                  MetaMask is required to sign in.{' '}
-                  <a href="https://metamask.io/download/" target="_blank" rel="noreferrer"
-                    style={{ color: 'inherit', fontWeight: 700, textDecoration: 'underline' }}>
-                    Install MetaMask
-                  </a>{' '}
-                  and refresh to continue.
-                </span>
-              </div>
-            ) : (
-              <button
-                className="btn btn-primary btn-lg pulse"
-                onClick={onConnect}
-                style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '1.05rem', padding: '16px' }}
-              >
-                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" style={{ width: '22px' }} />
-                Sign In with MetaMask
-              </button>
-            )}
+            <div className="stat-bubble" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div className="stat-value" style={{ fontSize: '2rem', color: '#f59e0b' }}>{stats.campaigns || campaigns.length}</div>
+              <div className="stat-labels" style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Active Campaigns</div>
+            </div>
+
+            <div className="stat-bubble" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div className="stat-value" style={{ fontSize: '2rem', color: '#a855f7' }}>{totalRaised} ETH</div>
+              <div className="stat-labels" style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Total Raised On-Chain</div>
+            </div>
           </div>
 
-          {/* How It Works */}
-          <div className="how-it-works">
-            <div className="how-step"><div className="how-icon">🏛️</div><div className="how-label">Organizations create relief campaigns</div></div>
-            <div className="how-arrow">→</div>
-            <div className="how-step"><div className="how-icon">💙</div><div className="how-label">Donors send ETH directly via MetaMask</div></div>
-            <div className="how-arrow">→</div>
-            <div className="how-step"><div className="how-icon">📜</div><div className="how-label">Every transaction recorded immutably on-chain</div></div>
-            <div className="how-arrow">→</div>
-            <div className="how-step"><div className="how-icon">🔍</div><div className="how-label">Anyone can verify donations on Etherscan</div></div>
-          </div>
-
-          <div className="features-strip">
-            <div className="feature-item"><span className="feature-icon">🚫</span><span>No Third-Party Fees</span></div>
-            <div className="feature-sep" />
-            <div className="feature-item"><span className="feature-icon">🔒</span><span>Tamper-Proof Ledger</span></div>
-            <div className="feature-sep" />
-            <div className="feature-item"><span className="feature-icon">⚡</span><span>Smart Contract Automation</span></div>
-            <div className="feature-sep" />
-            <div className="feature-item"><span className="feature-icon">🌐</span><span>Real-Time Tracking</span></div>
-          </div>
         </div>
       </section>
 
-      {/* ─── Public Campaign Browser ─── */}
-      <section style={{ paddingBottom: '60px' }}>
-        <div className="container">
-          <div className="section-header" style={{ marginBottom: '20px' }}>
-            <h2 className="section-title">
-              <span className="section-title-icon">📋</span>
-              Live Relief Campaigns
-            </h2>
-            {campaigns.length > 0 && (
-              <span className="section-count">{campaigns.length} on ledger</span>
-            )}
+      {/* ─── How It Works Flow Grid ─── */}
+      <section style={{ padding: '80px 20px', background: '#0d1322' }}>
+        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
+          
+          <h2 style={{ fontSize: '2.2rem', fontWeight: 700, marginBottom: '12px' }}>
+            How Blockchain Relief Works
+          </h2>
+          <p style={{ color: '#94a3b8', marginBottom: '50px', fontSize: '1rem' }}>
+            Four transparent steps from donation to verified community delivery.
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '24px'
+          }}>
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '30px 20px',
+              backdropFilter: 'blur(10px)',
+              textAlign: 'center'
+            }}>
+              <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <i className="material-symbols-outlined" style={{ fontSize: '28px' }}>domain</i>
+              </div>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>1. NGO Verification</h4>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                Admin verifies legitimate NGOs before campaign creation is authorized.
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '30px 20px',
+              backdropFilter: 'blur(10px)',
+              textAlign: 'center'
+            }}>
+              <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <i className="material-symbols-outlined" style={{ fontSize: '28px' }}>account_balance_wallet</i>
+              </div>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>2. Direct Wallet Donation</h4>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                Donors transfer funds directly via MetaMask wallet with zero intermediary fees.
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '30px 20px',
+              backdropFilter: 'blur(10px)',
+              textAlign: 'center'
+            }}>
+              <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <i className="material-symbols-outlined" style={{ fontSize: '28px' }}>lock</i>
+              </div>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>3. Immutable Ledger</h4>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                Smart contract records every transaction permanently on the Sepolia blockchain.
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '30px 20px',
+              backdropFilter: 'blur(10px)',
+              textAlign: 'center'
+            }}>
+              <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <i className="material-symbols-outlined" style={{ fontSize: '28px' }}>travel_explore</i>
+              </div>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>4. Public Auditability</h4>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                Anyone can verify campaign funds and transactions directly on Etherscan.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ─── Live Campaign Browser ─── */}
+      <section id="campaigns" style={{ padding: '80px 20px', background: '#0a0e1a' }}>
+        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <h2 style={{ fontSize: '2rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <i className="material-symbols-outlined" style={{ color: '#38bdf8' }}>campaign</i>
+                <span>Active Relief Campaigns</span>
+              </h2>
+              <p style={{ color: '#94a3b8', margin: '6px 0 0 0', fontSize: '0.9rem' }}>
+                Browse live campaigns deployed on the Ethereum Sepolia Testnet.
+              </p>
+            </div>
+            
+            <button className="btn-modern-primary" onClick={onConnect} style={{ width: 'auto', padding: '10px 20px', fontSize: '0.85rem' }}>
+              <i className="material-symbols-outlined">add_circle</i>
+              <span>Create or Donate</span>
+            </button>
           </div>
 
           {loading ? (
-            <div className="empty-state">
-              <div className="spinner spinner-light" style={{ width: 28, height: 28 }} />
-              <div className="empty-title">Reading from blockchain…</div>
-              <div className="empty-desc">Fetching live campaign data from Sepolia.</div>
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+              <div className="spinner-before" style={{ fontSize: '1.5rem', marginBottom: '12px' }}></div>
+              <p>Fetching real-time campaign block state from Sepolia...</p>
             </div>
           ) : campaigns.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <div className="empty-title">No campaigns yet</div>
-              <div className="empty-desc">
-                Connect your wallet and, if you are a registered organization,
-                deploy the first relief campaign above.
-              </div>
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '60px 20px',
+              textAlign: 'center'
+            }}>
+              <i className="material-symbols-outlined" style={{ fontSize: '48px', color: '#64748b', marginBottom: '12px' }}>inbox</i>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>No Active Campaigns Found</h3>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', maxWidth: '400px', margin: '0 auto 20px' }}>
+                Log in as a verified Non-Governmental Organization (NGO) to deploy the first relief campaign.
+              </p>
+              <button className="btn-modern-primary" onClick={onConnect} style={{ width: 'auto', margin: '0 auto' }}>
+                <span>Sign In to Create Campaign</span>
+              </button>
             </div>
           ) : (
             <div className="campaigns-list">
@@ -192,42 +337,11 @@ export default function LandingView({ onConnect, hasMetaMask }) {
               ))}
             </div>
           )}
+
         </div>
       </section>
 
-      {/* ─── Beneficiary Cards ─── */}
-      <section className="about-section">
-        <div className="container">
-          <div className="about-grid">
-            <div className="about-card">
-              <div className="about-card-icon">🏛️</div>
-              <h3 className="about-card-title">For NGOs &amp; Organizations</h3>
-              <p className="about-card-desc">
-                Create and manage relief campaigns with a secure portal. Reduce
-                administrative overhead, build donor trust, and publish an immutable
-                public record of every fund received.
-              </p>
-            </div>
-            <div className="about-card">
-              <div className="about-card-icon">💙</div>
-              <h3 className="about-card-title">For Donors</h3>
-              <p className="about-card-desc">
-                Send donations directly from your digital wallet — no intermediaries,
-                no hidden deductions. Track exactly where your contribution went
-                through a real-time public ledger.
-              </p>
-            </div>
-            <div className="about-card">
-              <div className="about-card-icon">🆘</div>
-              <h3 className="about-card-title">For Beneficiaries</h3>
-              <p className="about-card-desc">
-                Zero corporate gateway fees means a maximized portion of every donation
-                reaches the communities and individuals who need it most during crises.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
+    </div>
   );
 }
+
