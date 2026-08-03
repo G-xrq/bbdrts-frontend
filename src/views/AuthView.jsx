@@ -89,7 +89,7 @@ export default function AuthView({ onLoginSuccess }) {
 
           <div className="login-group">
             <div className="login-header-modern">
-              <h2>{isRegistering ? 'Create Account' : (role === 'admin' ? 'Administrator Portal' : 'Welcome Back')}</h2>
+              <h2>{isRegistering ? 'Create Account' : (role === 'admin' ? 'Administrator Portal')}</h2>
               <p>{isRegistering ? 'Sign up to access the ledger' : (role === 'admin' ? 'Secure System Management Access' : 'Log in to access your portal')}</p>
             </div>
 
