@@ -79,18 +79,6 @@ export default function AuthView({ onLoginSuccess }) {
               </div>
             </div>
 
-            <div className="social-media">
-              <h3>Our Social Media</h3>
-              <div className="social-group">
-                <a href="#" className="social-icon"><i className="fab fa-facebook-f"></i></a>
-                <a href="#" className="social-icon"><i className="fab fa-linkedin-in"></i></a>
-                <a href="#" className="social-icon"><i className="fab fa-instagram"></i></a>
-                <a href="#" className="social-icon"><i className="fab fa-tiktok"></i></a>
-                <a href="#" className="social-icon"><i className="fab fa-youtube"></i></a>
-                <a href="#" className="social-icon"><i className="fab fa-x-twitter"></i></a>
-              </div>
-            </div>
-
             <div className="floating-shapes">
               <div className="shape shape-1"></div>
               <div className="shape shape-2"></div>
