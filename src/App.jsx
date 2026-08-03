@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
 import { connectWallet } from './web3Connection';
 import { ROLES, ROLE_META } from './roleConfig';
+import LandingView from './views/LandingView';
 import AuthView from './views/AuthView';
 import DonorView from './views/DonorView';
 import OrganizationView from './views/OrganizationView';
@@ -17,6 +18,7 @@ export default function App() {
   const [dbUser, setDbUser] = useState(null); 
   // dbUser = { id, name, email, role, wallet_address }
   const [authLoading, setAuthLoading] = useState(true);
+  const [showAuth, setShowAuth] = useState(false); // Default to Landing Page!
 
   /* ── Wallet State (Web3) ────────────────────────────── */
   const [walletAddress, setWalletAddress] = useState('');
@@ -66,7 +68,6 @@ export default function App() {
           setActiveContract(contract);
           setWalletAddress(accounts[0]);
           fetchCampaigns(contract);
-          // Removed aggressive DB overwrite to protect Capstone test sessions from volatile MetaMask cache
         } catch (err) {
           console.error('Account change error:', err);
         }
@@ -74,16 +75,11 @@ export default function App() {
     };
     window.ethereum.on('accountsChanged', onChange);
 
-    // ── STRICT SESSION SANDBOXING: 
-    // Auto-reconnect ONLY if this specific Database User has a known wallet address 
-    // AND that exact wallet address is currently unlocked in MetaMask.
-    // This prevents new/different test accounts from blindly hijacking the previous session's wallet.
     if (dbUser && dbUser.wallet_address) {
       window.ethereum.request({ method: 'eth_accounts' })
         .then(async accounts => {
           if (accounts.length > 0 && accounts[0].toLowerCase() === dbUser.wallet_address.toLowerCase()) {
              try {
-                // We know it matches, so we can silently re-generate the Smart Contract bridge!
                 const { hydrateContract } = await import('./web3Connection.js');
                 const contract = await hydrateContract();
                 contractRef.current = contract;
@@ -135,16 +131,16 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('bbdrts_token');
     setDbUser(null);
+    setShowAuth(false);
     setWalletAddress('');
     contractRef.current = null;
     setActiveContract(null);
   };
 
-  /* ── 4. Fetch campaigns (Web2 Data Sync + Web3 Enhancement) ──────────────────────── */
+  /* ── 4. Fetch campaigns ──────────────────────────────── */
   const fetchCampaigns = async (contractOverride) => {
     try {
       setFetchingCampaigns(true);
-      // 1. OFFLINE SYNC: Instantly pull the full campaign state from XAMPP Local MySQL seamlessly!
       try {
         const res = await fetch(`${API_URL}/api/campaigns`);
         if (res.ok) {
@@ -157,7 +153,6 @@ export default function App() {
         console.error('Offline DB Sync failed:', e);
       }
       
-      // 2. ONLINE SYNC: If MetaMask successfully connects to Sepolia, read the definitive real-time block state!
       const contract = contractOverride || contractRef.current;
       if (contract) {
         const count = Number(await contract.campaignCount());
@@ -182,14 +177,10 @@ export default function App() {
     }
   };
 
-  /* ── Initial Global Fetch ─────────────── */
   useEffect(() => {
-    // Instantly hydrate UI using Hybrid Web2/Web3 logic regardless of connection status!
     fetchCampaigns();
   }, []);
 
-
-  /* ── Render ─────────────────────────────────────────── */
   if (authLoading) {
     return (
       <div className="app" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -198,13 +189,12 @@ export default function App() {
     );
   }
 
-  // Which view to render? Driven by Database User Role now!
   const uiRole = dbUser?.role || ROLES.PUBLIC;
   const roleMeta = ROLE_META[uiRole];
   
   const sharedProps = {
     contract: activeContract,
-    walletAddress, // Might be empty if they haven't connected MetaMask yet
+    walletAddress,
     role: uiRole,
     campaigns,
     fetchCampaigns,
@@ -218,17 +208,15 @@ export default function App() {
   return (
     <div className="app">
 
-      {/* ── Topbar (Hidden on Auth View to allow fullscreen UI) ── */}
-      {dbUser && (
+      {/* ── Top Navigation Bar ── */}
       <nav className="topbar">
         <div className="container topbar-inner">
           
-          {/* Brand Identity */}
-          <div className="topbar-brand">
+          <div className="topbar-brand" style={{ cursor: 'pointer' }} onClick={() => !dbUser && setShowAuth(false)}>
             <img src="/logo.png" alt="Logo" className="topbar-brand-logo" />
             <div className="topbar-brand-text">
                <span className="brand-title">BBDRTS</span>
-               <span className="brand-subtitle">Hybrid Architecture</span>
+               <span className="brand-subtitle">Relief Transparency</span>
             </div>
           </div>
 
@@ -238,6 +226,22 @@ export default function App() {
               <span>Sepolia Security</span>
             </div>
 
+            {/* Public Navigation Buttons (When Unauthenticated) */}
+            {!dbUser && !showAuth && (
+              <button className="btn btn-primary" onClick={() => setShowAuth(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="material-symbols-outlined icon-sm">login</span>
+                <span>Log In / Register</span>
+              </button>
+            )}
+
+            {!dbUser && showAuth && (
+              <button className="btn btn-outline" onClick={() => setShowAuth(false)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="material-symbols-outlined icon-sm">arrow_back</span>
+                <span>Public Landing Page</span>
+              </button>
+            )}
+
+            {/* Authenticated User Badges */}
             {dbUser && (
               <div className="premium-badge role-badge" style={{ color: roleMeta.color, borderColor: roleMeta.color, background: `${roleMeta.color}15` }}>
                 <span className="material-symbols-outlined icon-sm">account_circle</span>
@@ -267,10 +271,16 @@ export default function App() {
           </div>
         </div>
       </nav>
+
+      {/* ── Unauthenticated Views: Default Landing Page vs Auth Portal ── */}
+      {!dbUser && !showAuth && (
+        <LandingView 
+          onConnect={() => setShowAuth(true)} 
+          hasMetaMask={hasMetaMask} 
+        />
       )}
 
-      {/* ── Web2 Login Portal ── */}
-      {!dbUser && (
+      {!dbUser && showAuth && (
         <AuthView onLoginSuccess={(user) => {
           setDbUser(user);
           if (user.wallet_address) setWalletAddress(user.wallet_address);
