@@ -1,0 +1,540 @@
+/* ============================================================
+   BBDRTS LANDING VIEW — STYLED EXACTLY LIKE ENROLLMENT SYSTEM
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+.landing-wrapper {
+    font-family: 'Poppins', sans-serif;
+    background-color: #222222;
+    color: #ffffff;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ─── Hero Section ─── */
+.hero-es {
+    position: relative;
+    padding: 100px 20px 80px;
+    background: linear-gradient(135deg, rgba(20, 20, 20, 0.9) 0%, rgba(34, 34, 34, 0.95) 100%),
+                radial-gradient(circle at 50% 30%, rgba(74, 144, 226, 0.15) 0%, transparent 70%);
+    text-align: center;
+    border-bottom: 1px solid #333;
+}
+
+.hero-es-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.hero-es-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 18px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    color: #4a90e2;
+    margin-bottom: 24px;
+    backdrop-filter: blur(10px);
+}
+
+.hero-es h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+}
+
+.hero-es p {
+    font-size: 1.1rem;
+    color: #dddddd;
+    max-width: 750px;
+    margin: 0 auto 36px;
+    line-height: 1.7;
+    font-weight: 300;
+}
+
+.hero-es-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.btn-es-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    color: #222222;
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    text-decoration: none;
+}
+
+.btn-es-primary:hover {
+    background: #4a90e2;
+    color: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(74, 144, 226, 0.4);
+}
+
+.btn-es-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    color: #ffffff;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-es-ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #ffffff;
+    transform: translateY(-3px);
+}
+
+/* ─── News Ticker ─── */
+.news-ticker-container {
+    display: flex;
+    align-items: center;
+    background: #1e1e1e;
+    border-top: 1px solid #333;
+    border-bottom: 1px solid #333;
+    overflow: hidden;
+    height: 46px;
+}
+
+.ticker-label {
+    background: #4a90e2;
+    color: #ffffff;
+    padding: 0 20px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    z-index: 2;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.news-ticker {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.ticker-content {
+    display: inline-block;
+    padding-left: 100%;
+    animation: tickerMove 30s linear infinite;
+    font-size: 0.88rem;
+    color: #cccccc;
+}
+
+@keyframes tickerMove {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-100%, 0, 0); }
+}
+
+/* ─── Programs & About Section ─── */
+.section-es {
+    padding: 80px 20px;
+}
+
+.container-es {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.section-header-es {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.section-header-es h2 {
+    font-size: 2.3rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.section-header-es p {
+    color: #bbbbbb;
+    font-size: 1rem;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.about-hero-es {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+    margin-bottom: 60px;
+}
+
+.about-intro-es h3 {
+    font-size: 1.8rem;
+    color: #ffffff;
+    margin-bottom: 16px;
+}
+
+.about-badge-es {
+    display: inline-block;
+    background: #333;
+    border: 1px solid #555;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: #4a90e2;
+    margin-bottom: 14px;
+    font-weight: 600;
+}
+
+.about-description-es {
+    color: #cccccc;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 24px;
+}
+
+.about-highlights-es {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.highlight-card-es {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #2a2a2a;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+}
+
+.highlight-card-es:hover {
+    background: #333;
+    border-color: #555;
+    transform: translateX(6px);
+}
+
+.highlight-icon-es {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.highlight-content-es h4 {
+    font-size: 1rem;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.highlight-content-es p {
+    font-size: 0.8rem;
+    color: #aaaaaa;
+    margin: 0;
+}
+
+/* ─── Mission & Vision Grid ─── */
+.mission-vision-grid-es {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 80px;
+}
+
+.mission-card-es, .vision-card-es {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+    padding: 32px;
+    border-radius: 16px;
+    border: 1px solid #333;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.mission-card-es:hover, .vision-card-es:hover {
+    border-color: #4a90e2;
+    transform: translateY(-4px);
+}
+
+.card-header-es {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.card-icon-es {
+    width: 48px;
+    height: 48px;
+    background: #ffffff;
+    color: #222;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.card-header-es h3 {
+    font-size: 1.3rem;
+    color: #ffffff;
+    margin: 0;
+}
+
+.mission-card-es p, .vision-card-es p {
+    color: #cccccc;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ─── Interactive Stack System ─── */
+.programs-interactive-es {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 30px;
+    margin-bottom: 80px;
+}
+
+.card-stack-es {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stack-card-es {
+    background: #2a2a2a;
+    border: 1px solid #333;
+    padding: 18px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.stack-card-es:hover, .stack-card-es.active {
+    background: #ffffff;
+    color: #222222;
+    border-color: #ffffff;
+    transform: translateX(6px);
+}
+
+.stack-icon-es {
+    font-size: 1.3rem;
+    color: #4a90e2;
+}
+
+.stack-card-es:hover .stack-icon-es, .stack-card-es.active .stack-icon-es {
+    color: #222222;
+}
+
+.stack-title-es {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.program-details-panel-es {
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 32px;
+}
+
+.panel-placeholder-es {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+}
+
+.panel-placeholder-es i {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    color: #555;
+}
+
+/* ─── Stats Showcase ─── */
+.stats-showcase-es {
+    margin-bottom: 80px;
+}
+
+.stats-grid-es {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.stat-card-es {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+    padding: 28px 20px;
+    border-radius: 16px;
+    border: 1px solid #333;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card-es:hover {
+    transform: translateY(-8px);
+    border-color: #555;
+    box-shadow: 0 16px 35px rgba(0, 0, 0, 0.5);
+}
+
+.stat-icon-es {
+    width: 54px;
+    height: 54px;
+    background: #ffffff;
+    color: #222;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin: 0 auto 16px;
+}
+
+.stat-number-es {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.stat-label-es {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #dddddd;
+    margin-bottom: 2px;
+}
+
+.stat-sublabel-es {
+    font-size: 0.8rem;
+    color: #aaaaaa;
+}
+
+/* ─── Testimonials ─── */
+.testimonials-grid-es {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.testimonial-card-es {
+    background: #2a2a2a;
+    padding: 28px;
+    border-radius: 16px;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+}
+
+.testimonial-card-es:hover {
+    transform: translateY(-4px);
+    border-color: #555;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.testimonial-content-es p {
+    color: #dddddd;
+    font-size: 0.92rem;
+    font-style: italic;
+    line-height: 1.6;
+    margin: 0 0 20px 0;
+}
+
+.testimonial-author-es {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.author-avatar-es {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #4a90e2;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.author-info-es h4 {
+    font-size: 0.95rem;
+    color: #ffffff;
+    margin: 0 0 2px 0;
+}
+
+.author-info-es p {
+    font-size: 0.78rem;
+    color: #aaaaaa;
+    margin: 0;
+}
+
+/* ─── Scroll to Top Button ─── */
+.scroll-to-top-btn-es {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    color: #222222;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    z-index: 999;
+}
+
+.scroll-to-top-btn-es:hover {
+    background: #4a90e2;
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .hero-es h1 { font-size: 2.1rem; }
+    .about-hero-es { grid-template-columns: 1fr; }
+    .mission-vision-grid-es { grid-template-columns: 1fr; }
+    .programs-interactive-es { grid-template-columns: 1fr; }
+}
