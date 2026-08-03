@@ -102,7 +102,7 @@ export default function AuthView({ onLoginSuccess }) {
                 </div>
                 <div className={`role-option ${role === 'organization' ? 'active' : ''}`} onClick={() => setRole('organization')}>
                   <div className="role-icon"><i className="material-symbols-outlined">domain</i></div>
-                  <span>Organization</span>
+                  <span>NGO</span>
                   <div className="role-check"><i className="material-symbols-outlined">check_circle</i></div>
                 </div>
               </div>
