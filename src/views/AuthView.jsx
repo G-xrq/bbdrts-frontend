@@ -111,7 +111,7 @@ export default function AuthView({ onLoginSuccess }) {
             <form className="modern-login-form" onSubmit={handleSubmit}>
               {isRegistering && (
                 <div className="input-group-modern">
-                  <label>{role === 'donor' ? 'FULL NAME' : 'ORGANIZATION NAME'}</label>
+                  <label>{role === 'donor' ? 'FULL NAME' : 'NGO NAME'}</label>
                   <div className="input-container">
                     <i className="material-symbols-outlined">{role === 'donor' ? 'person' : 'domain'}</i>
                     <input type="text" placeholder={role === 'donor' ? "e.g., Gester Macaldo" : "e.g., Red Cross"} value={name} onChange={e => setName(e.target.value)} required />
