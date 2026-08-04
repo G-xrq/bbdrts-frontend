@@ -7,6 +7,7 @@ import AuthView from './views/AuthView';
 import DonorView from './views/DonorView';
 import OrganizationView from './views/OrganizationView';
 import AdminView from './views/AdminView';
+import SettingsPanel from './components/SettingsPanel';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -19,6 +20,8 @@ export default function App() {
   // dbUser = { id, name, email, role, wallet_address }
   const [authLoading, setAuthLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false); // Default to Landing Page!
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   /* ── Wallet State (Web3) ────────────────────────────── */
   const [walletAddress, setWalletAddress] = useState('');
@@ -208,69 +211,130 @@ export default function App() {
   return (
     <div className="app">
 
-      {/* ── Top Navigation Bar ── */}
-      <nav className="topbar">
-        <div className="container topbar-inner">
-          
-          <div className="topbar-brand" style={{ cursor: 'pointer' }} onClick={() => !dbUser && setShowAuth(false)}>
-            <img src="/logo.png" alt="Logo" className="topbar-brand-logo" />
-            <div className="topbar-brand-text">
-               <span className="brand-title">BBDRTS</span>
-               <span className="brand-subtitle">Relief Transparency</span>
+      {/* ── Enrollment System 2-Tier Stacked Header ── */}
+      <header className="es-header">
+        <div className="container es-logo-header">
+          <div className="es-logo-container" onClick={() => !dbUser && setShowAuth(false)} style={{ cursor: 'pointer' }}>
+            <img src="/logo.png" alt="BBDRTS Logo" className="es-logo-pic" />
+            <div className="es-name-subtitle">
+              <span className="es-brand-title">BBDRTS</span>
+              <span className="es-logo-subtitle">Disaster Relief Transparency System.</span>
             </div>
           </div>
 
-          <div className="topbar-actions">
-            <div className="premium-badge testnet-badge">
-              <span className="material-symbols-outlined icon-sm">shield_locked</span>
-              <span>Sepolia Security</span>
-            </div>
+          <div className="es-search-login">
+            {dbUser ? (() => {
+              // Sanitize name: if name contains '@' or is unformatted, format with proper spaces
+              let userDisplayName = dbUser.name;
+              if (!userDisplayName || userDisplayName.includes('@')) {
+                const handle = dbUser.email ? dbUser.email.split('@')[0] : 'User';
+                if (handle.toLowerCase() === 'gestermacaldo') {
+                  userDisplayName = 'Gester Macaldo';
+                } else {
+                  userDisplayName = handle.replace(/[\._]/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                }
+              }
+              const userInitials = userDisplayName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
-            {/* Public Navigation Buttons (When Unauthenticated) */}
-            {!dbUser && !showAuth && (
-              <button className="btn btn-primary" onClick={() => setShowAuth(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="material-symbols-outlined icon-sm">login</span>
-                <span>Log In / Register</span>
-              </button>
-            )}
+              return (
+                <div className={`profile-section ${isProfileOpen ? 'active' : ''}`} onClick={() => setIsProfileOpen(!isProfileOpen)}>
+                  <span className="student-name">{userDisplayName}</span>
+                  <div className="profile-picture-wrapper">
+                    <div className="profile-initial">{userInitials}</div>
+                    <span className="material-symbols-outlined dropdown-arrow">expand_more</span>
+                  </div>
 
-            {!dbUser && showAuth && (
-              <button className="btn btn-outline" onClick={() => setShowAuth(false)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="material-symbols-outlined icon-sm">arrow_back</span>
-                <span>Public Landing Page</span>
-              </button>
-            )}
+                  <div className="profile-dropdown" onClick={e => e.stopPropagation()}>
+                    {/* 👤 Account Header matching Reference UI */}
+                    <div className="profile-info" style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ fontWeight: 700, color: '#fff', fontSize: '1rem', marginBottom: '2px' }}>{userDisplayName}</div>
+                      <div style={{ color: '#9ca3af', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                        BBDRTS-{dbUser.role ? dbUser.role.toUpperCase() : 'USER'}-2026-0001
+                      </div>
+                    </div>
 
-            {/* Authenticated User Badges */}
-            {dbUser && (
-              <div className="premium-badge role-badge" style={{ color: roleMeta.color, borderColor: roleMeta.color, background: `${roleMeta.color}15` }}>
-                <span className="material-symbols-outlined icon-sm">account_circle</span>
-                <span>{roleMeta.label}</span>
+                    {/* 📋 Navigation & Actions Group */}
+                    <div className="profile-menu-links" style={{ padding: '6px 0' }}>
+                      <a href="#" onClick={(e) => { e.preventDefault(); setIsProfileOpen(false); }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>space_dashboard</span>
+                        <span>Dashboard</span>
+                      </a>
+                      <a href="#" onClick={(e) => { e.preventDefault(); setShowSettingsModal(true); setIsProfileOpen(false); }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>manage_accounts</span>
+                        <span>Edit Profile & Settings</span>
+                      </a>
+                      <a href="#campaigns" onClick={() => setIsProfileOpen(false)}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>volunteer_activism</span>
+                        <span>Relief Campaigns</span>
+                      </a>
+                      <a href="https://sepolia.etherscan.io" target="_blank" rel="noopener noreferrer">
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>analytics</span>
+                        <span>Public Ledger Reports</span>
+                      </a>
+                      {!walletAddress ? (
+                        <a href="#" onClick={(e) => { e.preventDefault(); handleConnectWallet(); }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#38bdf8' }}>account_balance_wallet</span>
+                          <span>Connect Web3 Wallet</span>
+                        </a>
+                      ) : (
+                        <div style={{ padding: '8px 16px', fontSize: '0.78rem', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>verified</span>
+                            <span>{walletAddress.substring(0, 6)}...{walletAddress.substring(walletAddress.length - 4)}</span>
+                          </div>
+                          <span style={{ fontSize: '0.7rem', color: '#64748b', background: '#1e293b', padding: '1px 6px', borderRadius: '4px' }}>Sepolia</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 🚪 Reference Logout Section with Red Accent */}
+                    <div style={{ padding: '6px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                      <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); setIsProfileOpen(false); }} className="logout-link" style={{ color: '#ef4444', borderRadius: '8px', padding: '8px 12px', background: 'rgba(239, 68, 68, 0.08)' }}>
+                        <span className="material-symbols-outlined" style={{ color: '#ef4444', fontSize: '18px' }}>logout</span>
+                        <span style={{ fontWeight: 600 }}>Logout</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="es-login">
+                <button className="es-auth-btn" onClick={() => setShowAuth(!showAuth)}>
+                  <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>{showAuth ? 'arrow_back' : 'login'}</i>
+                  <span>{showAuth ? 'Landing Page' : 'Portal Login'}</span>
+                </button>
               </div>
-            )}
-
-            {dbUser && !walletAddress && (
-              <button className="btn btn-outline btn-connect pulse" onClick={handleConnectWallet}>
-                <span className="material-symbols-outlined icon-sm">account_balance_wallet</span>
-                <span>Connect Wallet</span>
-              </button>
-            )}
-
-            {dbUser && walletAddress && (
-              <div className="premium-badge wallet-pill pulse">
-                <span className="material-symbols-outlined icon-sm wallet-icon">account_balance_wallet</span>
-                <span className="wallet-pill-addr">{walletAddress}</span>
-              </div>
-            )}
-
-            {dbUser && (
-              <button className="btn btn-icon btn-logout" onClick={handleLogout} title="Sign Out">
-                 <span className="material-symbols-outlined">logout</span>
-              </button>
             )}
           </div>
         </div>
-      </nav>
+      </header>
+
+      {/* ── Sticky Bottom Header Navigation Strip (Enrollment System Style) ── */}
+      <div className="es-header-navigation">
+        <div className="container es-nav-container">
+          <div className="es-navigation">
+            <a href="#top" className="es-nav-link active">Home</a>
+            <a href="#features" className="es-nav-link">Architecture <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>▾</span></a>
+            <a href="#campaigns" className="es-nav-link">Relief Causes <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>▾</span></a>
+            <a href="https://sepolia.etherscan.io" target="_blank" rel="noreferrer" className="es-nav-link">Public Ledger <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>▾</span></a>
+            <a href="#footer" className="es-nav-link">System Verification <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>▾</span></a>
+          </div>
+
+          <div className="es-enroll">
+            {!walletAddress ? (
+              <button className="es-enroll-btn" onClick={() => handleConnectWallet()}>
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>account_balance_wallet</span>
+                <span>Connect Web3 Wallet</span>
+              </button>
+            ) : (
+              <div className="es-wallet-pill">
+                <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>verified</span>
+                <span>Sepolia: {walletAddress.substring(0, 6)}...</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* ── Unauthenticated Views: Default Landing Page vs Auth Portal ── */}
       {!dbUser && !showAuth && (
@@ -311,6 +375,28 @@ export default function App() {
           {uiRole === ROLES.ORGANIZATION && <OrganizationView {...sharedProps} />}
           {uiRole === ROLES.DONOR && <DonorView {...sharedProps} />}
         </>
+      )}
+
+      {/* ── Account Settings Modal Overlay ── */}
+      {showSettingsModal && (
+        <div className="modal-overlay" onClick={() => setShowSettingsModal(false)} style={{ zIndex: 10000 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '680px', width: '90%', background: '#131622', border: '1px solid #242a3c', borderRadius: '16px', padding: '24px', position: 'relative' }}>
+            <button 
+              onClick={() => setShowSettingsModal(false)}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '24px', cursor: 'pointer' }}
+            >
+              ×
+            </button>
+            <SettingsPanel
+              contract={activeContract}
+              currentUser={dbUser}
+              walletAddress={walletAddress}
+              handleConnectWallet={handleConnectWallet}
+              handleLogout={handleLogout}
+              updateDbWallet={updateDbWallet}
+            />
+          </div>
+        </div>
       )}
 
       {/* ── Footer ── */}

@@ -1,136 +1,101 @@
 /* ============================================================
-   BBDRTS CAPSTONE LANDING PAGE — STYLESHEET
+   BBDRTS MAX-LEVEL CAPSTONE DEFENSE — STYLESHEET
    ============================================================ */
 
 .capstone-landing {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #0f172a;
-    color: #f8fafc;
+    background-color: #0f1117;
+    color: #e5e7eb;
     min-height: 100vh;
     overflow-x: hidden;
 }
 
-/* ── Navbar ── */
-.capstone-nav {
+/* ── Live Blockchain Status Ticker ── */
+.capstone-ticker-bar {
+    background: #141722;
+    border-bottom: 1px solid #242938;
+    padding: 6px 0;
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.capstone-ticker-inner {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.capstone-brand {
-    display: flex;
-    align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
 }
 
-.capstone-logo {
-    width: 42px;
-    height: 42px;
-    object-fit: contain;
-}
-
-.capstone-title-text {
-    font-size: 1.25rem;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #ffffff 0%, #38bdf8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.capstone-nav-links {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-}
-
-.capstone-nav-link {
-    color: #94a3b8;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-.capstone-nav-link:hover {
-    color: #38bdf8;
-}
-
-.capstone-btn-sm {
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 8px 18px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
+.capstone-ticker-item {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
 }
 
-.capstone-btn-sm:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.5);
-    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+.capstone-pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulseGlow 2s infinite;
 }
 
-/* ── Hero Section ── */
+@keyframes pulseGlow {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+/* ── Hero Presentation Section ── */
 .capstone-hero {
     position: relative;
-    padding: 80px 20px 60px;
+    padding: 75px 20px 55px;
     text-align: center;
-    background: radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.12) 0%, transparent 60%);
+    background: radial-gradient(circle at 50% 15%, rgba(56, 189, 248, 0.08) 0%, rgba(15, 17, 23, 0) 70%);
+    border-bottom: 1px solid #1e2330;
 }
 
 .capstone-hero-container {
-    max-width: 900px;
+    max-width: 880px;
     margin: 0 auto;
 }
 
-.capstone-badge {
+.capstone-protocol-badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(56, 189, 248, 0.1);
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
     color: #38bdf8;
     padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.82rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
     font-weight: 600;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 
 .capstone-hero h1 {
-    font-size: 3.2rem;
+    font-size: 3rem;
     font-weight: 800;
-    line-height: 1.15;
-    margin-bottom: 20px;
-    letter-spacing: -1px;
+    line-height: 1.18;
+    margin-bottom: 18px;
     color: #ffffff;
+    letter-spacing: -0.8px;
 }
 
-.capstone-hero-gradient {
-    background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
+.capstone-hero-highlight {
+    background: linear-gradient(135deg, #ffffff 40%, #38bdf8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .capstone-hero p {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     color: #94a3b8;
     max-width: 720px;
-    margin: 0 auto 36px;
-    line-height: 1.7;
-    font-weight: 400;
+    margin: 0 auto 34px;
+    line-height: 1.65;
 }
 
 .capstone-hero-btns {
@@ -140,55 +105,55 @@
     flex-wrap: wrap;
 }
 
-.capstone-btn-lg {
+.capstone-btn-primary {
     background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 14px 32px;
-    border-radius: 10px;
-    font-size: 1rem;
+    padding: 13px 30px;
+    border-radius: 8px;
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    transition: all 0.25 ease;
-    box-shadow: 0 8px 24px rgba(2, 132, 199, 0.4);
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
     text-decoration: none;
 }
 
-.capstone-btn-lg:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(56, 189, 248, 0.5);
+.capstone-btn-primary:hover {
     background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(56, 189, 248, 0.45);
 }
 
-.capstone-btn-ghost {
-    background: rgba(255, 255, 255, 0.04);
-    color: #f8fafc;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 14px 28px;
-    border-radius: 10px;
-    font-size: 1rem;
+.capstone-btn-secondary {
+    background: #1a1e2b;
+    color: #ffffff;
+    border: 1px solid #2d3548;
+    padding: 13px 26px;
+    border-radius: 8px;
+    font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    transition: all 0.25s ease;
+    gap: 8px;
+    transition: all 0.2s ease;
     text-decoration: none;
 }
 
-.capstone-btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.3);
+.capstone-btn-secondary:hover {
+    background: #242a3c;
+    border-color: #3f4a64;
     transform: translateY(-2px);
 }
 
-/* ── Live Stats Bar ── */
+/* ── Live Ledger Metrics Bar ── */
 .capstone-stats-bar {
-    max-width: 1000px;
-    margin: 0 auto 80px;
+    max-width: 980px;
+    margin: 45px auto 65px;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
@@ -196,99 +161,97 @@
 }
 
 .capstone-stat-card {
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 24px 20px;
+    background: #151822;
+    border: 1px solid #232838;
+    border-radius: 12px;
+    padding: 22px 18px;
     text-align: center;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
 }
 
 .capstone-stat-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(56, 189, 248, 0.3);
-    box-shadow: 0 14px 35px rgba(56, 189, 248, 0.15);
+    border-color: #38bdf8;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.12);
 }
 
 .capstone-stat-val {
-    font-size: 2.2rem;
+    font-size: 2rem;
     font-weight: 800;
     color: #ffffff;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .capstone-stat-lbl {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 600;
     color: #38bdf8;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
 }
 
 /* ── Feature Pillars Section ── */
 .capstone-section {
-    max-width: 1100px;
+    max-width: 1000px;
     margin: 0 auto 80px;
     padding: 0 20px;
 }
 
 .capstone-sec-title {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 42px;
 }
 
 .capstone-sec-title h2 {
-    font-size: 2rem;
-    font-weight: 800;
+    font-size: 1.85rem;
+    font-weight: 700;
     color: #ffffff;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .capstone-sec-title p {
     color: #94a3b8;
-    font-size: 1rem;
+    font-size: 0.95rem;
 }
 
 .capstone-pillars-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
 }
 
 .capstone-pillar-card {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    padding: 32px 28px;
-    transition: all 0.3s ease;
+    background: #151822;
+    border: 1px solid #232838;
+    border-radius: 14px;
+    padding: 28px 24px;
+    transition: all 0.25s ease;
 }
 
 .capstone-pillar-card:hover {
-    transform: translateY(-5px);
-    border-color: rgba(56, 189, 248, 0.3);
-    background: rgba(30, 41, 59, 0.9);
+    border-color: #38bdf8;
+    background: #1a1e2c;
+    transform: translateY(-3px);
 }
 
 .capstone-pillar-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
     background: rgba(56, 189, 248, 0.1);
     color: #38bdf8;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.6rem;
-    margin-bottom: 20px;
+    font-size: 1.4rem;
+    margin-bottom: 18px;
 }
 
 .capstone-pillar-card h3 {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: #ffffff;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .capstone-pillar-card p {
@@ -298,23 +261,69 @@
     margin: 0;
 }
 
+/* ── Technical Capstone Specifications Box ── */
+.capstone-tech-spec {
+    background: #131620;
+    border: 1px solid #222736;
+    border-radius: 16px;
+    padding: 32px;
+    margin-top: 50px;
+}
+
+.capstone-tech-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #222736;
+    padding-bottom: 16px;
+}
+
+.capstone-tech-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.capstone-tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.capstone-tech-item h4 {
+    font-size: 0.85rem;
+    color: #38bdf8;
+    margin: 0 0 6px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.capstone-tech-item p {
+    font-size: 0.88rem;
+    color: #cbd5e1;
+    margin: 0;
+    line-height: 1.5;
+}
+
 /* ── Live Campaigns Container ── */
 .capstone-campaigns-wrapper {
     max-width: 1000px;
-    margin: 0 auto 100px;
+    margin: 0 auto 90px;
     padding: 0 20px;
 }
 
 /* ── Footer ── */
 .capstone-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 40px 20px;
+    border-top: 1px solid #1e2330;
+    padding: 36px 20px;
     text-align: center;
     color: #64748b;
-    font-size: 0.85rem;
+    font-size: 0.84rem;
 }
 
 @media (max-width: 768px) {
-    .capstone-hero h1 { font-size: 2.2rem; }
-    .capstone-nav-links { display: none; }
+    .capstone-hero h1 { font-size: 2.1rem; }
+    .capstone-ticker-inner { justify-content: center; }
 }

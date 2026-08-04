@@ -1,28 +1,165 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import CampaignCard from '../components/CampaignCard';
+import CampaignCard, { shortAddr, formatCampaignTitle, getOrgDisplayName } from '../components/CampaignCard';
 import { ROLES } from '../roleConfig';
-import { shortAddr } from '../components/CampaignCard';
-
 import SettingsPanel from '../components/SettingsPanel';
+import './ReferenceDashboard.css';
 
-export default function OrganizationView({ contract, walletAddress, campaigns, fetchCampaigns, fetchingCampaigns, currentUser, handleConnectWallet, handleLogout, updateDbWallet }) {
-  const [activeTab, setActiveTab] = useState('all-campaigns');
+export default function OrganizationView({ 
+  contract, 
+  walletAddress, 
+  campaigns, 
+  fetchCampaigns, 
+  fetchingCampaigns, 
+  currentUser, 
+  handleConnectWallet, 
+  handleLogout, 
+  updateDbWallet 
+}) {
+  const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Create campaign form
+  // Filter & Sort States for "All Campaigns"
+  const [categoryFilterAll, setCategoryFilterAll] = useState('ALL');
+  const [campaignSortAll, setCampaignSortAll] = useState('NEWEST');
+  const [currentPageAll, setCurrentPageAll] = useState(1);
+
+  // Filter & Sort States for "My Campaigns"
+  const [categoryFilterMy, setCategoryFilterMy] = useState('ALL');
+  const [campaignSortMy, setCampaignSortMy] = useState('NEWEST');
+  const [currentPageMy, setCurrentPageMy] = useState(1);
+
+  // Filter & Sort States for "Ledger"
+  const [ledgerFilter, setLedgerFilter] = useState('ALL');
+  const [ledgerSort, setLedgerSort] = useState('NEWEST');
+  const [currentPageLedger, setCurrentPageLedger] = useState(1);
+
+  const campaignsPerPage = 4;
+
+  // Create campaign form state
   const [title, setTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [creating, setCreating] = useState(false);
   const [txModal, setTxModal] = useState({ show: false, step: 0, hash: '', type: '', error: '' });
+
+  // Organization Ledger / Donations State
+  const [orgDonations, setOrgDonations] = useState(null);
+  const [loadingOrgDonations, setLoadingOrgDonations] = useState(false);
 
   const myCampaigns = campaigns.filter(
     (c) => c.orgAddress?.toLowerCase() === walletAddress?.toLowerCase()
   );
 
   const totalRaisedByMe = myCampaigns
-    .reduce((s, c) => s + parseFloat(c.currentAmount || 0), 0)
-    .toFixed(4);
+    .reduce((s, c) => s + parseFloat(c.currentAmount || 0), 0);
 
+  // Reset pagination on filter change
+  useEffect(() => {
+    setCurrentPageAll(1);
+  }, [categoryFilterAll, campaignSortAll]);
+
+  useEffect(() => {
+    setCurrentPageMy(1);
+  }, [categoryFilterMy, campaignSortMy]);
+
+  useEffect(() => {
+    setCurrentPageLedger(1);
+  }, [ledgerFilter, ledgerSort]);
+
+  // Fetch Organization Received Donations
+  const fetchOrgDonations = async () => {
+    try {
+      setLoadingOrgDonations(true);
+      const token = localStorage.getItem('bbdrts_token');
+      if (!token) return;
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${apiUrl}/api/donations/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOrgDonations(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch org donations:', err);
+    } finally {
+      setLoadingOrgDonations(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrgDonations();
+  }, []);
+
+  // Filter & Sort All Campaigns
+  const filteredAllCampaigns = campaigns
+    .filter(c => {
+      if (categoryFilterAll === 'ALL') return true;
+      const displayTitle = formatCampaignTitle(c.title, c.id);
+      const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(displayTitle);
+      if (categoryFilterAll === 'DR') return !isCharity;
+      if (categoryFilterAll === 'CD') return isCharity;
+      return true;
+    })
+    .sort((a, b) => {
+      if (campaignSortAll === 'GOAL_HIGH') return (parseFloat(b.targetAmount) || 0) - (parseFloat(a.targetAmount) || 0);
+      if (campaignSortAll === 'GOAL_LOW') return (parseFloat(a.targetAmount) || 0) - (parseFloat(b.targetAmount) || 0);
+      if (campaignSortAll === 'RAISED_HIGH') return (parseFloat(b.currentAmount) || 0) - (parseFloat(a.currentAmount) || 0);
+      return b.id - a.id;
+    });
+
+  const totalPagesAll = Math.ceil(filteredAllCampaigns.length / campaignsPerPage);
+  const paginatedAllCampaigns = filteredAllCampaigns.slice(
+    (currentPageAll - 1) * campaignsPerPage,
+    currentPageAll * campaignsPerPage
+  );
+
+  // Filter & Sort My Campaigns
+  const filteredMyCampaigns = myCampaigns
+    .filter(c => {
+      if (categoryFilterMy === 'ALL') return true;
+      const displayTitle = formatCampaignTitle(c.title, c.id);
+      const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(displayTitle);
+      if (categoryFilterMy === 'DR') return !isCharity;
+      if (categoryFilterMy === 'CD') return isCharity;
+      return true;
+    })
+    .sort((a, b) => {
+      if (campaignSortMy === 'GOAL_HIGH') return (parseFloat(b.targetAmount) || 0) - (parseFloat(a.targetAmount) || 0);
+      if (campaignSortMy === 'GOAL_LOW') return (parseFloat(a.targetAmount) || 0) - (parseFloat(b.targetAmount) || 0);
+      if (campaignSortMy === 'RAISED_HIGH') return (parseFloat(b.currentAmount) || 0) - (parseFloat(a.currentAmount) || 0);
+      return b.id - a.id;
+    });
+
+  const totalPagesMy = Math.ceil(filteredMyCampaigns.length / campaignsPerPage);
+  const paginatedMyCampaigns = filteredMyCampaigns.slice(
+    (currentPageMy - 1) * campaignsPerPage,
+    currentPageMy * campaignsPerPage
+  );
+
+  // Filter & Sort Ledger Transactions
+  const filteredLedger = (orgDonations || [])
+    .filter(d => {
+      if (ledgerFilter === 'ALL') return true;
+      const matchCamp = campaigns.find(c => String(c.id) === String(d.campaignId));
+      const campTitle = matchCamp ? formatCampaignTitle(matchCamp.title, matchCamp.id) : '';
+      const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(campTitle);
+      if (ledgerFilter === 'DR') return !isCharity;
+      if (ledgerFilter === 'CD') return isCharity;
+      return true;
+    })
+    .sort((a, b) => {
+      if (ledgerSort === 'AMOUNT_HIGH') return (parseFloat(b.amount) || 0) - (parseFloat(a.amount) || 0);
+      if (ledgerSort === 'AMOUNT_LOW') return (parseFloat(a.amount) || 0) - (parseFloat(b.amount) || 0);
+      return (b.id || 0) - (a.id || 0);
+    });
+
+  const totalPagesLedger = Math.ceil(filteredLedger.length / campaignsPerPage);
+  const paginatedLedger = filteredLedger.slice(
+    (currentPageLedger - 1) * campaignsPerPage,
+    currentPageLedger * campaignsPerPage
+  );
+
+  // Deploy Campaign Logic
   const handleCreateCampaign = async (e) => {
     e.preventDefault();
     
@@ -66,6 +203,7 @@ export default function OrganizationView({ contract, walletAddress, campaigns, f
       setTitle('');
       setTargetAmount('');
       fetchCampaigns();
+      fetchOrgDonations();
     } catch (err) {
       console.error(err);
       if (err.code !== 'ACTION_REJECTED') {
@@ -82,248 +220,906 @@ export default function OrganizationView({ contract, walletAddress, campaigns, f
     }
   };
 
+  const orgDisplayName = getOrgDisplayName(walletAddress, currentUser?.name, 1);
+  const orgInitials = orgDisplayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
   return (
-    <main className="dashboard">
-      <div className="container">
+    <main className="dashboard container" style={{ paddingTop: '16px' }}>
+      {/* ── Reference Dashboard Grid Architecture (Matching DonorView Layout) ── */}
+      <div className="ref-dashboard-grid" style={{ marginTop: '0' }}>
 
-        {/* Testnet Banner */}
-        <div className="testnet-banner">
-          <span>🔬</span>
-          <span>
-            <strong>Sepolia Testnet</strong> — Transactions use test ETH with no real monetary value.{' '}
-            <a href="https://sepoliafaucet.com/" target="_blank" rel="noreferrer"
-              style={{ color: 'var(--info)', textDecoration: 'underline' }}>
-              Get Sepolia ETH →
-            </a>
-          </span>
-        </div>
-
-        {/* My Campaign Summary */}
-        {myCampaigns.length > 0 && (
-          <div className="stats-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-            <div className="stat-card">
-              <div className="stat-card-value">{myCampaigns.length}</div>
-              <div className="stat-card-label">My Campaigns</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card-value">{myCampaigns.filter(c => c.isActive).length}</div>
-              <div className="stat-card-label">Active</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card-value accent">{totalRaisedByMe} <span style={{ fontSize: '0.9rem' }}>ETH</span></div>
-              <div className="stat-card-label">Total Raised</div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab Bar */}
-        <div className="tab-bar">
-          <button className={`tab-btn ${activeTab === 'all-campaigns' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all-campaigns')}>
-            <span className="material-symbols-outlined icon-sm" style={{marginRight: '6px'}}>list_alt</span> All Campaigns
-          </button>
-          <button className={`tab-btn ${activeTab === 'my-campaigns' ? 'active' : ''}`}
-            onClick={() => setActiveTab('my-campaigns')}>
-            <span className="material-symbols-outlined icon-sm" style={{marginRight: '6px'}}>account_balance</span> My Campaigns
-            {myCampaigns.length > 0 && (
-              <span className="tab-count">{myCampaigns.length}</span>
-            )}
-          </button>
-          <button className={`tab-btn ${activeTab === 'create' ? 'active' : ''}`}
-            onClick={() => setActiveTab('create')}>
-            <span className="material-symbols-outlined icon-sm" style={{marginRight: '6px'}}>rocket_launch</span> Create Campaign
-          </button>
-          <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}>
-            <span className="material-symbols-outlined icon-sm" style={{marginRight: '6px'}}>settings</span> Profile & Settings
-          </button>
-        </div>
-
-        {/* ── All Campaigns Tab ── */}
-        {activeTab === 'all-campaigns' && (
+        {/* ── Left Sidebar Navigation (Maasin Reference Style) ── */}
+        <aside className="ref-sidebar">
           <div>
-            <div className="section-header">
-              <h2 className="section-title">
-                <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px'}}>list_alt</span> All Relief Campaigns
-              </h2>
-              {campaigns.length > 0 && <span className="section-count">{campaigns.length} on ledger</span>}
-              <button className="btn btn-ghost btn-sm" onClick={fetchCampaigns} disabled={fetchingCampaigns}>
-                {fetchingCampaigns ? <div className="spinner spinner-light" /> : '↻ Refresh'}
+            <div className="ref-sidebar-user">
+              <div className="ref-sidebar-avatar">{orgInitials}</div>
+              <div>
+                <div className="ref-sidebar-name">{orgDisplayName}</div>
+                <div className="ref-sidebar-id">BBDRTS-NGO-2026-0001</div>
+              </div>
+            </div>
+
+            <nav className="ref-sidebar-menu" style={{ marginTop: '16px' }}>
+              <button 
+                className={`ref-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dashboard')}
+              >
+                <span className="material-symbols-outlined">space_dashboard</span>
+                <span>Dashboard Overview</span>
               </button>
-            </div>
-            {campaigns.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">📭</div>
-                <div className="empty-title">No campaigns on the ledger yet</div>
-                <div className="empty-desc">Deploy your first campaign from the "Create Campaign" tab.</div>
-              </div>
-            ) : (
-              <div className="campaigns-list">
-                {campaigns.map((camp) => (
-                  <CampaignCard key={camp.id} camp={camp} contract={contract}
-                    role={ROLES.ORGANIZATION} walletAddress={walletAddress} onDonated={fetchCampaigns} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* ── My Campaigns Tab ── */}
-        {activeTab === 'my-campaigns' && (
-          <div>
-            <div className="section-header">
-              <h2 className="section-title">
-                <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px'}}>account_balance</span> My Campaigns
-              </h2>
-              <span className="section-count" style={{ color: 'var(--text-muted)' }}>
-                Org: {shortAddr(walletAddress)}
-              </span>
+              <button 
+                className={`ref-nav-item ${activeTab === 'all-campaigns' ? 'active' : ''}`}
+                onClick={() => setActiveTab('all-campaigns')}
+              >
+                <span className="material-symbols-outlined">list_alt</span>
+                <span>All Campaigns</span>
+              </button>
+
+              <button 
+                className={`ref-nav-item ${activeTab === 'my-campaigns' ? 'active' : ''}`}
+                onClick={() => setActiveTab('my-campaigns')}
+              >
+                <span className="material-symbols-outlined">account_balance</span>
+                <span>My Campaigns</span>
+              </button>
+
+              <button 
+                className={`ref-nav-item ${activeTab === 'create' ? 'active' : ''}`}
+                onClick={() => setActiveTab('create')}
+              >
+                <span className="material-symbols-outlined">rocket_launch</span>
+                <span>Deploy Campaign</span>
+              </button>
+
+              <button 
+                className={`ref-nav-item ${activeTab === 'ledger' ? 'active' : ''}`}
+                onClick={() => setActiveTab('ledger')}
+              >
+                <span className="material-symbols-outlined">receipt_long</span>
+                <span>Donation Ledger</span>
+              </button>
+
+              <button 
+                className={`ref-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+                onClick={() => setActiveTab('settings')}
+              >
+                <span className="material-symbols-outlined">account_circle</span>
+                <span>Profile & Settings</span>
+              </button>
+            </nav>
+          </div>
+
+          {/* ── Web3 Sepolia Live Protocol Widget ── */}
+          <div className="ref-sidebar-widget" style={{ marginTop: '20px' }}>
+            <div className="ref-widget-header">
+              <span className="ref-status-dot"></span>
+              <span className="ref-widget-title">Sepolia EVM Protocol</span>
             </div>
-            {myCampaigns.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">🚀</div>
-                <div className="empty-title">You haven't created any campaigns yet</div>
-                <div className="empty-desc">
-                  Switch to the "Create Campaign" tab to deploy your first relief campaign.
+            <div className="ref-widget-detail">
+              <div className="ref-widget-row">
+                <span>Verification</span>
+                <span className="ref-widget-value green">
+                  {currentUser?.verification_status === 'Approved' ? 'Approved NGO' : 'Pending Verification'}
+                </span>
+              </div>
+              <div className="ref-widget-row">
+                <span>Contract Health</span>
+                <span className="ref-widget-value">100% Immutable</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* ── Main Content Area ── */}
+        <section className="ref-main-content">
+
+          {/* Sleek Inline Testnet Banner */}
+          <div className="ref-inline-testnet-banner">
+            <span>🔬</span>
+            <span>
+              <strong>Sepolia Testnet Protocol Active</strong> — Verified Smart Contract Operations.{' '}
+              <a href="https://sepoliafaucet.com/" target="_blank" rel="noreferrer" style={{ color: '#38bdf8', textDecoration: 'underline' }}>
+                Get Sepolia ETH →
+              </a>
+            </span>
+          </div>
+
+          {/* ── 1. DASHBOARD OVERVIEW TAB ONLY ── */}
+          {activeTab === 'dashboard' && (
+            <>
+              {/* Top Welcome Hero Banner */}
+              <div className="ref-welcome-card">
+                <div className="ref-welcome-header">
+                  <div className="ref-welcome-avatar">{orgInitials}</div>
+                  <div className="ref-welcome-text">
+                    <h1>Welcome, {orgDisplayName}!</h1>
+                    <p>NGO ID: BBDRTS-NGO-2026-0001 | Verified Sepolia EVM Protocol</p>
+                  </div>
+                </div>
+
+                <div className="ref-action-btns">
+                  <button className="ref-btn-pill-primary" onClick={() => setActiveTab('create')}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>rocket_launch</span>
+                    <span>Deploy Campaign</span>
+                  </button>
+                  <a href="https://sepolia.etherscan.io" target="_blank" rel="noreferrer" className="ref-btn-pill-primary" style={{ textDecoration: 'none' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>analytics</span>
+                    <span>Public Ledger</span>
+                  </a>
                 </div>
               </div>
-            ) : (
-              <div className="campaigns-list">
-                {myCampaigns.map((camp) => (
-                  <CampaignCard key={camp.id} camp={camp} contract={contract}
-                    role={ROLES.ORGANIZATION} walletAddress={walletAddress} onDonated={fetchCampaigns} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* ── Create Campaign Tab ── */}
-        {activeTab === 'create' && (
-          <div>
-            {currentUser?.verification_status !== 'Approved' ? (
-              <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 40px', textAlign: 'center', border: '1px solid rgba(255, 60, 60, 0.4)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255, 60, 60, 0.05) 100%)' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--danger)', marginBottom: '16px' }}>gpp_bad</span>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--danger)', marginBottom: '12px' }}>Action Blocked: Pending Verification</h2>
-                <p style={{ color: 'var(--text-secondary)', maxWidth: '550px', lineHeight: '1.6', fontSize: '1.05rem' }}>
-                  Your Organization account must be manually verified and <strong>Approved by an Admin</strong> before you are allowed to deploy relief campaigns permanently onto the blockchain.
-                </p>
-                <div style={{ marginTop: '24px', padding: '12px 24px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                    Please check back later or contact the system administrator to expedite your approval.
-                  </p>
+              {/* 4-Metric Stat Cards Grid */}
+              <div className="ref-metrics-grid">
+                <div className="ref-metric-card">
+                  <div className="ref-metric-icon-circle">
+                    <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#0284c7' }}>account_balance_wallet</span>
+                  </div>
+                  <div className="ref-metric-title">Total Raised</div>
+                  <div className="ref-metric-value">{totalRaisedByMe.toFixed(4)} <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>ETH</span></div>
+                  <div className="ref-metric-sub">≈ ₱{(totalRaisedByMe * 170000).toLocaleString('en-US', {maximumFractionDigits: 0})} PHP</div>
+                </div>
+
+                <div className="ref-metric-card">
+                  <div className="ref-metric-icon-circle">
+                    <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#22c55e' }}>account_balance</span>
+                  </div>
+                  <div className="ref-metric-title">My Deployed Campaigns</div>
+                  <div className="ref-metric-value">{myCampaigns.length}</div>
+                  <div className="ref-metric-sub">{myCampaigns.filter(c => c.isActive).length} Active Operations</div>
+                </div>
+
+                <div className="ref-metric-card">
+                  <div className="ref-metric-icon-circle">
+                    <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#0284c7' }}>receipt_long</span>
+                  </div>
+                  <div className="ref-metric-title">Received Donations</div>
+                  <div className="ref-metric-value">{orgDonations ? orgDonations.length : 0}</div>
+                  <div className="ref-metric-sub">Verified On-Chain Ledger</div>
+                </div>
+
+                <div className="ref-metric-card">
+                  <div className="ref-metric-icon-circle">
+                    <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#38bdf8' }}>verified</span>
+                  </div>
+                  <div className="ref-metric-title">Verification Status</div>
+                  <div className="ref-metric-value" style={{ fontSize: '1rem', color: currentUser?.verification_status === 'Approved' ? '#22c55e' : '#f59e0b' }}>
+                    {currentUser?.verification_status === 'Approved' ? '✓ Approved NGO' : '⌛ Pending'}
+                  </div>
+                  <div className="ref-metric-sub">Admin Managed Access</div>
                 </div>
               </div>
-            ) : (
-              <div className="card">
+
+              {/* My Deployed Campaigns Preview Section */}
+              <div style={{ marginTop: '28px' }}>
                 <div className="section-header">
                   <h2 className="section-title">
-                    <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px'}}>rocket_launch</span> Deploy Relief Campaign
+                    <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px'}}>account_balance</span> My Relief Operations
                   </h2>
-                  <span className="badge badge-info">Organization Portal</span>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setActiveTab('my-campaigns')}>
+                    View All {myCampaigns.length} Campaigns →
+                  </button>
                 </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '18px' }}>
-                  Deploy a new campaign as your organization. This creates an immutable on-chain record
-                  linked to your wallet address (<code style={{ fontSize: '0.78rem', color: 'var(--accent)' }}>{shortAddr(walletAddress)}</code>).
-                </p>
-                <form className="create-form" onSubmit={handleCreateCampaign}>
-                  <input className="input" type="text"
-                    placeholder="Campaign title — e.g., Typhoon Odette Relief, CCS Emergency Fund"
-                    value={title} onChange={(e) => setTitle(e.target.value)} disabled={creating} />
-                  <div className="form-row">
-                    <input className="input" type="number" step="0.001" min="0"
-                      placeholder="Fundraising target in ETH — e.g., 0.5"
-                      value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} disabled={creating} />
-                    <button type="submit" className="btn btn-primary" disabled={creating} style={{ flexShrink: 0 }}>
-                      {creating ? <><div className="spinner" /> Processing…</> : '+ Deploy Campaign'}
-                    </button>
+
+                {fetchingCampaigns && myCampaigns.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="spinner spinner-light" style={{ width: 28, height: 28 }} />
+                    <div className="empty-title">Reading from blockchain…</div>
                   </div>
-                  <p className="form-hint">
-                    ⚠️ Deploying requires a MetaMask confirmation and a small Sepolia gas fee.
-                    Records cannot be deleted or altered once on-chain.
-                  </p>
-                </form>
+                ) : myCampaigns.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="empty-icon">🚀</div>
+                    <div className="empty-title">You haven't deployed any campaigns yet</div>
+                    <div className="empty-desc">Click "Deploy Campaign" to start your first relief operation.</div>
+                  </div>
+                ) : (
+                  <div className="campaigns-list">
+                    {myCampaigns.slice(0, 2).map((camp) => (
+                      <CampaignCard
+                        key={camp.id}
+                        camp={camp}
+                        contract={contract}
+                        role={ROLES.ORGANIZATION}
+                        walletAddress={walletAddress}
+                        onDonated={fetchCampaigns}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
+            </>
+          )}
 
-        {/* ── Settings Tab ── */}
-        {activeTab === 'settings' && (
-          <SettingsPanel 
-            contract={contract}
-            currentUser={currentUser} 
-            walletAddress={walletAddress} 
-            handleConnectWallet={handleConnectWallet} 
-            handleLogout={handleLogout} 
-            updateDbWallet={updateDbWallet}
-          />
-        )}
-
-        {/* ── Transaction Modal (On-Chain Syncer & Validation) ── */}
-        {txModal.show && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            background: 'rgba(5, 7, 12, 0.75)', backdropFilter: 'blur(10px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999
-          }} className="fade-in">
-            <div className="card bounce-in" style={{ width: '420px', padding: '24px', background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', borderRadius: '16px' }}>
-              
-              {txModal.step === 0 && (
-                <div className="fade-in">
-                  <h2 style={{marginTop:0, marginBottom:'20px', display:'flex', alignItems:'center', fontSize: '1.2rem', color: 'var(--text)'}}>
-                    <span className="material-symbols-outlined" style={{marginRight:'8px', color: 'var(--danger)'}}>error</span> 
-                    Action Blocked
+          {/* ── 2. ALL CAMPAIGNS TAB ── */}
+          {activeTab === 'all-campaigns' && (
+            <div style={{ marginTop: '8px' }}>
+              <div className="section-header">
+                <div>
+                  <h2 className="section-title" style={{ fontSize: '1.4rem' }}>
+                    <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px', color: '#0284c7'}}>list_alt</span> All Relief Campaigns
                   </h2>
-                  <p style={{color:'var(--text-secondary)', fontSize:'0.9rem', marginBottom:'24px', lineHeight:'1.5'}}>
-                    {txModal.error}
+                  <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '4px' }}>
+                    Public ledger view of all active disaster relief and charitable aid campaigns across the network.
                   </p>
-                  <button className="btn btn-primary btn-full pulse" onClick={() => setTxModal({ show: false, step: 0, hash: '', type: '', error: '' })}>Understood</button>
+                </div>
+
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={fetchCampaigns}
+                  disabled={fetchingCampaigns}
+                >
+                  {fetchingCampaigns
+                    ? <div className="spinner spinner-light" />
+                    : '↻ Refresh'}
+                </button>
+              </div>
+
+              {/* Filter & Sort Toolbar */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                gap: '12px', 
+                marginTop: '16px', 
+                marginBottom: '20px',
+                flexWrap: 'wrap',
+                background: 'rgba(15, 23, 42, 0.4)',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.06)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Filter Category:</span>
+                  <select
+                    value={categoryFilterAll}
+                    onChange={(e) => setCategoryFilterAll(e.target.value)}
+                    style={{
+                      background: 'rgba(30, 41, 59, 0.9)',
+                      color: '#fff',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      padding: '6px 14px',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="ALL">All Categories ({campaigns.length})</option>
+                    <option value="DR">🌊 Disaster Relief (DR-00X)</option>
+                    <option value="CD">🤝 Charitable Aid (CD-00X)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Sort By:</span>
+                  <select
+                    value={campaignSortAll}
+                    onChange={(e) => setCampaignSortAll(e.target.value)}
+                    style={{
+                      background: 'rgba(30, 41, 59, 0.9)',
+                      color: '#fff',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      padding: '6px 14px',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="NEWEST">Newest First</option>
+                    <option value="GOAL_HIGH">Target Goal: High to Low</option>
+                    <option value="GOAL_LOW">Target Goal: Low to High</option>
+                    <option value="RAISED_HIGH">Highest Raised</option>
+                  </select>
+                </div>
+              </div>
+
+              {filteredAllCampaigns.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📭</div>
+                  <div className="empty-title">No campaigns match this category</div>
+                  <div className="empty-desc">
+                    Try selecting a different category from the dropdown above.
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="campaigns-list">
+                    {paginatedAllCampaigns.map((camp) => (
+                      <CampaignCard key={camp.id} camp={camp} contract={contract}
+                        role={ROLES.ORGANIZATION} walletAddress={walletAddress} onDonated={fetchCampaigns} />
+                    ))}
+                  </div>
+
+                  {/* Centered Pagination Controls */}
+                  {totalPagesAll > 1 && (
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      marginTop: '24px',
+                      padding: '12px 0'
+                    }}>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setCurrentPageAll(p => Math.max(1, p - 1))}
+                        disabled={currentPageAll === 1}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>chevron_left</span> Previous
+                      </button>
+
+                      {Array.from({ length: totalPagesAll }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          className={`btn btn-sm ${currentPageAll === pageNum ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => setCurrentPageAll(pageNum)}
+                          style={{ minWidth: '36px', height: '36px', borderRadius: '8px', fontWeight: currentPageAll === pageNum ? 700 : 400 }}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setCurrentPageAll(p => Math.min(totalPagesAll, p + 1))}
+                        disabled={currentPageAll === totalPagesAll}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        Next <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>chevron_right</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── 3. MY CAMPAIGNS TAB ── */}
+          {activeTab === 'my-campaigns' && (
+            <div style={{ marginTop: '8px' }}>
+              <div className="section-header">
+                <div>
+                  <h2 className="section-title" style={{ fontSize: '1.4rem' }}>
+                    <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px', color: '#0284c7'}}>account_balance</span> My Campaigns
+                  </h2>
+                  <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '4px' }}>
+                    Relief operations deployed under {orgDisplayName} ({shortAddr(walletAddress)}).
+                  </p>
+                </div>
+
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={fetchCampaigns}
+                  disabled={fetchingCampaigns}
+                >
+                  {fetchingCampaigns
+                    ? <div className="spinner spinner-light" />
+                    : '↻ Refresh'}
+                </button>
+              </div>
+
+              {/* Filter & Sort Toolbar */}
+              {myCampaigns.length > 0 && (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  marginTop: '16px', 
+                  marginBottom: '20px',
+                  flexWrap: 'wrap',
+                  background: 'rgba(15, 23, 42, 0.4)',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Filter Category:</span>
+                    <select
+                      value={categoryFilterMy}
+                      onChange={(e) => setCategoryFilterMy(e.target.value)}
+                      style={{
+                        background: 'rgba(30, 41, 59, 0.9)',
+                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '8px',
+                        padding: '6px 14px',
+                        fontSize: '0.85rem',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="ALL">All Categories ({myCampaigns.length})</option>
+                      <option value="DR">🌊 Disaster Relief (DR-00X)</option>
+                      <option value="CD">🤝 Charitable Aid (CD-00X)</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Sort By:</span>
+                    <select
+                      value={campaignSortMy}
+                      onChange={(e) => setCampaignSortMy(e.target.value)}
+                      style={{
+                        background: 'rgba(30, 41, 59, 0.9)',
+                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '8px',
+                        padding: '6px 14px',
+                        fontSize: '0.85rem',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="NEWEST">Newest First</option>
+                      <option value="GOAL_HIGH">Target Goal: High to Low</option>
+                      <option value="GOAL_LOW">Target Goal: Low to High</option>
+                      <option value="RAISED_HIGH">Highest Raised</option>
+                    </select>
+                  </div>
                 </div>
               )}
 
-              {txModal.step === 1 && (
-                <div className="fade-in" style={{textAlign:'center', padding:'40px 0'}}>
-                   <div className="spinner" style={{width:'40px', height:'40px', margin:'0 auto 20px', borderColor:'var(--primary)', borderRightColor:'transparent'}}></div>
-                   <h3 style={{marginBottom:'8px', color: 'var(--text)'}}>Awaiting Signature</h3>
-                   <p style={{color:'var(--text-muted)', fontSize:'0.85rem'}}>Please open MetaMask and securely sign the transaction to deploy your new campaign.</p>
+              {myCampaigns.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">🚀</div>
+                  <div className="empty-title">You haven't created any campaigns yet</div>
+                  <div className="empty-desc">
+                    Switch to the "Deploy Campaign" tab to publish your first relief operation onto the blockchain.
+                  </div>
                 </div>
-              )}
-
-              {txModal.step === 2 && (
-                <div className="fade-in" style={{textAlign:'center', padding:'40px 0'}}>
-                   <div className="spinner" style={{width:'40px', height:'40px', margin:'0 auto 20px', borderColor:'var(--secondary)', borderRightColor:'transparent'}}></div>
-                   <h3 style={{marginBottom:'8px', color: 'var(--text)'}}>Deploying Campaign</h3>
-                   <p style={{color:'var(--text-muted)', fontSize:'0.85rem', marginBottom: '20px'}}>Mining your structural contract across the Sepolia network.</p>
-                   <div style={{padding:'10px', background:'rgba(0,0,0,0.3)', borderRadius:'8px', fontSize:'0.75rem', wordBreak:'break-all', border: '1px solid rgba(255,255,255,0.05)'}}>
-                     <span style={{color:'var(--text-secondary)', display:'block', marginBottom:'4px'}}>Transaction Hash:</span> 
-                     {txModal.hash}
-                   </div>
+              ) : filteredMyCampaigns.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📭</div>
+                  <div className="empty-title">No campaigns match this category</div>
+                  <div className="empty-desc">
+                    Try selecting a different category from the dropdown above.
+                  </div>
                 </div>
-              )}
+              ) : (
+                <>
+                  <div className="campaigns-list">
+                    {paginatedMyCampaigns.map((camp) => (
+                      <CampaignCard key={camp.id} camp={camp} contract={contract}
+                        role={ROLES.ORGANIZATION} walletAddress={walletAddress} onDonated={fetchCampaigns} />
+                    ))}
+                  </div>
 
-              {txModal.step === 3 && (
-                <div className="fade-in" style={{textAlign:'center', padding:'20px 0 10px'}}>
-                   <div className="success-circle-container">
-                      <span className="material-symbols-outlined check-icon-pop" style={{fontSize: '2.5rem', color: 'var(--success)'}}>check</span>
-                   </div>
-                   <h3 style={{marginBottom:'8px', color: 'var(--text)'}}>Deployment Successful!</h3>
-                   <p style={{color:'var(--text-muted)', fontSize:'0.85rem'}}>
-                     Your relief campaign has been permanently deployed on the immutable blockchain.
-                   </p>
-                   <div style={{margin:'24px 0', padding:'16px', background:'rgba(0,0,0,0.2)', borderRadius:'8px', textAlign:'left', border: '1px solid rgba(0,255,100,0.1)'}}>
-                      <div style={{fontSize:'0.75rem', color:'var(--text-secondary)', marginBottom:'8px'}}>Verified Block Receipt</div>
-                      <a href={`https://sepolia.etherscan.io/tx/${txModal.hash}`} target="_blank" rel="noreferrer" style={{color:'var(--success)', textDecoration:'none', wordBreak:'break-all', fontSize:'0.85rem', display:'flex', alignItems:'center', gap:'6px'}}>
-                        <span className="material-symbols-outlined" style={{fontSize:'1rem'}}>open_in_new</span> {txModal.hash.slice(0,20)}...
-                      </a>
-                   </div>
-                   <button className="btn btn-primary btn-full pulse" onClick={() => { setTxModal({ show: false, step: 0, hash: '', type: '', error: '' }); setActiveTab('my-campaigns'); }}>Complete</button>
+                  {/* Centered Pagination Controls */}
+                  {totalPagesMy > 1 && (
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      marginTop: '24px',
+                      padding: '12px 0'
+                    }}>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setCurrentPageMy(p => Math.max(1, p - 1))}
+                        disabled={currentPageMy === 1}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>chevron_left</span> Previous
+                      </button>
+
+                      {Array.from({ length: totalPagesMy }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          className={`btn btn-sm ${currentPageMy === pageNum ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => setCurrentPageMy(pageNum)}
+                          style={{ minWidth: '36px', height: '36px', borderRadius: '8px', fontWeight: currentPageMy === pageNum ? 700 : 400 }}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setCurrentPageMy(p => Math.min(totalPagesMy, p + 1))}
+                        disabled={currentPageMy === totalPagesMy}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        Next <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>chevron_right</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── 4. DEPLOY CAMPAIGN TAB ── */}
+          {activeTab === 'create' && (
+            <div style={{ marginTop: '8px' }}>
+              {currentUser?.verification_status !== 'Approved' ? (
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 40px', textAlign: 'center', border: '1px solid rgba(255, 60, 60, 0.4)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255, 60, 60, 0.05) 100%)' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '56px', color: 'var(--danger)', marginBottom: '16px' }}>gpp_bad</span>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--danger)', marginBottom: '12px' }}>Action Blocked: Pending Verification</h2>
+                  <p style={{ color: 'var(--text-secondary)', maxWidth: '550px', lineHeight: '1.6', fontSize: '1.05rem' }}>
+                    Your Organization account must be manually verified and <strong>Approved by an Admin</strong> before you are allowed to deploy relief campaigns permanently onto the blockchain.
+                  </p>
+                  <div style={{ marginTop: '24px', padding: '12px 24px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+                      Please check back later or contact the system administrator to expedite your approval.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="card glow fade-in" style={{ padding: '28px', borderRadius: '16px' }}>
+                  <div className="section-header" style={{ marginBottom: '16px' }}>
+                    <h2 className="section-title">
+                      <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px'}}>rocket_launch</span> Deploy Relief Campaign
+                    </h2>
+                    <span className="badge badge-info">NGO Organization Portal</span>
+                  </div>
+                  <p style={{ fontSize: '0.88rem', color: '#94a3b8', marginBottom: '22px', lineHeight: 1.5 }}>
+                    Deploy a new relief operation under your official organization name (<strong>{orgDisplayName}</strong>). This action creates a smart contract instance linked directly to your wallet address (<code style={{ fontSize: '0.82rem', color: 'var(--accent)' }}>{shortAddr(walletAddress)}</code>).
+                  </p>
+
+                  <form className="create-form" onSubmit={handleCreateCampaign}>
+                    <div style={{ marginBottom: '18px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                        Campaign Title
+                      </label>
+                      <input className="input" type="text"
+                        placeholder="e.g., Super Typhoon Odette Emergency Relief, Red Cross Blood Drive"
+                        value={title} onChange={(e) => setTitle(e.target.value)} disabled={creating} />
+                    </div>
+
+                    <div style={{ marginBottom: '22px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                        Fundraising Target (in ETH)
+                      </label>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <input className="input" type="number" step="0.001" min="0"
+                          placeholder="e.g., 0.5"
+                          value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} disabled={creating} />
+                        
+                        <button type="submit" className="btn btn-primary pulse" disabled={creating} style={{ flexShrink: 0, padding: '12px 24px' }}>
+                          {creating ? <><div className="spinner" /> Deploying…</> : '🚀 Deploy Campaign'}
+                        </button>
+                      </div>
+
+                      {targetAmount && !isNaN(parseFloat(targetAmount)) && (
+                        <div style={{ marginTop: '8px', fontSize: '0.82rem', color: '#38bdf8', fontWeight: 500 }}>
+                          ≈ Target Goal: ₱{(parseFloat(targetAmount) * 170000).toLocaleString('en-US', {maximumFractionDigits: 2})} PHP
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ 
+                      padding: '14px 18px', 
+                      background: 'rgba(15, 23, 42, 0.5)', 
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      color: '#94a3b8',
+                      lineHeight: 1.5
+                    }}>
+                      ⚠️ <strong>Blockchain Notice:</strong> Deployment requires a MetaMask transaction confirmation and a minimal Sepolia gas fee. Once mined, campaign target parameters are permanently recorded on-chain.
+                    </div>
+                  </form>
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
+
+          {/* ── 5. DONATION LEDGER TAB ── */}
+          {activeTab === 'ledger' && (
+            <div style={{ marginTop: '8px' }}>
+              <div className="section-header">
+                <div>
+                  <h2 className="section-title" style={{ fontSize: '1.4rem' }}>
+                    <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px', color: '#0284c7'}}>receipt_long</span> Organization Donation Ledger
+                  </h2>
+                  <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '4px' }}>
+                    Real-time transaction receipts for contributions received by {orgDisplayName}.
+                  </p>
+                </div>
+
+                <button className="btn btn-ghost btn-sm" onClick={fetchOrgDonations} disabled={loadingOrgDonations}>
+                  {loadingOrgDonations ? <div className="spinner spinner-light" /> : '↻ Sync Ledger'}
+                </button>
+              </div>
+
+              {/* Filter & Sort Toolbar */}
+              {orgDonations && orgDonations.length > 0 && (
+                <div style={{ 
+                  display: 'flex', 
+                  justify: 'space-between', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  marginTop: '16px', 
+                  marginBottom: '20px',
+                  flexWrap: 'wrap',
+                  background: 'rgba(15, 23, 42, 0.4)',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Filter Category:</span>
+                    <select
+                      value={ledgerFilter}
+                      onChange={(e) => setLedgerFilter(e.target.value)}
+                      style={{
+                        background: 'rgba(30, 41, 59, 0.9)',
+                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '8px',
+                        padding: '6px 14px',
+                        fontSize: '0.85rem',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="ALL">All Transactions ({orgDonations.length})</option>
+                      <option value="DR">🌊 Disaster Relief (DR)</option>
+                      <option value="CD">🤝 Charitable Aid (CD)</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Sort Amount:</span>
+                    <select
+                      value={ledgerSort}
+                      onChange={(e) => setLedgerSort(e.target.value)}
+                      style={{
+                        background: 'rgba(30, 41, 59, 0.9)',
+                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '8px',
+                        padding: '6px 14px',
+                        fontSize: '0.85rem',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="NEWEST">Newest First</option>
+                      <option value="AMOUNT_HIGH">Amount: High to Low</option>
+                      <option value="AMOUNT_LOW">Amount: Low to High</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {!orgDonations || orgDonations.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📜</div>
+                  <div className="empty-title">No transactions recorded yet</div>
+                  <div className="empty-desc">
+                    When donors contribute to your relief campaigns, immutable receipts will appear here in real time.
+                  </div>
+                </div>
+              ) : filteredLedger.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📭</div>
+                  <div className="empty-title">No transactions match this category</div>
+                  <div className="empty-desc">
+                    Try selecting a different category from the dropdown above.
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {paginatedLedger.map((d, idx) => {
+                      const matchCamp = campaigns.find(c => String(c.id) === String(d.campaignId));
+                      const rawTitle  = matchCamp ? matchCamp.title : `Disaster Relief Campaign #${d.campaignId}`;
+                      const campTitle = formatCampaignTitle(rawTitle, d.campaignId);
+                      const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(campTitle);
+                      const catCode   = isCharity ? `CD-00${d.campaignId}` : `DR-00${d.campaignId}`;
+                      const catLabel  = isCharity ? 'Charitable Aid' : 'Disaster Relief';
+
+                      return (
+                        <div 
+                          key={idx} 
+                          className="card glow fade-in" 
+                          style={{ 
+                            padding: '18px 22px', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            gap: '12px',
+                            background: 'rgba(15, 23, 42, 0.65)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '14px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                <span className={`badge ${isCharity ? 'badge-info' : 'badge-warning'}`} style={{ fontSize: '0.7rem' }}>
+                                  {catCode} • {catLabel}
+                                </span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--success)', fontWeight: 600 }}>
+                                  ✓ Verified On-Chain
+                                </span>
+                              </div>
+                              <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#ffffff', fontWeight: 600 }}>
+                                {campTitle}
+                              </h3>
+                            </div>
+
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--success)' }}>
+                                +{d.amount} <span style={{ fontSize: '0.85rem' }}>ETH</span>
+                              </div>
+                              <div style={{ fontSize: '0.82rem', color: '#38bdf8', fontWeight: 500, marginTop: '2px' }}>
+                                ≈ ₱{(parseFloat(d.amount) * 170000).toLocaleString('en-US', {maximumFractionDigits: 2})} PHP
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ 
+                            paddingTop: '10px', 
+                            borderTop: '1px solid rgba(255, 255, 255, 0.05)', 
+                            display: 'flex', 
+                            justify: 'space-between', 
+                            alignItems: 'center', 
+                            flexWrap: 'wrap', 
+                            gap: '8px',
+                            fontSize: '0.78rem' 
+                          }}>
+                            <div style={{ fontFamily: 'monospace', color: '#94a3b8' }}>
+                              <span style={{ color: '#cbd5e1' }}>Tx Hash:</span> {d.txHash.slice(0, 18)}…{d.txHash.slice(-8)}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(d.txHash);
+                                  alert('Transaction hash copied to clipboard!');
+                                }}
+                                style={{ padding: '3px 10px', fontSize: '0.75rem' }}
+                              >
+                                📋 Copy
+                              </button>
+                              <a
+                                href={`https://sepolia.etherscan.io/tx/${d.txHash}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="btn btn-outline btn-sm"
+                                style={{ padding: '3px 10px', fontSize: '0.75rem' }}
+                              >
+                                ↗ Etherscan
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Centered Pagination Controls */}
+                  {totalPagesLedger > 1 && (
+                    <div style={{ 
+                      display: 'flex', 
+                      justify: 'center', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      marginTop: '24px',
+                      padding: '12px 0'
+                    }}>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setCurrentPageLedger(p => Math.max(1, p - 1))}
+                        disabled={currentPageLedger === 1}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>chevron_left</span> Previous
+                      </button>
+
+                      {Array.from({ length: totalPagesLedger }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          className={`btn btn-sm ${currentPageLedger === pageNum ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => setCurrentPageLedger(pageNum)}
+                          style={{ minWidth: '36px', height: '36px', borderRadius: '8px', fontWeight: currentPageLedger === pageNum ? 700 : 400 }}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setCurrentPageLedger(p => Math.min(totalPagesLedger, p + 1))}
+                        disabled={currentPageLedger === totalPagesLedger}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        Next <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>chevron_right</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── 6. PROFILE & SETTINGS TAB ── */}
+          {activeTab === 'settings' && (
+            <div style={{ marginTop: '8px' }}>
+              <SettingsPanel 
+                contract={contract}
+                currentUser={currentUser} 
+                walletAddress={walletAddress} 
+                handleConnectWallet={handleConnectWallet} 
+                handleLogout={handleLogout} 
+                updateDbWallet={updateDbWallet}
+              />
+            </div>
+          )}
+
+        </section>
       </div>
+
+      {/* ── Web3 Deployment Modal ── */}
+      {txModal.show && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(5, 7, 12, 0.75)', backdropFilter: 'blur(10px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999
+        }} className="fade-in">
+          <div className="card bounce-in" style={{ width: '420px', padding: '24px', background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', borderRadius: '16px' }}>
+            
+            {txModal.step === 0 && (
+              <div className="fade-in">
+                <h2 style={{marginTop:0, marginBottom:'20px', display:'flex', alignItems:'center', fontSize: '1.2rem', color: 'var(--text)'}}>
+                  <span className="material-symbols-outlined" style={{marginRight:'8px', color: 'var(--danger)'}}>error</span> 
+                  Action Blocked
+                </h2>
+                <p style={{color:'var(--text-secondary)', fontSize:'0.9rem', marginBottom:'24px', lineHeight:'1.5'}}>
+                  {txModal.error}
+                </p>
+                <button className="btn btn-primary btn-full pulse" onClick={() => setTxModal({ show: false, step: 0, hash: '', type: '', error: '' })}>Understood</button>
+              </div>
+            )}
+
+            {txModal.step === 1 && (
+              <div className="fade-in" style={{textAlign:'center', padding:'40px 0'}}>
+                 <div className="spinner" style={{width:'40px', height:'40px', margin:'0 auto 20px', borderColor:'var(--primary)', borderRightColor:'transparent'}}></div>
+                 <h3 style={{marginBottom:'8px', color: 'var(--text)'}}>Awaiting Signature</h3>
+                 <p style={{color:'var(--text-muted)', fontSize:'0.85rem'}}>Please open MetaMask and securely sign the transaction to deploy your new campaign.</p>
+              </div>
+            )}
+
+            {txModal.step === 2 && (
+              <div className="fade-in" style={{textAlign:'center', padding:'40px 0'}}>
+                 <div className="spinner" style={{width:'40px', height:'40px', margin:'0 auto 20px', borderColor:'var(--secondary)', borderRightColor:'transparent'}}></div>
+                 <h3 style={{marginBottom:'8px', color: 'var(--text)'}}>Deploying Campaign</h3>
+                 <p style={{color:'var(--text-muted)', fontSize:'0.85rem', marginBottom: '20px'}}>Mining your structural contract across the Sepolia network.</p>
+                 <div style={{padding:'10px', background:'rgba(0,0,0,0.3)', borderRadius:'8px', fontSize:'0.75rem', wordBreak:'break-all', border: '1px solid rgba(255,255,255,0.05)'}}>
+                   <span style={{color:'var(--text-secondary)', display:'block', marginBottom:'4px'}}>Transaction Hash:</span> 
+                   {txModal.hash}
+                 </div>
+              </div>
+            )}
+
+            {txModal.step === 3 && (
+              <div className="fade-in" style={{textAlign:'center', padding:'20px 0 10px'}}>
+                 <div className="success-circle-container">
+                    <span className="material-symbols-outlined check-icon-pop" style={{fontSize: '2.5rem', color: 'var(--success)'}}>check</span>
+                 </div>
+                 <h3 style={{marginBottom:'8px', color: 'var(--text)'}}>Deployment Successful!</h3>
+                 <p style={{color:'var(--text-muted)', fontSize:'0.85rem'}}>
+                   Your relief campaign has been permanently deployed on the immutable blockchain.
+                 </p>
+                 <div style={{margin:'24px 0', padding:'16px', background:'rgba(0,0,0,0.2)', borderRadius:'8px', textAlign:'left', border: '1px solid rgba(0,255,100,0.1)'}}>
+                    <div style={{fontSize:'0.75rem', color:'var(--text-secondary)', marginBottom:'8px'}}>Verified Block Receipt</div>
+                    <a href={`https://sepolia.etherscan.io/tx/${txModal.hash}`} target="_blank" rel="noreferrer" style={{color:'var(--success)', textDecoration:'none', wordBreak:'break-all', fontSize:'0.85rem', display:'flex', alignItems:'center', gap:'6px'}}>
+                      <span className="material-symbols-outlined" style={{fontSize:'1rem'}}>open_in_new</span> {txModal.hash.slice(0,20)}...
+                    </a>
+                 </div>
+                 <button className="btn btn-primary btn-full pulse" onClick={() => { setTxModal({ show: false, step: 0, hash: '', type: '', error: '' }); setActiveTab('my-campaigns'); }}>Complete</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

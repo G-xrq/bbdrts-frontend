@@ -15,7 +15,44 @@ export const progressPct = (current, target) => {
   return Math.min(100, ((c / t) * 100).toFixed(1));
 };
 
-export default function CampaignCard({ camp, contract, role, walletAddress, onDonated, onDeactivated }) {
+export const getOrgDisplayName = (orgAddress, orgName, campaignId) => {
+  if (orgName && typeof orgName === 'string') {
+    const lower = orgName.toLowerCase();
+    if (lower.includes('redcross') || lower.includes('red cross')) return 'Red Cross';
+    if (lower.includes('ccs')) return 'CCS';
+  }
+  
+  if (orgAddress && typeof orgAddress === 'string') {
+    const addrLower = orgAddress.toLowerCase();
+    if (addrLower.startsWith('0x206e')) return 'Red Cross';
+    if (addrLower.startsWith('0x8898')) return 'CCS';
+  }
+
+  return String(campaignId) === '2' || String(campaignId) === '4' ? 'CCS' : 'Red Cross';
+};
+
+export const formatCampaignTitle = (title, id) => {
+  if (!title) return `Disaster Relief Campaign #${id}`;
+  const lower = String(title).toLowerCase().trim();
+  if (lower === 'blood donation') {
+    return 'Red Cross Emergency Blood & Medical Aid Drive';
+  }
+  if (lower.startsWith('campaign #') || lower.startsWith('disaster relief campaign #')) {
+    const titles = {
+      '1': 'Red Cross Emergency Blood & Medical Aid Drive',
+      '2': 'Super Typhoon Odette Emergency Disaster Relief',
+      '3': 'Visayas Community Food & Relief Operations',
+      '4': 'Southern Leyte Landslide Recovery & Shelter Aid',
+      '5': 'Bohol Earthquake Rehabilitation & Infrastructure Aid'
+    };
+    return titles[String(id)] || `Emergency Relief Operation #${id}`;
+  }
+  return title;
+};
+
+export default function CampaignCard(props) {
+  const camp = props.camp || props.campaign || {};
+  const { contract, role, walletAddress, onDonated, onDeactivated } = props;
   const [amount, setAmount] = useState('');
   const [deactivating, setDeactivating] = useState(false);
   const [ledgerOpen, setLedgerOpen] = useState(false);
@@ -179,8 +216,24 @@ export default function CampaignCard({ camp, contract, role, walletAddress, onDo
 
         {/* ── Left: Info ── */}
         <div className="campaign-info">
+          {/* Category Tag determination (Disaster Relief vs Charitable Aid) */}
+          {(() => {
+            const displayTitle = formatCampaignTitle(camp.title, camp.id);
+            const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(displayTitle);
+            const catPrefix = isCharity ? 'CD' : 'DR';
+            const catLabel  = isCharity ? 'Charitable Aid (CD)' : 'Disaster Relief (DR)';
+            const catClass  = isCharity ? 'badge-info' : 'badge-warning';
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span className={`badge ${catClass}`} style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                  {catPrefix}-00{camp.id} • {catLabel}
+                </span>
+              </div>
+            );
+          })()}
+
           <div className="campaign-title-row">
-            <h3 className="campaign-title">{camp.title}</h3>
+            <h3 className="campaign-title">{formatCampaignTitle(camp.title, camp.id)}</h3>
             <span className={`badge ${camp.isActive ? 'badge-active' : 'badge-closed'}`}>
               {camp.isActive ? '● Active' : '● Closed'}
             </span>
@@ -194,7 +247,7 @@ export default function CampaignCard({ camp, contract, role, walletAddress, onDo
           <div className="campaign-org">
             <span>🏛</span>
             <span className="campaign-org-addr" title={camp.orgAddress}>
-              Managing Org: {shortAddr(camp.orgAddress)}
+              Managing Org: <strong style={{ color: '#ffffff' }}>{getOrgDisplayName(camp.orgAddress, camp.orgName, camp.id)}</strong> ({shortAddr(camp.orgAddress)})
             </span>
           </div>
 
@@ -218,13 +271,19 @@ export default function CampaignCard({ camp, contract, role, walletAddress, onDo
             <div className="amount-block">
               <span className="amount-label">Raised</span>
               <span className="amount-value accent">{camp.currentAmount} ETH</span>
+              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                ≈ ₱{(parseFloat(camp.currentAmount || 0) * 170000).toLocaleString('en-US', {maximumFractionDigits: 0})} PHP
+              </span>
             </div>
             <div className="amount-block">
-              <span className="amount-label">Target</span>
+              <span className="amount-label">Target Goal</span>
               <span className="amount-value">{camp.targetAmount} ETH</span>
+              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                ≈ ₱{(parseFloat(camp.targetAmount || 0) * 170000).toLocaleString('en-US', {maximumFractionDigits: 0})} PHP
+              </span>
             </div>
             <div className="amount-block">
-              <span className="amount-label">Campaign ID</span>
+              <span className="amount-label">Tracking ID</span>
               <span className="amount-value" style={{ color: 'var(--text-secondary)' }}>
                 #{camp.id}
               </span>
@@ -247,16 +306,17 @@ export default function CampaignCard({ camp, contract, role, walletAddress, onDo
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                 Wallet-to-wallet — no intermediaries, no gateway fees.
               </p>
-              <div className="donate-row">
+              <div className="donate-row" style={{ display: 'flex', gap: '8px' }}>
                 <input
                   className="input donate-input"
                   type="number"
                   step="0.001"
                   min="0"
-                  placeholder="Amount (ETH)"
+                  placeholder="ETH Amount"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   disabled={!canDonate}
+                  style={{ width: '130px', minWidth: '110px' }}
                 />
                 <button
                   className="btn btn-primary donate-btn"

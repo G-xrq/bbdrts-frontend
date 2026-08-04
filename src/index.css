@@ -72,10 +72,10 @@ h1, h2, h3, h4 { line-height: 1.25; color: var(--text-primary); }
    Layout Utilities
    ============================================================ */
 .container {
-  width: 100%;
-  max-width: 900px;
+  width: 94%;
+  max-width: 1750px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 16px;
 }
 
 /* ============================================================
