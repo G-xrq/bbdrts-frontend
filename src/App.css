@@ -514,9 +514,9 @@
    Campaign Grid / List
    ============================================================ */
 .campaigns-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: block;
+  flex-direction: block;
+  gap: 0px;
 }
 
 /* ============================================================
