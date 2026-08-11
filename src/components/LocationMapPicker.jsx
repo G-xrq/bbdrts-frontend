@@ -84,19 +84,24 @@ export default function LocationMapPicker({
 
           const addr = data?.address || {};
           let street = addr.road || addr.street || addr.house_number || addr.building || addr.pedestrian || addr.amenity || '';
-          let barangay = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || addr.hamlet || addr.district || '';
+          let barangay = addr.neighbourhood || addr.suburb || addr.village || addr.quarter || addr.hamlet || addr.district || '';
           let city = addr.city || addr.town || addr.municipality || addr.city_district || addr.county || '';
           let province = addr.state || addr.region || addr.province || addr.state_district || '';
           let country = addr.country || 'Philippines';
 
-          // Fallback parsing from display_name if missing key fields
-          if (formatted && (!city || !province)) {
-            const parts = formatted.split(',').map(s => s.trim());
-            if (parts.length >= 3) {
-              if (!street && parts.length >= 4) street = parts[0];
-              if (!barangay && parts.length >= 4) barangay = parts[1];
-              if (!city) city = parts[parts.length - 3] || parts[1] || '';
-              if (!province) province = parts[parts.length - 2] || parts[2] || '';
+          if (formatted && formatted.includes(',')) {
+            const parts = formatted.split(',').map(s => s.trim()).filter(Boolean);
+            const cleanParts = parts.filter(p => !/^\d{4,6}$/.test(p));
+            if (cleanParts.length >= 4) {
+              if (!street) street = cleanParts[0];
+              if (!barangay) barangay = cleanParts[1];
+              if (!city) city = cleanParts[2];
+              if (!province) province = cleanParts[3];
+              if (!country && cleanParts.length >= 5) country = cleanParts[cleanParts.length - 1];
+            } else if (cleanParts.length === 3) {
+              if (!city) city = cleanParts[0];
+              if (!province) province = cleanParts[1];
+              if (!country) country = cleanParts[2];
             }
           }
 
@@ -214,21 +219,10 @@ export default function LocationMapPicker({
 
         if (mapRef.current && markerRef.current) {
           markerRef.current.setLatLng([lat, lon]);
-          mapRef.current.setView([lat, lon], 14);
+          mapRef.current.setView([lat, lon], 16);
         }
 
         if (onChangeGps) onChangeGps(newGps);
-        if (onChangeAddress) onChangeAddress(top.display_name);
-
-        if (onChangeGranularAddress && top.address) {
-          const addr = top.address;
-          const street = addr.road || addr.street || addr.house_number || addr.building || '';
-          const barangay = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || '';
-          const city = addr.city || addr.town || addr.municipality || addr.county || '';
-          const province = addr.state || addr.region || addr.province || '';
-          const country = addr.country || 'Philippines';
-          onChangeGranularAddress({ street, barangay, city, province, country, fullAddress: top.display_name });
-        }
       }
     } catch (err) {
       console.warn('Geocoding error:', err);
@@ -240,7 +234,7 @@ export default function LocationMapPicker({
   const isMapClickingRef = useRef(false);
   const debounceTimerRef = useRef(null);
 
-  // Auto-geocode address when user types in granular address fields (600ms debounce)
+  // Auto-geocode address when user types in granular address fields (300ms instant debounce)
   useEffect(() => {
     if (readOnly || !address || !address.trim() || address.trim().length < 3) return;
 
@@ -252,7 +246,7 @@ export default function LocationMapPicker({
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(() => {
       handleAddressSearch(address);
-    }, 600);
+    }, 300);
 
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
