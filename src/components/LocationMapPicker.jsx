@@ -85,8 +85,14 @@ export default function LocationMapPicker({
 
           const addr = data?.address || data?.properties || {};
           let street = addr.name || addr.road || addr.street || addr.house_number || addr.building || addr.pedestrian || addr.amenity || '';
-          let barangay = addr.district || addr.neighbourhood || addr.suburb || addr.village || addr.quarter || addr.hamlet || '';
           let city = addr.city || addr.town || addr.municipality || addr.city_district || addr.county || '';
+          
+          // Reordered Barangay Tag Priority: Suburb/Village/Quarter/Neighbourhood > District
+          let barangay = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || addr.hamlet || addr.subdistrict || '';
+          if (!barangay && addr.district && addr.district.toLowerCase() !== city.toLowerCase()) {
+            barangay = addr.district;
+          }
+
           let province = addr.state || addr.region || addr.province || addr.state_district || '';
           let country = addr.country || 'Philippines';
           let zip = addr.postcode || addr.zip || addr.postal_code || '';
@@ -122,6 +128,11 @@ export default function LocationMapPicker({
             }
           }
 
+          // If barangay mistakenly equals city, clear barangay
+          if (barangay && city && barangay.toLowerCase() === city.toLowerCase()) {
+            barangay = '';
+          }
+
           if (onChangeGranularAddress) {
             onChangeGranularAddress({ street, barangay, city, province, country, zip, fullAddress: formatted });
           }
@@ -133,8 +144,23 @@ export default function LocationMapPicker({
           const newGps = `${latFormatted}° N, ${lngFormatted}° E`;
 
           setGeocoding(true);
+
+          // Priority 1: OpenStreetMap Nominatim zoom=18 for pinpoint Barangay resolution
           try {
-            // Engine 1: Photon API (Fast, 0 Rate-Limit)
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&zoom=18&lat=${lat}&lon=${lng}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.address) {
+                updateFromReverseData(data, data.display_name, lat, lng);
+                return;
+              }
+            }
+          } catch (err) {
+            console.warn('Nominatim reverse error:', err);
+          }
+
+          // Priority 2: Photon API Fallback
+          try {
             const photonRes = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`);
             if (photonRes.ok) {
               const photonData = await photonRes.json();
@@ -147,18 +173,6 @@ export default function LocationMapPicker({
             }
           } catch (e) {
             console.warn('Photon reverse error:', e);
-          }
-
-          try {
-            // Engine 2: OpenStreetMap Nominatim Fallback
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`);
-            if (res.ok) {
-              const data = await res.json();
-              updateFromReverseData(data, data?.display_name || `Selected Pin (${newGps})`, lat, lng);
-              return;
-            }
-          } catch (err) {
-            console.warn('Nominatim reverse error:', err);
           }
 
           // Fallback if both APIs fail
