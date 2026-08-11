@@ -1095,7 +1095,7 @@ export default function OrganizationView({
                             </div>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                             <div>
                               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
                                 Province / State *
@@ -1132,7 +1132,9 @@ export default function OrganizationView({
                                 style={{ fontSize: '0.85rem' }}
                               />
                             </div>
+                          </div>
 
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                             <div>
                               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
                                 Country
@@ -1150,24 +1152,24 @@ export default function OrganizationView({
                                 style={{ fontSize: '0.85rem' }}
                               />
                             </div>
-                          </div>
 
-                          <div>
-                            <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
-                              Landmark / Nearby Reference (Optional)
-                            </label>
-                            <input
-                              className="input"
-                              type="text"
-                              placeholder="e.g., Beside Rizal Park, Near Maasin City Port"
-                              value={landmark}
-                              onChange={(e) => {
-                                setLandmark(e.target.value);
-                                setLocationRegion([street, barangay, city, province, zipCode, country, e.target.value ? `(Landmark: ${e.target.value})` : ''].filter(Boolean).join(', '));
-                              }}
-                              disabled={creating}
-                              style={{ fontSize: '0.85rem' }}
-                            />
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                                Landmark / Nearby Reference (Optional)
+                              </label>
+                              <input
+                                className="input"
+                                type="text"
+                                placeholder="e.g., Beside Rizal Park, Near City Port"
+                                value={landmark}
+                                onChange={(e) => {
+                                  setLandmark(e.target.value);
+                                  setLocationRegion([street, barangay, city, province, zipCode, country, e.target.value ? `(Landmark: ${e.target.value})` : ''].filter(Boolean).join(', '));
+                                }}
+                                disabled={creating}
+                                style={{ fontSize: '0.85rem' }}
+                              />
+                            </div>
                           </div>
 
                           {/* Combined Address Preview */}

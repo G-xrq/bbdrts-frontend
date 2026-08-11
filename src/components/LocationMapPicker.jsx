@@ -97,16 +97,28 @@ export default function LocationMapPicker({
             if (numPart && !zip) zip = numPart;
 
             const cleanParts = parts.filter(p => !/^\d{4,6}$/.test(p));
-            if (cleanParts.length >= 4) {
-              if (!street) street = cleanParts[0];
-              if (!barangay) barangay = cleanParts[1];
-              if (!city) city = cleanParts[2];
-              if (!province) province = cleanParts[3];
-              if (!country && cleanParts.length >= 5) country = cleanParts[cleanParts.length - 1];
-            } else if (cleanParts.length === 3) {
-              if (!city) city = cleanParts[0];
-              if (!province) province = cleanParts[1];
+            const n = cleanParts.length;
+
+            // Robust right-to-left (backwards) Philippine address parser:
+            // [Street / Building, Barangay, Municipality / City, Province, Country]
+            if (n >= 5) {
+              if (!country) country = cleanParts[n - 1];
+              if (!province) province = cleanParts[n - 2];
+              if (!city) city = cleanParts[n - 3];
+              if (!barangay) barangay = cleanParts[n - 4];
+              if (!street) street = cleanParts.slice(0, n - 4).join(', ');
+            } else if (n === 4) {
+              if (!country) country = cleanParts[3];
+              if (!province) province = cleanParts[2];
+              if (!city) city = cleanParts[1];
+              if (!barangay) barangay = cleanParts[0];
+            } else if (n === 3) {
               if (!country) country = cleanParts[2];
+              if (!province) province = cleanParts[1];
+              if (!city) city = cleanParts[0];
+            } else if (n === 2) {
+              if (!province) province = cleanParts[1];
+              if (!city) city = cleanParts[0];
             }
           }
 
