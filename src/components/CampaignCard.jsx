@@ -37,25 +37,6 @@ export const formatCampaignTitle = (title, id) => {
 };
 
 export const getCampaignAuditDetails = (id, title, camp = {}) => {
-  const sId = String(id);
-
-  // Default fallback presets ONLY used if the campaign has no DB fields whatsoever (e.g. raw blockchain seed without backend record)
-  const defaultFallback = {
-    region: 'Visayas Disaster Management Zone',
-    gps: '10.1333° N, 124.8667° E',
-    beneficiaries: '~2,500 Registered Relief Beneficiaries',
-    allocations: [
-      { label: '🍲 Emergency Relief Supplies & Food Rations', pct: 40, icon: 'rice_bowl' },
-      { label: '🏥 Medical & Hygiene Aid Packs', pct: 30, icon: 'medical_services' },
-      { label: '⛺ Shelter & Structural Materials', pct: 20, icon: 'roofing' },
-      { label: '🚚 Transportation & Fuel Logistics', pct: 10, icon: 'local_shipping' }
-    ],
-    contact: 'operations@bbdrts.org',
-    logisticsHub: 'Central Regional Relief Depot',
-    urgency: 'HIGH (EMERGENCY AID)',
-    description: 'Disaster relief operation deployed on Sepolia EVM protocol.'
-  };
-
   // Parse allocationsJson if present (supports camelCase & snake_case)
   const rawAllocations = camp.allocationsJson || camp.allocations_json;
   let customAllocations = null;
@@ -79,15 +60,21 @@ export const getCampaignAuditDetails = (id, title, camp = {}) => {
   const targetDate = camp.targetDate || camp.target_date;
   const documentUrl = camp.documentUrl || camp.document_url;
 
+  const defaultAllocations = [
+    { label: '🍲 Emergency Food Packs & Clean Water', pct: 40, icon: 'rice_bowl' },
+    { label: '🏥 Medical Aid & First-Aid Kits', pct: 30, icon: 'medical_services' },
+    { label: '⛺ Emergency Shelter & Tarpaulins', pct: 20, icon: 'roofing' },
+    { label: '🚚 Logistics & Evacuation Fuel', pct: 10, icon: 'local_shipping' }
+  ];
+
   return {
-    region: region || defaultFallback.region,
-    gps: gps || defaultFallback.gps,
-    beneficiaries: beneficiaries || defaultFallback.beneficiaries,
-    allocations: customAllocations || defaultFallback.allocations,
-    contact: contact || defaultFallback.contact,
-    logisticsHub: defaultFallback.logisticsHub,
-    urgency: urgency || defaultFallback.urgency,
-    description: description || defaultFallback.description,
+    region: region || 'Location Not Specified',
+    gps: gps || 'GPS Not Specified',
+    beneficiaries: beneficiaries || 'Not Specified',
+    allocations: customAllocations || defaultAllocations,
+    contact: contact || 'Not Specified',
+    urgency: urgency || 'HIGH (EMERGENCY AID)',
+    description: description || 'Disaster relief operation deployed on Sepolia EVM protocol.',
     targetDate: targetDate || '',
     documentUrl: documentUrl || ''
   };

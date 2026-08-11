@@ -153,6 +153,32 @@ export default function App() {
       } catch (e) {
         console.error('Offline DB Sync failed:', e);
       }
+
+      // Merge client-side localStorage cached campaigns
+      try {
+        const localCreated = JSON.parse(localStorage.getItem('bbdrts_created_campaigns') || '[]');
+        localCreated.forEach(lc => {
+          const exists = dbCampaigns.some(d => (d.title || '').trim().toLowerCase() === (lc.title || '').trim().toLowerCase());
+          if (!exists) {
+            dbCampaigns.unshift({
+              title: lc.title,
+              targetAmount: lc.target_amount,
+              locationRegion: lc.location_region,
+              gpsCoordinates: lc.gps_coordinates,
+              beneficiariesImpact: lc.beneficiaries_impact,
+              allocationsJson: lc.allocations_json,
+              contactInfo: lc.contact_info,
+              description: lc.description,
+              urgency: lc.urgency,
+              targetDate: lc.target_date,
+              documentUrl: lc.document_url,
+              orgName: lc.org_name
+            });
+          }
+        });
+      } catch (e) {
+        console.warn('Failed to load local campaign cache:', e);
+      }
       
       const contract = contractOverride || contractRef.current;
       if (contract) {

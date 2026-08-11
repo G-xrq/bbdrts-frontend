@@ -248,27 +248,39 @@ export default function OrganizationView({
           { label: '🚚 Logistics & Evacuation Fuel', pct: Number(logisticsPct) || 10, icon: 'local_shipping' }
         ];
 
+        const payload = {
+          title: title.trim(),
+          target_amount: targetAmount,
+          contract_address: Object(contract).target || 'Pending',
+          category: category,
+          location_region: locationRegion.trim() || '',
+          gps_coordinates: gpsCoordinates.trim() || '',
+          beneficiaries_impact: beneficiariesImpact.trim() || '',
+          allocations_json: allocations,
+          contact_info: contactInfo.trim() || `${currentUser?.username || 'ngo'}@bbdrts.org`,
+          description: description.trim() || '',
+          urgency: urgency,
+          target_date: targetDate,
+          document_url: documentUrl.trim(),
+          org_name: orgDisplayName
+        };
+
+        // Cache in LocalStorage for client-side resilience
+        try {
+          const existingLocal = JSON.parse(localStorage.getItem('bbdrts_created_campaigns') || '[]');
+          existingLocal.unshift(payload);
+          localStorage.setItem('bbdrts_created_campaigns', JSON.stringify(existingLocal));
+        } catch (e) {
+          console.warn('LocalStorage cache write error:', e);
+        }
+
         await fetch(`${apiUrl}/api/campaigns`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({
-            title: title.trim(),
-            target_amount: targetAmount,
-            contract_address: Object(contract).target || 'Pending',
-            category: category,
-            location_region: locationRegion.trim() || 'Visayas Relief Region',
-            gps_coordinates: gpsCoordinates.trim() || '10.1333° N, 124.8667° E',
-            beneficiaries_impact: beneficiariesImpact.trim() || '~2,500 Displaced Families',
-            allocations_json: allocations,
-            contact_info: contactInfo.trim() || `${currentUser?.username || 'ngo'}@bbdrts.org`,
-            description: description.trim() || 'Disaster relief operation deployed on Sepolia EVM protocol.',
-            urgency: urgency,
-            target_date: targetDate,
-            document_url: documentUrl.trim()
-          })
+          body: JSON.stringify(payload)
         });
       } catch (err) {
         console.error("Failed to sync campaign to backend:", err);
