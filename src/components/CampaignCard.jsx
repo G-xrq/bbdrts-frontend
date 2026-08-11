@@ -161,8 +161,10 @@ export const getCampaignAuditDetails = (id, title, camp = {}) => {
     allocations: customAllocations,
     contact: camp.contactInfo || preset.contact,
     logisticsHub: preset.logisticsHub,
-    urgency: camp.category === 'CD' ? 'STABLE (CHARITABLE AID)' : preset.urgency,
-    description: camp.description || null
+    urgency: camp.urgency || preset.urgency,
+    description: camp.description || preset.description || 'Full disaster relief deployment and distribution scope logged under official NGO smart contract instance.',
+    targetDate: camp.targetDate || '',
+    documentUrl: camp.documentUrl || ''
   };
 };
 
@@ -932,6 +934,41 @@ export default function CampaignCard(props) {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Mission Purpose & Campaign Scope Description Box */}
+              <div style={{ 
+                background: 'rgba(15, 23, 42, 0.6)', 
+                border: '1px solid rgba(56, 189, 248, 0.2)', 
+                borderRadius: '12px', 
+                padding: '16px', 
+                marginBottom: '20px' 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>description</span> Mission Purpose & Relief Scope
+                  </h4>
+                  {audit.targetDate && (
+                    <span style={{ fontSize: '0.75rem', color: '#e2e8f0', background: 'rgba(30, 41, 59, 0.8)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      📅 Target Date: {audit.targetDate}
+                    </span>
+                  )}
+                </div>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                  {audit.description}
+                </p>
+                {audit.documentUrl && (
+                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                    <a 
+                      href={audit.documentUrl.startsWith('http') ? audit.documentUrl : `https://${audit.documentUrl}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.8rem', color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>open_in_new</span> Official Verification / Press Release Audit Document
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* 2. Fund Allocation Breakdown */}

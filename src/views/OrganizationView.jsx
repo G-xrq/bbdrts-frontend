@@ -51,6 +51,9 @@ export default function OrganizationView({
   const [country, setCountry] = useState('Philippines');
   const [gpsCoordinates, setGpsCoordinates] = useState('');
   const [beneficiariesImpact, setBeneficiariesImpact] = useState('');
+  const [urgency, setUrgency] = useState('HIGH (EMERGENCY AID)');
+  const [targetDate, setTargetDate] = useState('');
+  const [documentUrl, setDocumentUrl] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [foodPct, setFoodPct] = useState(40);
   const [medicalPct, setMedicalPct] = useState(30);
@@ -254,7 +257,10 @@ export default function OrganizationView({
             beneficiaries_impact: beneficiariesImpact.trim() || '~2,500 Displaced Families',
             allocations_json: allocations,
             contact_info: contactInfo.trim() || `${currentUser?.username || 'ngo'}@bbdrts.org`,
-            description: description.trim() || 'Disaster relief operation deployed on Sepolia EVM protocol.'
+            description: description.trim() || 'Disaster relief operation deployed on Sepolia EVM protocol.',
+            urgency: urgency,
+            target_date: targetDate,
+            document_url: documentUrl.trim()
           })
         });
       } catch (err) {
@@ -269,6 +275,9 @@ export default function OrganizationView({
       setBeneficiariesImpact('');
       setContactInfo('');
       setDescription('');
+      setTargetDate('');
+      setDocumentUrl('');
+      setUrgency('HIGH (EMERGENCY AID)');
       fetchCampaigns();
       fetchOrgDonations();
     } catch (err) {
@@ -940,6 +949,27 @@ export default function OrganizationView({
                           )}
                         </div>
 
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                              Urgency Status
+                            </label>
+                            <select className="input" value={urgency} onChange={(e) => setUrgency(e.target.value)} disabled={creating} style={{ fontSize: '0.82rem' }}>
+                              <option value="HIGH (EMERGENCY AID)">🔴 Emergency High Aid</option>
+                              <option value="MEDIUM (URGENT REHABILITATION)">🟡 Urgent Medium Rehabilitation</option>
+                              <option value="STABLE (CHARITABLE AID)">🟢 Standard Aid Operation</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                              Target Relief Delivery Date
+                            </label>
+                            <input className="input" type="date"
+                              value={targetDate} onChange={(e) => setTargetDate(e.target.value)} disabled={creating} style={{ fontSize: '0.82rem' }} />
+                          </div>
+                        </div>
+
                         <div>
                           <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
                             Estimated Beneficiaries
@@ -964,23 +994,38 @@ export default function OrganizationView({
                             <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: '#ef4444' }}>location_on</span> Granular Address Details
                             </div>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-xs"
-                              onClick={() => {
-                                setStreet('');
-                                setBarangay('');
-                                setCity('');
-                                setProvince('');
-                                setCountry('Philippines');
-                                setLocationRegion('');
-                                setGpsCoordinates('');
-                              }}
-                              disabled={creating}
-                              style={{ fontSize: '0.72rem', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '2px 8px', borderRadius: '6px' }}
-                            >
-                              🧹 Clear Address Fields
-                            </button>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-xs"
+                                onClick={() => {
+                                  const fullAddr = [street, barangay, city, province, country].filter(Boolean).join(', ');
+                                  if (fullAddr) setLocationRegion(fullAddr);
+                                }}
+                                disabled={creating}
+                                style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid rgba(56, 189, 248, 0.4)' }}
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: '0.95rem' }}>search</span>
+                                Find / Sync Location
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-xs"
+                                onClick={() => {
+                                  setStreet('');
+                                  setBarangay('');
+                                  setCity('');
+                                  setProvince('');
+                                  setCountry('Philippines');
+                                  setLocationRegion('');
+                                  setGpsCoordinates('');
+                                }}
+                                disabled={creating}
+                                style={{ fontSize: '0.72rem', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '2px 8px', borderRadius: '6px' }}
+                              >
+                                🧹 Clear
+                              </button>
+                            </div>
                           </div>
 
                           <div>
@@ -1137,6 +1182,15 @@ export default function OrganizationView({
                           <input className="input" type="text"
                             placeholder="e.g., relief@redcross.org.ph • (053) 570-8899"
                             value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} disabled={creating} />
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                            Official Document / Verification Link (Optional)
+                          </label>
+                          <input className="input" type="url"
+                            placeholder="e.g., https://redcross.org.ph/press-release-102"
+                            value={documentUrl} onChange={(e) => setDocumentUrl(e.target.value)} disabled={creating} />
                         </div>
                       </div>
 
