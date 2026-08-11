@@ -152,7 +152,66 @@ export default function LocationMapPicker({
 
           setGeocoding(true);
 
-          // Priority 1: OpenStreetMap Nominatim zoom=18 for pinpoint Barangay resolution
+          // Priority 1: BigDataCloud API (Pinpoint Administrative Boundaries: Level 4=Province, 6=City, 7/8=Barangay, 0 Rate-Limit)
+          try {
+            const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+            if (bdcRes.ok) {
+              const bdcData = await bdcRes.json();
+              const admin = bdcData?.localityInfo?.administrative || [];
+
+              const barangayObj = admin.find(a => a.adminLevel === 7 || a.adminLevel === 8 || a.adminLevel === 9);
+              const cityObj = admin.find(a => a.adminLevel === 6);
+              const provinceObj = admin.find(a => a.adminLevel === 4);
+
+              let barangayStr = barangayObj?.name || bdcData.locality || '';
+              if (barangayStr.toLowerCase().startsWith('barangay ')) {
+                barangayStr = barangayStr.substring(9).trim();
+              } else if (barangayStr.toLowerCase().startsWith('bgy. ')) {
+                barangayStr = barangayStr.substring(5).trim();
+              }
+
+              let cityStr = cityObj?.name || bdcData.city || '';
+              if (cityStr.toLowerCase().startsWith('city of ')) {
+                cityStr = cityStr.substring(8).trim() + ' City';
+              }
+              let provinceStr = provinceObj?.name || bdcData.principalSubdivision || '';
+              let countryStr = bdcData.countryName || 'Philippines';
+              let zipStr = bdcData.postcode || '';
+
+              let streetStr = '';
+              const informant = bdcData?.localityInfo?.informative || [];
+              const roadObj = informant.find(i => i.description === 'road' || i.description === 'street');
+              if (roadObj && roadObj.name && roadObj.name.toLowerCase() !== barangayStr.toLowerCase() && roadObj.name.toLowerCase() !== cityStr.toLowerCase()) {
+                streetStr = roadObj.name;
+              }
+
+              // Duplicate Cleanup
+              if (streetStr && barangayStr && streetStr.toLowerCase() === barangayStr.toLowerCase()) streetStr = '';
+              if (barangayStr && cityStr && barangayStr.toLowerCase() === cityStr.toLowerCase()) barangayStr = '';
+
+              const formatted = [streetStr, barangayStr, cityStr, provinceStr, zipStr, countryStr].filter(Boolean).join(', ');
+
+              isMapClickingRef.current = true;
+              if (onChangeAddress) onChangeAddress(formatted);
+
+              if (onChangeGranularAddress) {
+                onChangeGranularAddress({
+                  street: streetStr,
+                  barangay: barangayStr,
+                  city: cityStr,
+                  province: provinceStr,
+                  country: countryStr,
+                  zip: zipStr,
+                  fullAddress: formatted
+                });
+              }
+              return;
+            }
+          } catch (e) {
+            console.warn('BigDataCloud reverse error:', e);
+          }
+
+          // Priority 2: OpenStreetMap Nominatim zoom=18 Fallback
           try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&zoom=18&lat=${lat}&lon=${lng}`);
             if (res.ok) {
@@ -166,7 +225,7 @@ export default function LocationMapPicker({
             console.warn('Nominatim reverse error:', err);
           }
 
-          // Priority 2: Photon API Fallback
+          // Priority 3: Photon API Fallback
           try {
             const photonRes = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`);
             if (photonRes.ok) {
@@ -182,7 +241,7 @@ export default function LocationMapPicker({
             console.warn('Photon reverse error:', e);
           }
 
-          // Fallback if both APIs fail
+          // Fallback if all APIs fail
           updateFromReverseData({}, `Selected Pin (${newGps})`, lat, lng);
           setGeocoding(false);
         };
