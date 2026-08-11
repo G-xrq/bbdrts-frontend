@@ -50,6 +50,7 @@ export default function OrganizationView({
   const [province, setProvince] = useState('');
   const [country, setCountry] = useState('Philippines');
   const [gpsCoordinates, setGpsCoordinates] = useState('');
+  const [mapSearchTrigger, setMapSearchTrigger] = useState(0);
   const [beneficiariesImpact, setBeneficiariesImpact] = useState('');
   const [urgency, setUrgency] = useState('HIGH (EMERGENCY AID)');
   const [targetDate, setTargetDate] = useState('');
@@ -84,11 +85,11 @@ export default function OrganizationView({
   }, [categoryFilterMy, campaignSortMy, searchQueryMy]);
 
   const handleGranularAddressFromMap = ({ street: s, barangay: b, city: c, province: p, country: cnt, fullAddress }) => {
-    if (s) setStreet(s);
-    if (b) setBarangay(b);
-    if (c) setCity(c);
-    if (p) setProvince(p);
-    if (cnt) setCountry(cnt);
+    setStreet(s || '');
+    setBarangay(b || '');
+    setCity(c || '');
+    setProvince(p || '');
+    setCountry(cnt || 'Philippines');
     setLocationRegion(fullAddress || [s, b, c, p, cnt].filter(Boolean).join(', '));
   };
 
@@ -1001,6 +1002,7 @@ export default function OrganizationView({
                                 onClick={() => {
                                   const fullAddr = [street, barangay, city, province, country].filter(Boolean).join(', ');
                                   if (fullAddr) setLocationRegion(fullAddr);
+                                  setMapSearchTrigger(prev => prev + 1);
                                 }}
                                 disabled={creating}
                                 style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid rgba(56, 189, 248, 0.4)' }}
@@ -1164,6 +1166,7 @@ export default function OrganizationView({
                               height="320px"
                               hideTip={true}
                               hideSearch={true}
+                              searchTrigger={mapSearchTrigger}
                             />
                           </div>
                         </div>

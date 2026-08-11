@@ -21,7 +21,8 @@ export default function LocationMapPicker({
   readOnly = false,
   height = '240px',
   hideTip = false,
-  hideSearch = false
+  hideSearch = false,
+  searchTrigger = 0
 }) {
   const mapRef = useRef(null);
   const containerRef = useRef(null);
@@ -166,12 +167,12 @@ export default function LocationMapPicker({
     }
   }, [gps]);
 
-  // Geocode address when user searches
+  // Geocode address when searchTrigger prop changes or when address search is invoked
   const handleAddressSearch = async () => {
     if (!address.trim() || readOnly) return;
     try {
       setGeocoding(true);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(address)}`);
       const data = await res.json();
       if (data && data.length > 0) {
         const top = data[0];
@@ -187,6 +188,16 @@ export default function LocationMapPicker({
         }
 
         if (onChangeGps) onChangeGps(newGps);
+
+        if (onChangeGranularAddress && top.address) {
+          const addr = top.address;
+          const street = addr.road || addr.house_number || addr.building || '';
+          const barangay = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || '';
+          const city = addr.city || addr.town || addr.municipality || addr.county || '';
+          const province = addr.state || addr.region || addr.province || '';
+          const country = addr.country || 'Philippines';
+          onChangeGranularAddress({ street, barangay, city, province, country, fullAddress: top.display_name });
+        }
       }
     } catch (err) {
       console.warn('Geocoding error:', err);
@@ -194,6 +205,12 @@ export default function LocationMapPicker({
       setGeocoding(false);
     }
   };
+
+  useEffect(() => {
+    if (searchTrigger > 0) {
+      handleAddressSearch();
+    }
+  }, [searchTrigger]);
 
   return (
     <div style={{ width: '100%' }}>
