@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ethers } from 'ethers';
 import { ROLES } from '../roleConfig';
+import LocationMapPicker from './LocationMapPicker';
 
 const SEPOLIA_EXPLORER = 'https://sepolia.etherscan.io/tx/';
 
@@ -787,8 +788,7 @@ export default function CampaignCard(props) {
             )}
 
           </div>
-        </div>
-      , document.body)}
+        </div>, document.body)}
 
       {/* ── Comprehensive Campaign Audit & Location Details Modal ── */}
       {detailsOpen && (() => {
@@ -855,7 +855,7 @@ export default function CampaignCard(props) {
                 </button>
               </div>
 
-              {/* 1. Target Region & Location GPS Radar Box */}
+              {/* 1. Target Region & Location GPS Interactive Map Box */}
               <div style={{ 
                 background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
                 border: '1px solid rgba(56, 189, 248, 0.25)',
@@ -871,11 +871,11 @@ export default function CampaignCard(props) {
                       location_on
                     </span>
                     <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f8fafc' }}>
-                      Beneficiary Target Zone & GPS Pin
+                      Target Region & Interactive GPS Pin
                     </span>
                   </div>
-                  <span style={{ fontSize: '0.72rem', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
-                    GPS LIVE RADAR
+                  <span style={{ fontSize: '0.72rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                    GPS LIVE MAP
                   </span>
                 </div>
 
@@ -886,17 +886,26 @@ export default function CampaignCard(props) {
                   📡 <strong>Coordinates:</strong> {audit.gps}
                 </div>
 
-                {/* Radar Grid Box */}
+                {/* Interactive Leaflet Location Map */}
+                <div style={{ marginBottom: '16px' }}>
+                  <LocationMapPicker
+                    address={audit.region}
+                    gps={audit.gps}
+                    readOnly={true}
+                    height="200px"
+                  />
+                </div>
+
+                {/* Beneficiaries & Impact Box */}
                 <div style={{
                   background: '#020617',
                   border: '1px solid rgba(56, 189, 248, 0.3)',
                   borderRadius: '10px',
-                  padding: '16px',
+                  padding: '14px 16px',
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'space-between',
-                  gap: '12px',
-                  boxShadow: 'inset 0 0 15px rgba(0, 255, 163, 0.05)'
+                  justifyContent: 'space-between',
+                  gap: '12px'
                 }}>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -906,26 +915,25 @@ export default function CampaignCard(props) {
                       {audit.beneficiaries}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '4px' }}>
-                      🏢 Logistics Hub: <span style={{ color: '#f8fafc' }}>{audit.logisticsHub}</span>
+                      📞 Emergency Contact: <span style={{ color: '#38bdf8' }}>{audit.contact}</span>
                     </div>
                   </div>
 
                   <div style={{
-                    minWidth: '90px',
-                    height: '60px',
+                    minWidth: '80px',
+                    height: '50px',
                     background: 'radial-gradient(circle, rgba(14,165,233,0.3) 0%, rgba(2,6,23,1) 80%)',
                     border: '1px solid rgba(14,165,233,0.4)',
                     borderRadius: '8px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    justify: 'center',
-                    position: 'relative'
+                    justifyContent: 'center'
                   }}>
-                    <span className="material-symbols-outlined" style={{ color: '#38bdf8', fontSize: '1.5rem', animation: 'pulse 2s infinite' }}>
-                      my_location
+                    <span className="material-symbols-outlined" style={{ color: '#38bdf8', fontSize: '1.3rem' }}>
+                      verified_user
                     </span>
-                    <span style={{ fontSize: '0.62rem', color: '#38bdf8', fontWeight: 700, marginTop: '2px' }}>VERIFIED</span>
+                    <span style={{ fontSize: '0.6rem', color: '#38bdf8', fontWeight: 700, marginTop: '2px' }}>VERIFIED</span>
                   </div>
                 </div>
               </div>

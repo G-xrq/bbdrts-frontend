@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import CampaignCard, { shortAddr, formatCampaignTitle, getOrgDisplayName } from '../components/CampaignCard';
+import LocationMapPicker from '../components/LocationMapPicker';
 import { ROLES } from '../roleConfig';
 import SettingsPanel from '../components/SettingsPanel';
 import './ReferenceDashboard.css';
@@ -883,132 +884,110 @@ export default function OrganizationView({
                     Deploy a new relief operation under your official organization name (<strong>{orgDisplayName}</strong>). This action creates a smart contract instance linked directly to your wallet address (<code style={{ fontSize: '0.82rem', color: 'var(--accent)' }}>{shortAddr(walletAddress)}</code>).
                   </p>
 
-                  <form className="create-form" onSubmit={handleCreateCampaign}>
-                    {/* Row 1: Title & Category */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '18px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                          Campaign Title *
-                        </label>
-                        <input className="input" type="text" required
-                          placeholder="e.g., Super Typhoon Odette Emergency Disaster Relief"
-                          value={title} onChange={(e) => setTitle(e.target.value)} disabled={creating} />
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                          Relief Category *
-                        </label>
-                        <select
-                          className="input"
-                          value={category}
-                          onChange={(e) => setCategory(e.target.value)}
-                          disabled={creating}
-                          style={{ background: 'rgba(30, 41, 59, 0.9)', color: '#fff' }}
-                        >
-                          <option value="DR">🌊 Disaster Relief (DR)</option>
-                          <option value="CD">🤝 Charitable Aid (CD)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Row 2: Target ETH & Contact Info */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '18px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                          Fundraising Target (in ETH) *
-                        </label>
-                        <input className="input" type="number" step="0.001" min="0" required
-                          placeholder="e.g., 0.5 ETH"
-                          value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} disabled={creating} />
-                        {targetAmount && !isNaN(parseFloat(targetAmount)) && (
-                          <div style={{ marginTop: '4px', fontSize: '0.78rem', color: '#38bdf8', fontWeight: 500 }}>
-                            ≈ Goal: ₱{(parseFloat(targetAmount) * 170000).toLocaleString('en-US', {maximumFractionDigits: 2})} PHP
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                          Emergency Contact Hotline / Email
-                        </label>
-                        <input className="input" type="text"
-                          placeholder="e.g., relief@redcross.org.ph • (053) 570-8899"
-                          value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} disabled={creating} />
-                      </div>
-                    </div>
-
-                    {/* Row 3: Target Region, GPS, & Beneficiaries */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '18px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                          📍 Target Location / Ground Zero Region
-                        </label>
-                        <input className="input" type="text"
-                          placeholder="e.g., Maasin City, Southern Leyte"
-                          value={locationRegion} onChange={(e) => setLocationRegion(e.target.value)} disabled={creating} />
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                          📡 GPS Coordinates (Radar Pin)
-                        </label>
-                        <input className="input" type="text"
-                          placeholder="e.g., 10.1333° N, 124.8667° E"
-                          value={gpsCoordinates} onChange={(e) => setGpsCoordinates(e.target.value)} disabled={creating} />
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                          👥 Beneficiaries Estimate
-                        </label>
-                        <input className="input" type="text"
-                          placeholder="e.g., ~3,500 Displaced Families"
-                          value={beneficiariesImpact} onChange={(e) => setBeneficiariesImpact(e.target.value)} disabled={creating} />
-                      </div>
-                    </div>
-
-                    {/* Row 4: Item Allocations Breakdown */}
-                    <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px', marginBottom: '18px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#38bdf8', fontWeight: 700, marginBottom: '10px' }}>
-                        📊 Proposed Resource & Fund Allocation Breakdown (%)
-                      </label>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
+                  <form className="create-form" onSubmit={handleCreateCampaign} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Section 1: Campaign Essentials */}
+                    <div style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '20px' }}>
+                      <h3 style={{ margin: '0 0 14px 0', fontSize: '0.95rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>campaign</span> 1. Basic Campaign Information
+                      </h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                         <div>
-                          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>🍲 Food & Water %</span>
-                          <input className="input" type="number" min="0" max="100" value={foodPct} onChange={(e) => setFoodPct(e.target.value)} disabled={creating} style={{ marginTop: '4px' }} />
+                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                            Campaign Title *
+                          </label>
+                          <input className="input" type="text" required
+                            placeholder="e.g., Super Typhoon Emergency Relief Operation"
+                            value={title} onChange={(e) => setTitle(e.target.value)} disabled={creating} />
                         </div>
+
                         <div>
-                          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>🏥 Medical Aid %</span>
-                          <input className="input" type="number" min="0" max="100" value={medicalPct} onChange={(e) => setMedicalPct(e.target.value)} disabled={creating} style={{ marginTop: '4px' }} />
+                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                            Relief Category *
+                          </label>
+                          <select
+                            className="input"
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                            disabled={creating}
+                            style={{ background: 'rgba(30, 41, 59, 0.9)', color: '#fff' }}
+                          >
+                            <option value="DR">🌊 Disaster Relief (DR)</option>
+                            <option value="CD">🤝 Charitable Aid (CD)</option>
+                          </select>
                         </div>
+
                         <div>
-                          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>⛺ Shelter Kits %</span>
-                          <input className="input" type="number" min="0" max="100" value={shelterPct} onChange={(e) => setShelterPct(e.target.value)} disabled={creating} style={{ marginTop: '4px' }} />
+                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                            Fundraising Target (ETH) *
+                          </label>
+                          <input className="input" type="number" step="0.001" min="0" required
+                            placeholder="e.g., 0.5 ETH"
+                            value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} disabled={creating} />
+                          {targetAmount && !isNaN(parseFloat(targetAmount)) && (
+                            <div style={{ marginTop: '4px', fontSize: '0.78rem', color: '#38bdf8', fontWeight: 500 }}>
+                              ≈ Target Goal: ₱{(parseFloat(targetAmount) * 170000).toLocaleString('en-US', {maximumFractionDigits: 2})} PHP
+                            </div>
+                          )}
                         </div>
+
                         <div>
-                          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>🚚 Logistics/Fuel %</span>
-                          <input className="input" type="number" min="0" max="100" value={logisticsPct} onChange={(e) => setLogisticsPct(e.target.value)} disabled={creating} style={{ marginTop: '4px' }} />
+                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                            Estimated Beneficiaries
+                          </label>
+                          <input className="input" type="text"
+                            placeholder="e.g., ~3,500 Displaced Families"
+                            value={beneficiariesImpact} onChange={(e) => setBeneficiariesImpact(e.target.value)} disabled={creating} />
                         </div>
                       </div>
                     </div>
 
-                    {/* Row 5: Detailed Description */}
-                    <div style={{ marginBottom: '22px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                        📝 Mission & Campaign Operations Description
-                      </label>
-                      <textarea
-                        className="input"
-                        rows="3"
-                        placeholder="Provide mission background, emergency relief scope, and on-ground deployment plan..."
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        disabled={creating}
-                        style={{ width: '100%', resize: 'none' }}
+                    {/* Section 2: Interactive Location Map & Geocoding */}
+                    <div style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '14px', padding: '20px' }}>
+                      <h3 style={{ margin: '0 0 14px 0', fontSize: '0.95rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>map</span> 2. Target Location & Interactive Pin Map
+                      </h3>
+                      <LocationMapPicker
+                        address={locationRegion}
+                        gps={gpsCoordinates}
+                        onChangeAddress={(addr) => setLocationRegion(addr)}
+                        onChangeGps={(coords) => setGpsCoordinates(coords)}
+                        height="260px"
                       />
                     </div>
 
+                    {/* Section 3: Purpose & Contact */}
+                    <div style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '20px' }}>
+                      <h3 style={{ margin: '0 0 14px 0', fontSize: '0.95rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>contact_support</span> 3. Mission Purpose & Emergency Contact
+                      </h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '14px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                            Emergency Contact Hotline / Email
+                          </label>
+                          <input className="input" type="text"
+                            placeholder="e.g., relief@redcross.org.ph • (053) 570-8899"
+                            value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} disabled={creating} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          Mission & Campaign Description
+                        </label>
+                        <textarea
+                          className="input"
+                          rows="3"
+                          placeholder="Provide mission background, emergency relief scope, and on-ground deployment plan..."
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          disabled={creating}
+                          style={{ width: '100%', resize: 'none' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Submit Bar */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                       <button type="submit" className="btn btn-primary pulse" disabled={creating} style={{ padding: '12px 28px', fontSize: '0.95rem' }}>
                         {creating ? <><div className="spinner" /> Deploying to Blockchain…</> : '🚀 Confirm & Deploy Campaign'}
