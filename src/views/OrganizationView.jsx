@@ -1163,6 +1163,7 @@ export default function OrganizationView({
                               onChangeGps={(coords) => setGpsCoordinates(coords)}
                               height="320px"
                               hideTip={true}
+                              hideSearch={true}
                             />
                           </div>
                         </div>

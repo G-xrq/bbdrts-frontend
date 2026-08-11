@@ -20,7 +20,8 @@ export default function LocationMapPicker({
   onChangeGps,
   readOnly = false,
   height = '240px',
-  hideTip = false
+  hideTip = false,
+  hideSearch = false
 }) {
   const mapRef = useRef(null);
   const containerRef = useRef(null);
@@ -196,7 +197,7 @@ export default function LocationMapPicker({
 
   return (
     <div style={{ width: '100%' }}>
-      {!readOnly && (
+      {!readOnly && !hideSearch && (
         <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <input
