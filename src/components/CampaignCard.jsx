@@ -855,85 +855,81 @@ export default function CampaignCard(props) {
                 </button>
               </div>
 
-              {/* 1. Target Region & Location GPS Interactive Map Box */}
+              {/* 1. Target Region & Location GPS Interactive Map Box (2-Column Grid) */}
               <div style={{ 
                 background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
                 border: '1px solid rgba(56, 189, 248, 0.25)',
                 borderRadius: '14px',
                 padding: '18px',
-                marginBottom: '20px',
-                position: 'relative',
-                overflow: 'hidden'
+                marginBottom: '20px'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span className="material-symbols-outlined" style={{ color: '#ef4444', fontSize: '1.4rem' }}>
                       location_on
                     </span>
                     <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f8fafc' }}>
-                      Target Region & Interactive GPS Pin
+                      Target Location & Interactive Audit Map
                     </span>
                   </div>
                   <span style={{ fontSize: '0.72rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
-                    GPS LIVE MAP
+                    GPS LIVE AUDIT
                   </span>
                 </div>
 
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#38bdf8', marginBottom: '4px' }}>
-                  📍 {audit.region}
-                </div>
-                <div style={{ fontSize: '0.82rem', color: '#cbd5e1', marginBottom: '12px' }}>
-                  📡 <strong>Coordinates:</strong> {audit.gps}
-                </div>
-
-                {/* Interactive Leaflet Location Map */}
-                <div style={{ marginBottom: '16px' }}>
-                  <LocationMapPicker
-                    address={audit.region}
-                    gps={audit.gps}
-                    readOnly={true}
-                    height="200px"
-                  />
-                </div>
-
-                {/* Beneficiaries & Impact Box */}
-                <div style={{
-                  background: '#020617',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Beneficiary Impact Estimate
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', alignItems: 'center' }}>
+                  {/* Left Column: Location Details & Impact Summary */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div>
+                      <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Deployed Relief Region
+                      </div>
+                      <div style={{ fontSize: '1rem', fontWeight: 800, color: '#38bdf8', marginTop: '2px' }}>
+                        📍 {audit.region || 'On-Site Relief Zone'}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#22c55e', marginTop: '2px' }}>
-                      {audit.beneficiaries}
+
+                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
+                      📡 <strong>Coordinates:</strong> <span style={{ color: '#38bdf8', fontWeight: 600 }}>{audit.gps || 'Logged On-Chain'}</span>
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '4px' }}>
-                      📞 Emergency Contact: <span style={{ color: '#38bdf8' }}>{audit.contact}</span>
+
+                    {/* Impact & Contact Card */}
+                    <div style={{
+                      background: 'rgba(2, 6, 23, 0.7)',
+                      border: '1px solid rgba(56, 189, 248, 0.2)',
+                      borderRadius: '10px',
+                      padding: '12px',
+                      marginTop: '4px'
+                    }}>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Beneficiary Impact Estimate
+                      </div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#22c55e', marginTop: '2px' }}>
+                        {audit.beneficiaries}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                        📞 Contact: <span style={{ color: '#38bdf8' }}>{audit.contact}</span>
+                      </div>
                     </div>
                   </div>
 
+                  {/* Right Column: Square Read-Only Leaflet Map */}
                   <div style={{
-                    minWidth: '80px',
-                    height: '50px',
-                    background: 'radial-gradient(circle, rgba(14,165,233,0.3) 0%, rgba(2,6,23,1) 80%)',
-                    border: '1px solid rgba(14,165,233,0.4)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    width: '100%',
+                    height: '220px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(56, 189, 248, 0.3)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    background: '#0f172a'
                   }}>
-                    <span className="material-symbols-outlined" style={{ color: '#38bdf8', fontSize: '1.3rem' }}>
-                      verified_user
-                    </span>
-                    <span style={{ fontSize: '0.6rem', color: '#38bdf8', fontWeight: 700, marginTop: '2px' }}>VERIFIED</span>
+                    <LocationMapPicker
+                      address={audit.region}
+                      gps={audit.gps}
+                      readOnly={true}
+                      height="220px"
+                      hideTip={true}
+                    />
                   </div>
                 </div>
               </div>
