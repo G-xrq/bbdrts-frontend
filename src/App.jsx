@@ -158,22 +158,40 @@ export default function App() {
       try {
         const localCreated = JSON.parse(localStorage.getItem('bbdrts_created_campaigns') || '[]');
         localCreated.forEach(lc => {
-          const exists = dbCampaigns.some(d => (d.title || '').trim().toLowerCase() === (lc.title || '').trim().toLowerCase());
-          if (!exists) {
-            dbCampaigns.unshift({
-              title: lc.title,
-              targetAmount: lc.target_amount,
-              locationRegion: lc.location_region,
-              gpsCoordinates: lc.gps_coordinates,
-              beneficiariesImpact: lc.beneficiaries_impact,
-              allocationsJson: lc.allocations_json,
-              contactInfo: lc.contact_info,
-              description: lc.description,
-              urgency: lc.urgency,
-              targetDate: lc.target_date,
-              documentUrl: lc.document_url,
-              orgName: lc.org_name
-            });
+          const lcTitle = (lc.title || '').trim().toLowerCase();
+          const dbIndex = dbCampaigns.findIndex(d => (d.title || '').trim().toLowerCase() === lcTitle);
+          
+          const enriched = {
+            title: lc.title,
+            targetAmount: lc.targetAmount || lc.target_amount,
+            locationRegion: lc.locationRegion || lc.location_region,
+            gpsCoordinates: lc.gpsCoordinates || lc.gps_coordinates,
+            beneficiariesImpact: lc.beneficiariesImpact || lc.beneficiaries_impact,
+            allocationsJson: lc.allocationsJson || lc.allocations_json,
+            contactInfo: lc.contactInfo || lc.contact_info,
+            description: lc.description,
+            urgency: lc.urgency,
+            targetDate: lc.targetDate || lc.target_date,
+            documentUrl: lc.documentUrl || lc.document_url,
+            orgName: lc.orgName || lc.org_name
+          };
+
+          if (dbIndex !== -1) {
+            // Overwrite any empty DB fields with local cache
+            dbCampaigns[dbIndex] = {
+              ...dbCampaigns[dbIndex],
+              locationRegion: dbCampaigns[dbIndex].locationRegion || enriched.locationRegion,
+              gpsCoordinates: dbCampaigns[dbIndex].gpsCoordinates || enriched.gpsCoordinates,
+              beneficiariesImpact: dbCampaigns[dbIndex].beneficiariesImpact || enriched.beneficiariesImpact,
+              allocationsJson: dbCampaigns[dbIndex].allocationsJson || enriched.allocationsJson,
+              contactInfo: dbCampaigns[dbIndex].contactInfo || enriched.contactInfo,
+              description: dbCampaigns[dbIndex].description || enriched.description,
+              urgency: dbCampaigns[dbIndex].urgency || enriched.urgency,
+              targetDate: dbCampaigns[dbIndex].targetDate || enriched.targetDate,
+              documentUrl: dbCampaigns[dbIndex].documentUrl || enriched.documentUrl
+            };
+          } else {
+            dbCampaigns.unshift(enriched);
           }
         });
       } catch (e) {

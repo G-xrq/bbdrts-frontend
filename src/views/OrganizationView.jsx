@@ -248,12 +248,20 @@ export default function OrganizationView({
           { label: '🚚 Logistics & Evacuation Fuel', pct: Number(logisticsPct) || 10, icon: 'local_shipping' }
         ];
 
+        // Construct full address from granular input fields if map picker wasn't clicked
+        const constructedAddress = [street, barangay, city, province, zipCode, country, landmark ? `(Landmark: ${landmark})` : '']
+          .map(s => (s || '').trim())
+          .filter(Boolean)
+          .join(', ');
+
+        const finalLocationRegion = locationRegion.trim() || constructedAddress || '';
+
         const payload = {
           title: title.trim(),
           target_amount: targetAmount,
           contract_address: Object(contract).target || 'Pending',
           category: category,
-          location_region: locationRegion.trim() || '',
+          location_region: finalLocationRegion,
           gps_coordinates: gpsCoordinates.trim() || '',
           beneficiaries_impact: beneficiariesImpact.trim() || '',
           allocations_json: allocations,
