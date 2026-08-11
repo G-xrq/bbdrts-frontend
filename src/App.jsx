@@ -160,7 +160,12 @@ export default function App() {
         const fetched = [];
         for (let i = 1; i <= count; i++) {
           const c = await contract.campaigns(i);
-          const dbCamp = dbCampaigns.find(d => String(d.id) === String(i)) || {};
+          const cleanContractTitle = (c[1] || '').trim().toLowerCase();
+          const dbCamp = dbCampaigns.find(d => 
+            (d.title && d.title.trim().toLowerCase() === cleanContractTitle) ||
+            String(d.id) === String(i)
+          ) || dbCampaigns[i - 1] || {};
+
           fetched.push({
             ...dbCamp,
             id: i,
