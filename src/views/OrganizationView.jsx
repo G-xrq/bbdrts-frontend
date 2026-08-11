@@ -86,16 +86,17 @@ export default function OrganizationView({
     setCurrentPageMy(1);
   }, [categoryFilterMy, campaignSortMy, searchQueryMy]);
 
-  const handleGranularAddressFromMap = ({ street: s, barangay: b, city: c, province: p, country: cnt, zip: z, fullAddress }) => {
+  const handleGranularAddressFromMap = ({ street: s, barangay: b, city: c, province: p, country: cnt, zip: z }) => {
     setStreet(s || '');
     setBarangay(b || '');
     setCity(c || '');
     setProvince(p || '');
     setCountry(cnt || 'Philippines');
+    const activeZip = z || zipCode;
     if (z) setZipCode(z);
     
-    const constructed = [s, b, c, p, z || zipCode, cnt, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', ');
-    setLocationRegion(fullAddress || constructed);
+    const constructed = [s, b, c, p, activeZip, cnt, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', ');
+    setLocationRegion(constructed);
   };
 
   // Fetch Organization Received Donations
