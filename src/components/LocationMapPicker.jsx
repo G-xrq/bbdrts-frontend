@@ -121,11 +121,10 @@ export default function LocationMapPicker({
             setGeocoding(true);
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`);
             const data = await res.json();
-            if (data && data.display_name) {
-              updateFromReverseData(data, data.display_name, lat, lng);
-            }
+            updateFromReverseData(data, data?.display_name || `Selected Pin (${newGps})`, lat, lng);
           } catch (err) {
-            console.warn('Reverse geocoding warning:', err);
+            console.warn('Reverse geocoding error:', err);
+            updateFromReverseData({}, `Selected Pin (${newGps})`, lat, lng);
           } finally {
             setGeocoding(false);
           }
@@ -143,11 +142,10 @@ export default function LocationMapPicker({
             setGeocoding(true);
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`);
             const data = await res.json();
-            if (data && data.display_name) {
-              updateFromReverseData(data, data.display_name, lat, lng);
-            }
+            updateFromReverseData(data, data?.display_name || `Selected Pin (${newGps})`, lat, lng);
           } catch (err) {
-            console.warn('Reverse geocoding warning:', err);
+            console.warn('Reverse geocoding error:', err);
+            updateFromReverseData({}, `Selected Pin (${newGps})`, lat, lng);
           } finally {
             setGeocoding(false);
           }
@@ -176,18 +174,33 @@ export default function LocationMapPicker({
   const handleAddressSearch = async (targetQuery) => {
     const searchQuery = targetQuery || address;
     if (!searchQuery || !searchQuery.trim() || readOnly) return;
+
+    // Build progressive search attempts: Full String -> Substrings
+    let searchAttempts = [searchQuery.trim()];
+    if (searchQuery.includes(',')) {
+      const parts = searchQuery.split(',').map(p => p.trim()).filter(Boolean);
+      for (let i = 1; i < parts.length; i++) {
+        const sub = parts.slice(i).join(', ');
+        if (sub.length >= 3 && !searchAttempts.includes(sub)) {
+          searchAttempts.push(sub);
+        }
+      }
+    }
+
     try {
       setGeocoding(true);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(searchQuery)}`);
-      let data = await res.json();
+      let data = [];
 
-      // If full address search yields no results, attempt broader city/province fallback search
-      if ((!data || data.length === 0) && searchQuery.includes(',')) {
-        const parts = searchQuery.split(',');
-        const broaderQuery = parts.slice(1).join(',').trim();
-        if (broaderQuery) {
-          const fallbackRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(broaderQuery)}`);
-          data = await fallbackRes.json();
+      for (const attempt of searchAttempts) {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(attempt)}`);
+          const resData = await res.json();
+          if (resData && resData.length > 0) {
+            data = resData;
+            break;
+          }
+        } catch (e) {
+          console.warn('Attempt search error:', e);
         }
       }
 
