@@ -41,6 +41,16 @@ export default function OrganizationView({
   // Create campaign form state
   const [title, setTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
+  const [category, setCategory] = useState('DR');
+  const [locationRegion, setLocationRegion] = useState('');
+  const [gpsCoordinates, setGpsCoordinates] = useState('');
+  const [beneficiariesImpact, setBeneficiariesImpact] = useState('');
+  const [contactInfo, setContactInfo] = useState('');
+  const [foodPct, setFoodPct] = useState(40);
+  const [medicalPct, setMedicalPct] = useState(30);
+  const [shelterPct, setShelterPct] = useState(20);
+  const [logisticsPct, setLogisticsPct] = useState(10);
+  const [description, setDescription] = useState('');
   const [creating, setCreating] = useState(false);
   const [txModal, setTxModal] = useState({ show: false, step: 0, hash: '', type: '', error: '' });
 
@@ -209,6 +219,14 @@ export default function OrganizationView({
       try {
         const token = localStorage.getItem('bbdrts_token');
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        
+        const allocations = [
+          { label: '🍲 Emergency Food Packs & Clean Water', pct: Number(foodPct) || 40, icon: 'rice_bowl' },
+          { label: '🏥 Medical Aid & First-Aid Kits', pct: Number(medicalPct) || 30, icon: 'medical_services' },
+          { label: '⛺ Emergency Shelter & Tarpaulins', pct: Number(shelterPct) || 20, icon: 'roofing' },
+          { label: '🚚 Logistics & Evacuation Fuel', pct: Number(logisticsPct) || 10, icon: 'local_shipping' }
+        ];
+
         await fetch(`${apiUrl}/api/campaigns`, {
           method: 'POST',
           headers: {
@@ -218,7 +236,14 @@ export default function OrganizationView({
           body: JSON.stringify({
             title: title.trim(),
             target_amount: targetAmount,
-            contract_address: Object(contract).target || 'Pending'
+            contract_address: Object(contract).target || 'Pending',
+            category: category,
+            location_region: locationRegion.trim() || 'Visayas Relief Region',
+            gps_coordinates: gpsCoordinates.trim() || '10.1333° N, 124.8667° E',
+            beneficiaries_impact: beneficiariesImpact.trim() || '~2,500 Displaced Families',
+            allocations_json: allocations,
+            contact_info: contactInfo.trim() || `${currentUser?.username || 'ngo'}@bbdrts.org`,
+            description: description.trim() || 'Disaster relief operation deployed on Sepolia EVM protocol.'
           })
         });
       } catch (err) {
@@ -228,6 +253,11 @@ export default function OrganizationView({
       setTxModal({ show: true, step: 3, hash: tx.hash, type: 'CREATE', error: '' });
       setTitle('');
       setTargetAmount('');
+      setLocationRegion('');
+      setGpsCoordinates('');
+      setBeneficiariesImpact('');
+      setContactInfo('');
+      setDescription('');
       fetchCampaigns();
       fetchOrgDonations();
     } catch (err) {
@@ -845,7 +875,7 @@ export default function OrganizationView({
                 <div className="card glow fade-in" style={{ padding: '28px', borderRadius: '16px' }}>
                   <div className="section-header" style={{ marginBottom: '16px' }}>
                     <h2 className="section-title">
-                      <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px'}}>rocket_launch</span> Deploy Relief Campaign
+                  <span className="material-symbols-outlined section-title-icon" style={{marginRight: '8px'}}>rocket_launch</span> Deploy Relief Campaign
                     </h2>
                     <span className="badge badge-info">NGO Organization Portal</span>
                   </div>
@@ -854,46 +884,139 @@ export default function OrganizationView({
                   </p>
 
                   <form className="create-form" onSubmit={handleCreateCampaign}>
-                    <div style={{ marginBottom: '18px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                        Campaign Title
-                      </label>
-                      <input className="input" type="text"
-                        placeholder="e.g., Super Typhoon Odette Emergency Relief, Red Cross Blood Drive"
-                        value={title} onChange={(e) => setTitle(e.target.value)} disabled={creating} />
-                    </div>
-
-                    <div style={{ marginBottom: '22px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                        Fundraising Target (in ETH)
-                      </label>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <input className="input" type="number" step="0.001" min="0"
-                          placeholder="e.g., 0.5"
-                          value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} disabled={creating} />
-                        
-                        <button type="submit" className="btn btn-primary pulse" disabled={creating} style={{ flexShrink: 0, padding: '12px 24px' }}>
-                          {creating ? <><div className="spinner" /> Deploying…</> : '🚀 Deploy Campaign'}
-                        </button>
+                    {/* Row 1: Title & Category */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '18px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          Campaign Title *
+                        </label>
+                        <input className="input" type="text" required
+                          placeholder="e.g., Super Typhoon Odette Emergency Disaster Relief"
+                          value={title} onChange={(e) => setTitle(e.target.value)} disabled={creating} />
                       </div>
 
-                      {targetAmount && !isNaN(parseFloat(targetAmount)) && (
-                        <div style={{ marginTop: '8px', fontSize: '0.82rem', color: '#38bdf8', fontWeight: 500 }}>
-                          ≈ Target Goal: ₱{(parseFloat(targetAmount) * 170000).toLocaleString('en-US', {maximumFractionDigits: 2})} PHP
-                        </div>
-                      )}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          Relief Category *
+                        </label>
+                        <select
+                          className="input"
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                          disabled={creating}
+                          style={{ background: 'rgba(30, 41, 59, 0.9)', color: '#fff' }}
+                        >
+                          <option value="DR">🌊 Disaster Relief (DR)</option>
+                          <option value="CD">🤝 Charitable Aid (CD)</option>
+                        </select>
+                      </div>
                     </div>
 
-                    <div style={{ 
-                      padding: '14px 18px', 
-                      background: 'rgba(15, 23, 42, 0.5)', 
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      color: '#94a3b8',
-                      lineHeight: 1.5
-                    }}>
-                      ⚠️ <strong>Blockchain Notice:</strong> Deployment requires a MetaMask transaction confirmation and a minimal Sepolia gas fee. Once mined, campaign target parameters are permanently recorded on-chain.
+                    {/* Row 2: Target ETH & Contact Info */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '18px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          Fundraising Target (in ETH) *
+                        </label>
+                        <input className="input" type="number" step="0.001" min="0" required
+                          placeholder="e.g., 0.5 ETH"
+                          value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} disabled={creating} />
+                        {targetAmount && !isNaN(parseFloat(targetAmount)) && (
+                          <div style={{ marginTop: '4px', fontSize: '0.78rem', color: '#38bdf8', fontWeight: 500 }}>
+                            ≈ Goal: ₱{(parseFloat(targetAmount) * 170000).toLocaleString('en-US', {maximumFractionDigits: 2})} PHP
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          Emergency Contact Hotline / Email
+                        </label>
+                        <input className="input" type="text"
+                          placeholder="e.g., relief@redcross.org.ph • (053) 570-8899"
+                          value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} disabled={creating} />
+                      </div>
+                    </div>
+
+                    {/* Row 3: Target Region, GPS, & Beneficiaries */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '18px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          📍 Target Location / Ground Zero Region
+                        </label>
+                        <input className="input" type="text"
+                          placeholder="e.g., Maasin City, Southern Leyte"
+                          value={locationRegion} onChange={(e) => setLocationRegion(e.target.value)} disabled={creating} />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          📡 GPS Coordinates (Radar Pin)
+                        </label>
+                        <input className="input" type="text"
+                          placeholder="e.g., 10.1333° N, 124.8667° E"
+                          value={gpsCoordinates} onChange={(e) => setGpsCoordinates(e.target.value)} disabled={creating} />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          👥 Beneficiaries Estimate
+                        </label>
+                        <input className="input" type="text"
+                          placeholder="e.g., ~3,500 Displaced Families"
+                          value={beneficiariesImpact} onChange={(e) => setBeneficiariesImpact(e.target.value)} disabled={creating} />
+                      </div>
+                    </div>
+
+                    {/* Row 4: Item Allocations Breakdown */}
+                    <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px', marginBottom: '18px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#38bdf8', fontWeight: 700, marginBottom: '10px' }}>
+                        📊 Proposed Resource & Fund Allocation Breakdown (%)
+                      </label>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
+                        <div>
+                          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>🍲 Food & Water %</span>
+                          <input className="input" type="number" min="0" max="100" value={foodPct} onChange={(e) => setFoodPct(e.target.value)} disabled={creating} style={{ marginTop: '4px' }} />
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>🏥 Medical Aid %</span>
+                          <input className="input" type="number" min="0" max="100" value={medicalPct} onChange={(e) => setMedicalPct(e.target.value)} disabled={creating} style={{ marginTop: '4px' }} />
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>⛺ Shelter Kits %</span>
+                          <input className="input" type="number" min="0" max="100" value={shelterPct} onChange={(e) => setShelterPct(e.target.value)} disabled={creating} style={{ marginTop: '4px' }} />
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>🚚 Logistics/Fuel %</span>
+                          <input className="input" type="number" min="0" max="100" value={logisticsPct} onChange={(e) => setLogisticsPct(e.target.value)} disabled={creating} style={{ marginTop: '4px' }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 5: Detailed Description */}
+                    <div style={{ marginBottom: '22px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                        📝 Mission & Campaign Operations Description
+                      </label>
+                      <textarea
+                        className="input"
+                        rows="3"
+                        placeholder="Provide mission background, emergency relief scope, and on-ground deployment plan..."
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        disabled={creating}
+                        style={{ width: '100%', resize: 'none' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      <button type="submit" className="btn btn-primary pulse" disabled={creating} style={{ padding: '12px 28px', fontSize: '0.95rem' }}>
+                        {creating ? <><div className="spinner" /> Deploying to Blockchain…</> : '🚀 Confirm & Deploy Campaign'}
+                      </button>
+
+                      <div style={{ fontSize: '0.78rem', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.5)', padding: '8px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                        ⚡ Gas Fee Notice: Transaction mined on Sepolia EVM Protocol.
+                      </div>
                     </div>
                   </form>
                 </div>

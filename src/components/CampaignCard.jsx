@@ -50,7 +50,7 @@ export const formatCampaignTitle = (title, id) => {
   return title;
 };
 
-export const getCampaignAuditDetails = (id, title) => {
+export const getCampaignAuditDetails = (id, title, camp = {}) => {
   const sId = String(id);
   const detailsMap = {
     '1': {
@@ -125,7 +125,7 @@ export const getCampaignAuditDetails = (id, title) => {
     }
   };
 
-  return detailsMap[sId] || {
+  const preset = detailsMap[sId] || {
     region: 'Visayas Disaster Management Zone',
     gps: '10.1333° N, 124.8667° E',
     beneficiaries: '~2,500 Registered Relief Beneficiaries',
@@ -138,6 +138,30 @@ export const getCampaignAuditDetails = (id, title) => {
     contact: 'operations@bbdrts.org',
     logisticsHub: 'Central Regional Relief Depot',
     urgency: 'HIGH'
+  };
+
+  // Parse allocationsJson if present
+  let customAllocations = preset.allocations;
+  if (camp.allocationsJson) {
+    try {
+      const parsed = typeof camp.allocationsJson === 'string' ? JSON.parse(camp.allocationsJson) : camp.allocationsJson;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        customAllocations = parsed;
+      }
+    } catch (e) {
+      console.warn("Failed to parse allocationsJson", e);
+    }
+  }
+
+  return {
+    region: camp.locationRegion || preset.region,
+    gps: camp.gpsCoordinates || preset.gps,
+    beneficiaries: camp.beneficiariesImpact || preset.beneficiaries,
+    allocations: customAllocations,
+    contact: camp.contactInfo || preset.contact,
+    logisticsHub: preset.logisticsHub,
+    urgency: camp.category === 'CD' ? 'STABLE (CHARITABLE AID)' : preset.urgency,
+    description: camp.description || null
   };
 };
 
@@ -768,7 +792,7 @@ export default function CampaignCard(props) {
 
       {/* ── Comprehensive Campaign Audit & Location Details Modal ── */}
       {detailsOpen && (() => {
-        const audit = getCampaignAuditDetails(camp.id, camp.title);
+        const audit = getCampaignAuditDetails(camp.id, camp.title, camp);
         const orgDisplayName = getOrgDisplayName(camp.orgAddress, camp.orgName, camp.id);
         const displayTitle = formatCampaignTitle(camp.title, camp.id);
 
