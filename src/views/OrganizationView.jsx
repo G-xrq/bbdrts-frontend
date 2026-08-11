@@ -912,22 +912,25 @@ export default function OrganizationView({
 
                   <form className="create-form" onSubmit={handleCreateCampaign} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     {/* Section 1: Campaign Essentials */}
-                    <div style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '20px' }}>
-                      <h3 style={{ margin: '0 0 14px 0', fontSize: '0.95rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <div style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '14px', padding: '20px' }}>
+                      <h3 style={{ margin: '0 0 16px 0', fontSize: '0.95rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>campaign</span> 1. Basic Campaign Information
                       </h3>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                        {/* Campaign Title (Full Width) */}
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
                             Campaign Title *
                           </label>
                           <input className="input" type="text" required
                             placeholder="e.g., Super Typhoon Emergency Relief Operation"
-                            value={title} onChange={(e) => setTitle(e.target.value)} disabled={creating} />
+                            value={title} onChange={(e) => setTitle(e.target.value)} disabled={creating} style={{ fontSize: '0.88rem' }} />
                         </div>
 
+                        {/* Relief Category */}
                         <div>
-                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
                             Relief Category *
                           </label>
                           <select
@@ -935,55 +938,57 @@ export default function OrganizationView({
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
                             disabled={creating}
-                            style={{ background: 'rgba(30, 41, 59, 0.9)', color: '#fff' }}
+                            style={{ background: 'rgba(30, 41, 59, 0.9)', color: '#fff', fontSize: '0.85rem' }}
                           >
                             <option value="DR">🌊 Disaster Relief (DR)</option>
                             <option value="CD">🤝 Charitable Aid (CD)</option>
                           </select>
                         </div>
 
+                        {/* Fundraising Target (ETH) */}
                         <div>
-                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
+                          <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
                             Fundraising Target (ETH) *
                           </label>
                           <input className="input" type="number" step="0.001" min="0" required
                             placeholder="e.g., 0.5 ETH"
-                            value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} disabled={creating} />
+                            value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} disabled={creating} style={{ fontSize: '0.85rem' }} />
                           {targetAmount && !isNaN(parseFloat(targetAmount)) && (
-                            <div style={{ marginTop: '4px', fontSize: '0.78rem', color: '#38bdf8', fontWeight: 500 }}>
+                            <div style={{ marginTop: '4px', fontSize: '0.76rem', color: '#38bdf8', fontWeight: 600 }}>
                               ≈ Target Goal: ₱{(parseFloat(targetAmount) * 170000).toLocaleString('en-US', {maximumFractionDigits: 2})} PHP
                             </div>
                           )}
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                          <div>
-                            <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                              Urgency Status
-                            </label>
-                            <select className="input" value={urgency} onChange={(e) => setUrgency(e.target.value)} disabled={creating} style={{ fontSize: '0.82rem' }}>
-                              <option value="HIGH (EMERGENCY AID)">🔴 Emergency High Aid</option>
-                              <option value="MEDIUM (URGENT REHABILITATION)">🟡 Urgent Medium Rehabilitation</option>
-                              <option value="STABLE (CHARITABLE AID)">🟢 Standard Aid Operation</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                              Target Relief Delivery Date
-                            </label>
-                            <input className="input" type="date"
-                              value={targetDate} onChange={(e) => setTargetDate(e.target.value)} disabled={creating} style={{ fontSize: '0.82rem' }} />
-                          </div>
+                        {/* Urgency Status */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                            Urgency Status
+                          </label>
+                          <select className="input" value={urgency} onChange={(e) => setUrgency(e.target.value)} disabled={creating} style={{ fontSize: '0.85rem', background: 'rgba(30, 41, 59, 0.9)', color: '#fff' }}>
+                            <option value="HIGH (EMERGENCY AID)">🔴 Emergency High Aid</option>
+                            <option value="MEDIUM (URGENT REHABILITATION)">🟡 Urgent Medium Rehabilitation</option>
+                            <option value="STABLE (CHARITABLE AID)">🟢 Standard Aid Operation</option>
+                          </select>
                         </div>
 
+                        {/* Target Relief Delivery Date */}
                         <div>
-                          <label style={{ display: 'block', fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600, marginBottom: '6px' }}>
-                            Estimated Beneficiaries
+                          <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                            Target Relief Delivery Date
+                          </label>
+                          <input className="input" type="date"
+                            value={targetDate} onChange={(e) => setTargetDate(e.target.value)} disabled={creating} style={{ fontSize: '0.85rem' }} />
+                        </div>
+
+                        {/* Estimated Beneficiaries (Full Width) */}
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                            Estimated Beneficiaries / Impact Scope
                           </label>
                           <input className="input" type="text"
-                            placeholder="e.g., ~3,500 Displaced Families"
-                            value={beneficiariesImpact} onChange={(e) => setBeneficiariesImpact(e.target.value)} disabled={creating} />
+                            placeholder="e.g., ~3,500 Displaced Families across 12 Barangays"
+                            value={beneficiariesImpact} onChange={(e) => setBeneficiariesImpact(e.target.value)} disabled={creating} style={{ fontSize: '0.85rem' }} />
                         </div>
                       </div>
                     </div>
