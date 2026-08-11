@@ -1098,7 +1098,7 @@ export default function OrganizationView({
                               onChangeAddress={(addr) => setLocationRegion(addr)}
                               onChangeGranularAddress={handleGranularAddressFromMap}
                               onChangeGps={(coords) => setGpsCoordinates(coords)}
-                              height="100%"
+                              height="320px"
                             />
                           </div>
                         </div>

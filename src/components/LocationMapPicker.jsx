@@ -61,6 +61,18 @@ export default function LocationMapPicker({
       markerRef.current = marker;
       mapRef.current = map;
 
+      // Ensure map tiles render properly after DOM container sizing
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      }, 100);
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      }, 500);
+
       // Handle map click
       if (!readOnly) {
         map.on('click', async (e) => {
@@ -217,7 +229,8 @@ export default function LocationMapPicker({
         ref={containerRef}
         style={{
           width: '100%',
-          height,
+          height: height && height !== '100%' ? height : '300px',
+          minHeight: '300px',
           borderRadius: '12px',
           border: '1px solid rgba(56, 189, 248, 0.3)',
           overflow: 'hidden',
