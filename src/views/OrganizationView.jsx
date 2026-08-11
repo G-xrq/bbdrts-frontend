@@ -1084,8 +1084,7 @@ export default function OrganizationView({
 
                           <div style={{
                             width: '100%',
-                            aspectRatio: '1 / 1',
-                            minHeight: '280px',
+                            height: '320px',
                             borderRadius: '14px',
                             overflow: 'hidden',
                             border: '1px solid rgba(56, 189, 248, 0.3)',
@@ -1099,6 +1098,7 @@ export default function OrganizationView({
                               onChangeGranularAddress={handleGranularAddressFromMap}
                               onChangeGps={(coords) => setGpsCoordinates(coords)}
                               height="320px"
+                              hideTip={true}
                             />
                           </div>
                         </div>

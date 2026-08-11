@@ -19,7 +19,8 @@ export default function LocationMapPicker({
   onChangeGranularAddress,
   onChangeGps,
   readOnly = false,
-  height = '240px'
+  height = '240px',
+  hideTip = false
 }) {
   const mapRef = useRef(null);
   const containerRef = useRef(null);
@@ -92,7 +93,7 @@ export default function LocationMapPicker({
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
             const data = await res.json();
             if (data && data.display_name) {
-              const formatted = data.display_name.split(',').slice(0, 3).join(',').trim();
+              const formatted = data.display_name;
               if (onChangeAddress) onChangeAddress(formatted);
 
               if (onChangeGranularAddress && data.address) {
@@ -125,7 +126,7 @@ export default function LocationMapPicker({
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
             const data = await res.json();
             if (data && data.display_name) {
-              const formatted = data.display_name.split(',').slice(0, 3).join(',').trim();
+              const formatted = data.display_name;
               if (onChangeAddress) onChangeAddress(formatted);
 
               if (onChangeGranularAddress && data.address) {
@@ -237,7 +238,7 @@ export default function LocationMapPicker({
           zIndex: 1
         }}
       />
-      {!readOnly && (
+      {!readOnly && !hideTip && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '0.75rem', color: '#94a3b8' }}>
           <span>💡 <strong>Tip:</strong> Click anywhere on the map or drag the pin to set exact location.</span>
           <span style={{ color: '#38bdf8', fontWeight: 600 }}>GPS: {gps || 'Not selected'}</span>
