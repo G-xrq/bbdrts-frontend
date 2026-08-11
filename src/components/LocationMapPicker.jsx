@@ -79,6 +79,7 @@ export default function LocationMapPicker({
       // Handle map click
       if (!readOnly) {
         const updateFromReverseData = (data, formatted, lat, lng) => {
+          isMapClickingRef.current = true;
           if (onChangeAddress) onChangeAddress(formatted);
 
           const addr = data?.address || {};
@@ -222,6 +223,28 @@ export default function LocationMapPicker({
       setGeocoding(false);
     }
   };
+
+  const isMapClickingRef = useRef(false);
+  const debounceTimerRef = useRef(null);
+
+  // Auto-geocode address when user types in granular address fields (600ms debounce)
+  useEffect(() => {
+    if (readOnly || !address || !address.trim() || address.trim().length < 3) return;
+
+    if (isMapClickingRef.current) {
+      isMapClickingRef.current = false;
+      return;
+    }
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      handleAddressSearch(address);
+    }, 600);
+
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [address]);
 
   useEffect(() => {
     if (searchTrigger) {
