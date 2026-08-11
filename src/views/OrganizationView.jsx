@@ -49,6 +49,8 @@ export default function OrganizationView({
   const [city, setCity] = useState('');
   const [province, setProvince] = useState('');
   const [country, setCountry] = useState('Philippines');
+  const [zipCode, setZipCode] = useState('');
+  const [landmark, setLandmark] = useState('');
   const [gpsCoordinates, setGpsCoordinates] = useState('');
   const [mapSearchTrigger, setMapSearchTrigger] = useState(0);
   const [beneficiariesImpact, setBeneficiariesImpact] = useState('');
@@ -84,13 +86,16 @@ export default function OrganizationView({
     setCurrentPageMy(1);
   }, [categoryFilterMy, campaignSortMy, searchQueryMy]);
 
-  const handleGranularAddressFromMap = ({ street: s, barangay: b, city: c, province: p, country: cnt, fullAddress }) => {
+  const handleGranularAddressFromMap = ({ street: s, barangay: b, city: c, province: p, country: cnt, zip: z, fullAddress }) => {
     setStreet(s || '');
     setBarangay(b || '');
     setCity(c || '');
     setProvince(p || '');
     setCountry(cnt || 'Philippines');
-    setLocationRegion(fullAddress || [s, b, c, p, cnt].filter(Boolean).join(', '));
+    if (z) setZipCode(z);
+    
+    const constructed = [s, b, c, p, z || zipCode, cnt, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', ');
+    setLocationRegion(fullAddress || constructed);
   };
 
   // Fetch Organization Received Donations
@@ -1000,7 +1005,7 @@ export default function OrganizationView({
                                 type="button"
                                 className="btn btn-secondary btn-xs"
                                 onClick={() => {
-                                  const fullAddr = [street, barangay, city, province, country].filter(Boolean).join(', ');
+                                  const fullAddr = [street, barangay, city, province, zipCode, country, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', ');
                                   if (fullAddr) setLocationRegion(fullAddr);
                                   setMapSearchTrigger({ query: fullAddr || locationRegion || 'Philippines', ts: Date.now() });
                                 }}
@@ -1018,6 +1023,8 @@ export default function OrganizationView({
                                   setBarangay('');
                                   setCity('');
                                   setProvince('');
+                                  setZipCode('');
+                                  setLandmark('');
                                   setCountry('Philippines');
                                   setLocationRegion('');
                                   setGpsCoordinates('');
@@ -1041,7 +1048,7 @@ export default function OrganizationView({
                               value={street}
                               onChange={(e) => {
                                 setStreet(e.target.value);
-                                setLocationRegion([e.target.value, barangay, city, province, country].filter(Boolean).join(', '));
+                                setLocationRegion([e.target.value, barangay, city, province, zipCode, country, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', '));
                               }}
                               disabled={creating}
                               style={{ fontSize: '0.85rem' }}
@@ -1060,7 +1067,7 @@ export default function OrganizationView({
                                 value={barangay}
                                 onChange={(e) => {
                                   setBarangay(e.target.value);
-                                  setLocationRegion([street, e.target.value, city, province, country].filter(Boolean).join(', '));
+                                  setLocationRegion([street, e.target.value, city, province, zipCode, country, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', '));
                                 }}
                                 disabled={creating}
                                 style={{ fontSize: '0.85rem' }}
@@ -1079,7 +1086,7 @@ export default function OrganizationView({
                                 value={city}
                                 onChange={(e) => {
                                   setCity(e.target.value);
-                                  setLocationRegion([street, barangay, e.target.value, province, country].filter(Boolean).join(', '));
+                                  setLocationRegion([street, barangay, e.target.value, province, zipCode, country, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', '));
                                 }}
                                 disabled={creating}
                                 style={{ fontSize: '0.85rem' }}
@@ -1087,7 +1094,7 @@ export default function OrganizationView({
                             </div>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                             <div>
                               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
                                 Province / State *
@@ -1100,7 +1107,25 @@ export default function OrganizationView({
                                 value={province}
                                 onChange={(e) => {
                                   setProvince(e.target.value);
-                                  setLocationRegion([street, barangay, city, e.target.value, country].filter(Boolean).join(', '));
+                                  setLocationRegion([street, barangay, city, e.target.value, zipCode, country, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', '));
+                                }}
+                                disabled={creating}
+                                style={{ fontSize: '0.85rem' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                                Zip / Postal Code
+                              </label>
+                              <input
+                                className="input"
+                                type="text"
+                                placeholder="e.g., 6600"
+                                value={zipCode}
+                                onChange={(e) => {
+                                  setZipCode(e.target.value);
+                                  setLocationRegion([street, barangay, city, province, e.target.value, country, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', '));
                                 }}
                                 disabled={creating}
                                 style={{ fontSize: '0.85rem' }}
@@ -1118,12 +1143,30 @@ export default function OrganizationView({
                                 value={country}
                                 onChange={(e) => {
                                   setCountry(e.target.value);
-                                  setLocationRegion([street, barangay, city, province, e.target.value].filter(Boolean).join(', '));
+                                  setLocationRegion([street, barangay, city, province, zipCode, e.target.value, landmark ? `(Landmark: ${landmark})` : ''].filter(Boolean).join(', '));
                                 }}
                                 disabled={creating}
                                 style={{ fontSize: '0.85rem' }}
                               />
                             </div>
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                              Landmark / Nearby Reference (Optional)
+                            </label>
+                            <input
+                              className="input"
+                              type="text"
+                              placeholder="e.g., Beside Rizal Park, Near Maasin City Port"
+                              value={landmark}
+                              onChange={(e) => {
+                                setLandmark(e.target.value);
+                                setLocationRegion([street, barangay, city, province, zipCode, country, e.target.value ? `(Landmark: ${e.target.value})` : ''].filter(Boolean).join(', '));
+                              }}
+                              disabled={creating}
+                              style={{ fontSize: '0.85rem' }}
+                            />
                           </div>
 
                           {/* Combined Address Preview */}

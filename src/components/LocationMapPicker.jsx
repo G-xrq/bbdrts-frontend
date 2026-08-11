@@ -89,9 +89,13 @@ export default function LocationMapPicker({
           let city = addr.city || addr.town || addr.municipality || addr.city_district || addr.county || '';
           let province = addr.state || addr.region || addr.province || addr.state_district || '';
           let country = addr.country || 'Philippines';
+          let zip = addr.postcode || addr.zip || addr.postal_code || '';
 
           if (formatted && formatted.includes(',')) {
             const parts = formatted.split(',').map(s => s.trim()).filter(Boolean);
+            const numPart = parts.find(p => /^\d{4,6}$/.test(p));
+            if (numPart && !zip) zip = numPart;
+
             const cleanParts = parts.filter(p => !/^\d{4,6}$/.test(p));
             if (cleanParts.length >= 4) {
               if (!street) street = cleanParts[0];
@@ -107,7 +111,7 @@ export default function LocationMapPicker({
           }
 
           if (onChangeGranularAddress) {
-            onChangeGranularAddress({ street, barangay, city, province, country, fullAddress: formatted });
+            onChangeGranularAddress({ street, barangay, city, province, country, zip, fullAddress: formatted });
           }
         };
 
