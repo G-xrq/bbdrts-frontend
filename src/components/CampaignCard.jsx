@@ -68,13 +68,13 @@ export const getCampaignAuditDetails = (id, title, camp = {}) => {
   ];
 
   return {
-    region: region || 'Location Not Specified',
-    gps: gps || 'GPS Not Specified',
-    beneficiaries: beneficiaries || 'Not Specified',
+    region: region || '',
+    gps: gps || '',
+    beneficiaries: beneficiaries || '',
     allocations: customAllocations || defaultAllocations,
-    contact: contact || 'Not Specified',
+    contact: contact || '',
     urgency: urgency || 'HIGH (EMERGENCY AID)',
-    description: description || 'Disaster relief operation deployed on Sepolia EVM protocol.',
+    description: description || '',
     targetDate: targetDate || '',
     documentUrl: documentUrl || ''
   };
@@ -796,16 +796,18 @@ export default function CampaignCard(props) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div>
                       <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Deployed Relief Region
+                        Target Relief Location
                       </div>
                       <div style={{ fontSize: '1rem', fontWeight: 800, color: '#38bdf8', marginTop: '2px' }}>
-                        📍 {audit.region || 'On-Site Relief Zone'}
+                        📍 {audit.region || 'Location Not Specified'}
                       </div>
                     </div>
 
-                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
-                      📡 <strong>Coordinates:</strong> <span style={{ color: '#38bdf8', fontWeight: 600 }}>{audit.gps || 'Logged On-Chain'}</span>
-                    </div>
+                    {audit.gps && (
+                      <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
+                        📡 <strong>Coordinates:</strong> <span style={{ color: '#38bdf8', fontWeight: 600 }}>{audit.gps}</span>
+                      </div>
+                    )}
 
                     {/* Impact & Contact Card */}
                     <div style={{
@@ -816,14 +818,16 @@ export default function CampaignCard(props) {
                       marginTop: '4px'
                     }}>
                       <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Beneficiary Impact Estimate
+                        Estimated Beneficiaries / Impact Scope
                       </div>
                       <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#22c55e', marginTop: '2px' }}>
-                        {audit.beneficiaries}
+                        {audit.beneficiaries || 'Not Specified'}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
-                        📞 Contact: <span style={{ color: '#38bdf8' }}>{audit.contact}</span>
-                      </div>
+                      {audit.contact && (
+                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                          📞 Contact: <span style={{ color: '#38bdf8' }}>{audit.contact}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -858,7 +862,7 @@ export default function CampaignCard(props) {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>description</span> Mission Purpose & Relief Scope
+                    <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>description</span> Mission Purpose & Detailed Description
                   </h4>
                   {audit.targetDate && (
                     <span style={{ fontSize: '0.75rem', color: '#e2e8f0', background: 'rgba(30, 41, 59, 0.8)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -867,7 +871,7 @@ export default function CampaignCard(props) {
                   )}
                 </div>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
-                  {audit.description}
+                  {audit.description || 'No detailed mission description provided by organization.'}
                 </p>
                 {audit.documentUrl && (
                   <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
@@ -914,23 +918,7 @@ export default function CampaignCard(props) {
                 </div>
               </div>
 
-              {/* 3. Provenance & Smart Contract Audit Footer */}
-              <div style={{ 
-                background: 'rgba(15, 23, 42, 0.7)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                borderRadius: '12px',
-                padding: '14px 16px',
-                marginBottom: '20px',
-                fontSize: '0.8rem',
-                color: '#94a3b8',
-                lineHeight: '1.5'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#22c55e', fontWeight: 700, marginBottom: '4px' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>verified_user</span>
-                  100% Cryptographic On-Chain Provenance Guarantee
-                </div>
-                Donations made to this campaign are routed directly into the Sepolia EVM Smart Contract vault (`{shortAddr(camp.orgAddress)}`). No intermediary gateway fees, admin cuts, or third-party holding accounts.
-              </div>
+
 
               {/* Modal Actions */}
               <div style={{ display: 'flex', gap: '12px' }}>
