@@ -141,11 +141,12 @@ export const getCampaignAuditDetails = (id, title, camp = {}) => {
     urgency: 'HIGH'
   };
 
-  // Parse allocationsJson if present
-  let customAllocations = preset.allocations;
-  if (camp.allocationsJson) {
+  // Parse allocationsJson if present (supports camelCase & snake_case)
+  const rawAllocations = camp.allocationsJson || camp.allocations_json;
+  let customAllocations = null;
+  if (rawAllocations) {
     try {
-      const parsed = typeof camp.allocationsJson === 'string' ? JSON.parse(camp.allocationsJson) : camp.allocationsJson;
+      const parsed = typeof rawAllocations === 'string' ? JSON.parse(rawAllocations) : rawAllocations;
       if (Array.isArray(parsed) && parsed.length > 0) {
         customAllocations = parsed;
       }
@@ -154,17 +155,26 @@ export const getCampaignAuditDetails = (id, title, camp = {}) => {
     }
   }
 
+  const region = camp.locationRegion || camp.location_region || camp.location;
+  const gps = camp.gpsCoordinates || camp.gps_coordinates || camp.gps;
+  const beneficiaries = camp.beneficiariesImpact || camp.beneficiaries_impact || camp.beneficiaries;
+  const contact = camp.contactInfo || camp.contact_info || camp.contact;
+  const urgency = camp.urgency;
+  const description = camp.description;
+  const targetDate = camp.targetDate || camp.target_date;
+  const documentUrl = camp.documentUrl || camp.document_url;
+
   return {
-    region: camp.locationRegion || preset.region,
-    gps: camp.gpsCoordinates || preset.gps,
-    beneficiaries: camp.beneficiariesImpact || preset.beneficiaries,
-    allocations: customAllocations,
-    contact: camp.contactInfo || preset.contact,
+    region: region || preset.region,
+    gps: gps || preset.gps,
+    beneficiaries: beneficiaries || preset.beneficiaries,
+    allocations: customAllocations || preset.allocations,
+    contact: contact || preset.contact,
     logisticsHub: preset.logisticsHub,
-    urgency: camp.urgency || preset.urgency,
-    description: camp.description || preset.description || 'Full disaster relief deployment and distribution scope logged under official NGO smart contract instance.',
-    targetDate: camp.targetDate || '',
-    documentUrl: camp.documentUrl || ''
+    urgency: urgency || preset.urgency,
+    description: description || preset.description || 'Full disaster relief deployment and distribution scope logged under official NGO smart contract instance.',
+    targetDate: targetDate || preset.targetDate || '',
+    documentUrl: documentUrl || preset.documentUrl || ''
   };
 };
 

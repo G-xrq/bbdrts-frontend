@@ -144,13 +144,11 @@ export default function App() {
   const fetchCampaigns = async (contractOverride) => {
     try {
       setFetchingCampaigns(true);
+      let dbCampaigns = [];
       try {
         const res = await fetch(`${API_URL}/api/campaigns`);
         if (res.ok) {
-          const data = await res.json();
-          if (!contractRef.current && !contractOverride) {
-            setCampaigns(data);
-          }
+          dbCampaigns = await res.json();
         }
       } catch (e) {
         console.error('Offline DB Sync failed:', e);
@@ -162,16 +160,20 @@ export default function App() {
         const fetched = [];
         for (let i = 1; i <= count; i++) {
           const c = await contract.campaigns(i);
+          const dbCamp = dbCampaigns.find(d => String(d.id) === String(i)) || {};
           fetched.push({
+            ...dbCamp,
             id: i,
-            orgAddress: c[0],
-            title: c[1],
+            orgAddress: c[0] || dbCamp.orgAddress,
+            title: c[1] || dbCamp.title,
             targetAmount: ethers.formatEther(c[2]),
             currentAmount: ethers.formatEther(c[3]),
             isActive: c[4],
           });
         }
         setCampaigns(fetched);
+      } else {
+        setCampaigns(dbCampaigns);
       }
     } catch (err) {
       console.error('Campaign sync error:', err);
