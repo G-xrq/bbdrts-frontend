@@ -1059,7 +1059,7 @@ export default function OrganizationView({
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                             <div>
                               <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
-                                Barangay / Village
+                                Barangay
                               </label>
                               <input
                                 className="input"
