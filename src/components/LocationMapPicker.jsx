@@ -84,7 +84,8 @@ export default function LocationMapPicker({
           if (onChangeAddress) onChangeAddress(formatted);
 
           const addr = data?.address || data?.properties || {};
-          let street = addr.name || addr.road || addr.street || addr.house_number || addr.building || addr.pedestrian || addr.amenity || '';
+          // Street strictly extracts road/street/house_number/building/pedestrian/amenity (DO NOT use generic addr.name)
+          let street = addr.road || addr.street || addr.house_number || addr.building || addr.pedestrian || addr.amenity || '';
           let city = addr.city || addr.town || addr.municipality || addr.city_district || addr.county || '';
           
           // Reordered Barangay Tag Priority: Suburb/Village/Quarter/Neighbourhood > District
@@ -128,8 +129,14 @@ export default function LocationMapPicker({
             }
           }
 
-          // If barangay mistakenly equals city, clear barangay
-          if (barangay && city && barangay.toLowerCase() === city.toLowerCase()) {
+          // Strict Duplicate Filtering to ensure Street, Barangay, and City never mirror each other
+          if (street && barangay && street.trim().toLowerCase() === barangay.trim().toLowerCase()) {
+            street = '';
+          }
+          if (street && city && street.trim().toLowerCase() === city.trim().toLowerCase()) {
+            street = '';
+          }
+          if (barangay && city && barangay.trim().toLowerCase() === city.trim().toLowerCase()) {
             barangay = '';
           }
 
