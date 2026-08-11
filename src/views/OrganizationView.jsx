@@ -977,8 +977,21 @@ export default function OrganizationView({
                           <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
                             Target Relief Delivery Date
                           </label>
-                          <input className="input" type="date"
-                            value={targetDate} onChange={(e) => setTargetDate(e.target.value)} disabled={creating} style={{ fontSize: '0.85rem' }} />
+                          <input
+                            className="input"
+                            type="date"
+                            min={new Date().toISOString().split('T')[0]}
+                            value={targetDate}
+                            onChange={(e) => setTargetDate(e.target.value)}
+                            disabled={creating}
+                            style={{
+                              fontSize: '0.85rem',
+                              colorScheme: 'dark',
+                              color: '#ffffff',
+                              background: 'rgba(30, 41, 59, 0.9)',
+                              cursor: 'pointer'
+                            }}
+                          />
                         </div>
 
                         {/* Estimated Beneficiaries (Full Width) */}
