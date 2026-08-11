@@ -1002,7 +1002,7 @@ export default function OrganizationView({
                                 onClick={() => {
                                   const fullAddr = [street, barangay, city, province, country].filter(Boolean).join(', ');
                                   if (fullAddr) setLocationRegion(fullAddr);
-                                  setMapSearchTrigger(prev => prev + 1);
+                                  setMapSearchTrigger({ query: fullAddr || locationRegion || 'Philippines', ts: Date.now() });
                                 }}
                                 disabled={creating}
                                 style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid rgba(56, 189, 248, 0.4)' }}

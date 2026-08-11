@@ -78,6 +78,32 @@ export default function LocationMapPicker({
 
       // Handle map click
       if (!readOnly) {
+        const updateFromReverseData = (data, formatted, lat, lng) => {
+          if (onChangeAddress) onChangeAddress(formatted);
+
+          const addr = data?.address || {};
+          let street = addr.road || addr.street || addr.house_number || addr.building || addr.pedestrian || addr.amenity || '';
+          let barangay = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || addr.hamlet || addr.district || '';
+          let city = addr.city || addr.town || addr.municipality || addr.city_district || addr.county || '';
+          let province = addr.state || addr.region || addr.province || addr.state_district || '';
+          let country = addr.country || 'Philippines';
+
+          // Fallback parsing from display_name if missing key fields
+          if (formatted && (!city || !province)) {
+            const parts = formatted.split(',').map(s => s.trim());
+            if (parts.length >= 3) {
+              if (!street && parts.length >= 4) street = parts[0];
+              if (!barangay && parts.length >= 4) barangay = parts[1];
+              if (!city) city = parts[parts.length - 3] || parts[1] || '';
+              if (!province) province = parts[parts.length - 2] || parts[2] || '';
+            }
+          }
+
+          if (onChangeGranularAddress) {
+            onChangeGranularAddress({ street, barangay, city, province, country, fullAddress: formatted });
+          }
+        };
+
         map.on('click', async (e) => {
           const { lat, lng } = e.latlng;
           const latFormatted = lat.toFixed(4);
@@ -92,21 +118,10 @@ export default function LocationMapPicker({
           // Reverse Geocode
           try {
             setGeocoding(true);
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`);
             const data = await res.json();
             if (data && data.display_name) {
-              const formatted = data.display_name;
-              if (onChangeAddress) onChangeAddress(formatted);
-
-              if (onChangeGranularAddress && data.address) {
-                const addr = data.address;
-                const street = addr.road || addr.house_number || addr.building || '';
-                const barangay = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || '';
-                const city = addr.city || addr.town || addr.municipality || addr.county || '';
-                const province = addr.state || addr.region || addr.province || '';
-                const country = addr.country || 'Philippines';
-                onChangeGranularAddress({ street, barangay, city, province, country, fullAddress: formatted });
-              }
+              updateFromReverseData(data, data.display_name, lat, lng);
             }
           } catch (err) {
             console.warn('Reverse geocoding warning:', err);
@@ -125,21 +140,10 @@ export default function LocationMapPicker({
 
           try {
             setGeocoding(true);
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`);
             const data = await res.json();
             if (data && data.display_name) {
-              const formatted = data.display_name;
-              if (onChangeAddress) onChangeAddress(formatted);
-
-              if (onChangeGranularAddress && data.address) {
-                const addr = data.address;
-                const street = addr.road || addr.house_number || addr.building || '';
-                const barangay = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || '';
-                const city = addr.city || addr.town || addr.municipality || addr.county || '';
-                const province = addr.state || addr.region || addr.province || '';
-                const country = addr.country || 'Philippines';
-                onChangeGranularAddress({ street, barangay, city, province, country, fullAddress: formatted });
-              }
+              updateFromReverseData(data, data.display_name, lat, lng);
             }
           } catch (err) {
             console.warn('Reverse geocoding warning:', err);
@@ -168,12 +172,24 @@ export default function LocationMapPicker({
   }, [gps]);
 
   // Geocode address when searchTrigger prop changes or when address search is invoked
-  const handleAddressSearch = async () => {
-    if (!address.trim() || readOnly) return;
+  const handleAddressSearch = async (targetQuery) => {
+    const searchQuery = targetQuery || address;
+    if (!searchQuery || !searchQuery.trim() || readOnly) return;
     try {
       setGeocoding(true);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(address)}`);
-      const data = await res.json();
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(searchQuery)}`);
+      let data = await res.json();
+
+      // If full address search yields no results, attempt broader city/province fallback search
+      if ((!data || data.length === 0) && searchQuery.includes(',')) {
+        const parts = searchQuery.split(',');
+        const broaderQuery = parts.slice(1).join(',').trim();
+        if (broaderQuery) {
+          const fallbackRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(broaderQuery)}`);
+          data = await fallbackRes.json();
+        }
+      }
+
       if (data && data.length > 0) {
         const top = data[0];
         const lat = parseFloat(top.lat);
@@ -188,10 +204,11 @@ export default function LocationMapPicker({
         }
 
         if (onChangeGps) onChangeGps(newGps);
+        if (onChangeAddress) onChangeAddress(top.display_name);
 
         if (onChangeGranularAddress && top.address) {
           const addr = top.address;
-          const street = addr.road || addr.house_number || addr.building || '';
+          const street = addr.road || addr.street || addr.house_number || addr.building || '';
           const barangay = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || '';
           const city = addr.city || addr.town || addr.municipality || addr.county || '';
           const province = addr.state || addr.region || addr.province || '';
@@ -207,8 +224,11 @@ export default function LocationMapPicker({
   };
 
   useEffect(() => {
-    if (searchTrigger > 0) {
-      handleAddressSearch();
+    if (searchTrigger) {
+      const targetQuery = typeof searchTrigger === 'object' ? searchTrigger.query : address;
+      if (targetQuery && targetQuery.trim()) {
+        handleAddressSearch(targetQuery);
+      }
     }
   }, [searchTrigger]);
 
