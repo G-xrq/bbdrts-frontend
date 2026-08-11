@@ -77,14 +77,15 @@ export default function LocationMapPicker({
       }, 500);
 
       // Handle map click
+      // Handle map click
       if (!readOnly) {
         const updateFromReverseData = (data, formatted, lat, lng) => {
           isMapClickingRef.current = true;
           if (onChangeAddress) onChangeAddress(formatted);
 
-          const addr = data?.address || {};
-          let street = addr.road || addr.street || addr.house_number || addr.building || addr.pedestrian || addr.amenity || '';
-          let barangay = addr.neighbourhood || addr.suburb || addr.village || addr.quarter || addr.hamlet || addr.district || '';
+          const addr = data?.address || data?.properties || {};
+          let street = addr.name || addr.road || addr.street || addr.house_number || addr.building || addr.pedestrian || addr.amenity || '';
+          let barangay = addr.district || addr.neighbourhood || addr.suburb || addr.village || addr.quarter || addr.hamlet || '';
           let city = addr.city || addr.town || addr.municipality || addr.city_district || addr.county || '';
           let province = addr.state || addr.region || addr.province || addr.state_district || '';
           let country = addr.country || 'Philippines';
@@ -110,50 +111,64 @@ export default function LocationMapPicker({
           }
         };
 
-        map.on('click', async (e) => {
-          const { lat, lng } = e.latlng;
+        const performReverseGeocode = async (lat, lng) => {
           const latFormatted = lat.toFixed(4);
           const lngFormatted = lng.toFixed(4);
           const newGps = `${latFormatted}° N, ${lngFormatted}° E`;
 
+          setGeocoding(true);
+          try {
+            // Engine 1: Photon API (Fast, 0 Rate-Limit)
+            const photonRes = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`);
+            if (photonRes.ok) {
+              const photonData = await photonRes.json();
+              if (photonData?.features?.length > 0) {
+                const props = photonData.features[0].properties;
+                const formatted = [props.name, props.district, props.city, props.state, props.country].filter(Boolean).join(', ');
+                updateFromReverseData({ properties: props }, formatted || `Selected Location (${newGps})`, lat, lng);
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn('Photon reverse error:', e);
+          }
+
+          try {
+            // Engine 2: OpenStreetMap Nominatim Fallback
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`);
+            if (res.ok) {
+              const data = await res.json();
+              updateFromReverseData(data, data?.display_name || `Selected Pin (${newGps})`, lat, lng);
+              return;
+            }
+          } catch (err) {
+            console.warn('Nominatim reverse error:', err);
+          }
+
+          // Fallback if both APIs fail
+          updateFromReverseData({}, `Selected Pin (${newGps})`, lat, lng);
+          setGeocoding(false);
+        };
+
+        map.on('click', (e) => {
+          const { lat, lng } = e.latlng;
           marker.setLatLng([lat, lng]);
           map.panTo([lat, lng]);
 
-          if (onChangeGps) onChangeGps(newGps);
+          const latFormatted = lat.toFixed(4);
+          const lngFormatted = lng.toFixed(4);
+          if (onChangeGps) onChangeGps(`${latFormatted}° N, ${lngFormatted}° E`);
 
-          // Reverse Geocode
-          try {
-            setGeocoding(true);
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`);
-            const data = await res.json();
-            updateFromReverseData(data, data?.display_name || `Selected Pin (${newGps})`, lat, lng);
-          } catch (err) {
-            console.warn('Reverse geocoding error:', err);
-            updateFromReverseData({}, `Selected Pin (${newGps})`, lat, lng);
-          } finally {
-            setGeocoding(false);
-          }
+          performReverseGeocode(lat, lng);
         });
 
-        marker.on('dragend', async (e) => {
+        marker.on('dragend', (e) => {
           const { lat, lng } = e.target.getLatLng();
           const latFormatted = lat.toFixed(4);
           const lngFormatted = lng.toFixed(4);
-          const newGps = `${latFormatted}° N, ${lngFormatted}° E`;
+          if (onChangeGps) onChangeGps(`${latFormatted}° N, ${lngFormatted}° E`);
 
-          if (onChangeGps) onChangeGps(newGps);
-
-          try {
-            setGeocoding(true);
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`);
-            const data = await res.json();
-            updateFromReverseData(data, data?.display_name || `Selected Pin (${newGps})`, lat, lng);
-          } catch (err) {
-            console.warn('Reverse geocoding error:', err);
-            updateFromReverseData({}, `Selected Pin (${newGps})`, lat, lng);
-          } finally {
-            setGeocoding(false);
-          }
+          performReverseGeocode(lat, lng);
         });
       }
     }
@@ -175,15 +190,45 @@ export default function LocationMapPicker({
     }
   }, [gps]);
 
-  // Geocode address when searchTrigger prop changes or when address search is invoked
+  // Forward Geocode Dual-Engine: Input -> Map Pin
   const handleAddressSearch = async (targetQuery) => {
     const searchQuery = targetQuery || address;
     if (!searchQuery || !searchQuery.trim() || readOnly) return;
 
-    // Build progressive search attempts: Full String -> Substrings
-    let searchAttempts = [searchQuery.trim()];
-    if (searchQuery.includes(',')) {
-      const parts = searchQuery.split(',').map(p => p.trim()).filter(Boolean);
+    const queryStr = searchQuery.trim();
+    setGeocoding(true);
+
+    try {
+      // Engine 1: Photon API Search (Fast, 0 Rate Limit)
+      const photonRes = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(queryStr)}&limit=1`);
+      if (photonRes.ok) {
+        const photonData = await photonRes.json();
+        if (photonData?.features?.length > 0) {
+          const coords = photonData.features[0].geometry.coordinates; // [lon, lat]
+          const lon = coords[0];
+          const lat = coords[1];
+          const latFormatted = lat.toFixed(4);
+          const lngFormatted = lon.toFixed(4);
+          const newGps = `${latFormatted}° N, ${lngFormatted}° E`;
+
+          if (mapRef.current && markerRef.current) {
+            markerRef.current.setLatLng([lat, lon]);
+            mapRef.current.setView([lat, lon], 16);
+          }
+
+          if (onChangeGps) onChangeGps(newGps);
+          setGeocoding(false);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Photon search error:', e);
+    }
+
+    // Engine 2: Nominatim Progressive Fallback Loop
+    let searchAttempts = [queryStr];
+    if (queryStr.includes(',')) {
+      const parts = queryStr.split(',').map(p => p.trim()).filter(Boolean);
       for (let i = 1; i < parts.length; i++) {
         const sub = parts.slice(i).join(', ');
         if (sub.length >= 3 && !searchAttempts.includes(sub)) {
@@ -193,19 +238,19 @@ export default function LocationMapPicker({
     }
 
     try {
-      setGeocoding(true);
       let data = [];
-
       for (const attempt of searchAttempts) {
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(attempt)}`);
-          const resData = await res.json();
-          if (resData && resData.length > 0) {
-            data = resData;
-            break;
+          if (res.ok) {
+            const resData = await res.json();
+            if (resData && resData.length > 0) {
+              data = resData;
+              break;
+            }
           }
         } catch (e) {
-          console.warn('Attempt search error:', e);
+          console.warn('Nominatim attempt error:', e);
         }
       }
 
