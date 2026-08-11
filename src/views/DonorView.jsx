@@ -9,26 +9,36 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
   const [activeTab, setActiveTab] = useState('campaigns');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [campaignSort, setCampaignSort] = useState('NEWEST');
+  const [searchQuery, setSearchQuery] = useState('');
   const [receiptFilter, setReceiptFilter] = useState('ALL');
   const [receiptSort, setReceiptSort] = useState('NEWEST');
+  const [searchQueryReceipts, setSearchQueryReceipts] = useState('');
 
   // Pagination for Relief Campaigns
   const [currentPage, setCurrentPage] = useState(1);
   const campaignsPerPage = 4;
 
-  // Reset page on filter/sort change
+  // Reset page on filter/sort/search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [categoryFilter, campaignSort]);
+  }, [categoryFilter, campaignSort, searchQuery]);
 
   // Filter & Sort campaigns
   const filteredCampaigns = campaigns
     .filter(c => {
-      if (categoryFilter === 'ALL') return true;
-      const displayTitle = formatCampaignTitle(c.title, c.id);
-      const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(displayTitle);
-      if (categoryFilter === 'DR') return !isCharity;
-      if (categoryFilter === 'CD') return isCharity;
+      if (categoryFilter !== 'ALL') {
+        const displayTitle = formatCampaignTitle(c.title, c.id);
+        const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(displayTitle);
+        if (categoryFilter === 'DR' && isCharity) return false;
+        if (categoryFilter === 'CD' && !isCharity) return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const displayTitle = formatCampaignTitle(c.title, c.id).toLowerCase();
+        const rawTitle = (c.title || '').toLowerCase();
+        const orgName = (c.orgName || '').toLowerCase();
+        return displayTitle.includes(q) || rawTitle.includes(q) || orgName.includes(q) || String(c.id).includes(q);
+      }
       return true;
     })
     .sort((a, b) => {
@@ -86,11 +96,19 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
 
   const filteredMyDonations = (myDonations || [])
     .filter(d => {
-      if (receiptFilter === 'ALL') return true;
-      const matchCamp = campaigns.find(c => String(c.id) === String(d.campaignId));
-      const isCharity = matchCamp ? /charity|school|orphan|food|feed|community/i.test(matchCamp.title) : false;
-      if (receiptFilter === 'DR') return !isCharity;
-      if (receiptFilter === 'CD') return isCharity;
+      if (receiptFilter !== 'ALL') {
+        const matchCamp = campaigns.find(c => String(c.id) === String(d.campaignId));
+        const isCharity = matchCamp ? /charity|school|orphan|food|feed|community/i.test(matchCamp.title) : false;
+        if (receiptFilter === 'DR' && isCharity) return false;
+        if (receiptFilter === 'CD' && !isCharity) return false;
+      }
+      if (searchQueryReceipts.trim()) {
+        const q = searchQueryReceipts.toLowerCase().trim();
+        const txHash = (d.txHash || '').toLowerCase();
+        const matchCamp = campaigns.find(c => String(c.id) === String(d.campaignId));
+        const campTitle = matchCamp ? formatCampaignTitle(matchCamp.title, matchCamp.id).toLowerCase() : '';
+        return txHash.includes(q) || campTitle.includes(q) || String(d.campaignId).includes(q);
+      }
       return true;
     })
     .sort((a, b) => {
@@ -329,6 +347,39 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
                 borderRadius: '12px',
                 border: '1px solid rgba(255, 255, 255, 0.06)'
               }}>
+                {/* Live Search Input Bar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 240px', minWidth: '220px' }}>
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <span className="material-symbols-outlined" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '1.1rem', pointerEvents: 'none' }}>
+                      search
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Search campaign, NGO, or cause..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{
+                        width: '100%',
+                        background: 'rgba(30, 41, 59, 0.9)',
+                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '8px',
+                        padding: '7px 30px 7px 34px',
+                        fontSize: '0.85rem',
+                        outline: 'none'
+                      }}
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.85rem', padding: 0 }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Filter Category:</span>
                   <select
@@ -519,6 +570,39 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
                     borderRadius: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.06)'
                   }}>
+                    {/* Live Receipts Search Input */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 220px', minWidth: '200px' }}>
+                      <div style={{ position: 'relative', width: '100%' }}>
+                        <span className="material-symbols-outlined" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '1rem', pointerEvents: 'none' }}>
+                          search
+                        </span>
+                        <input
+                          type="text"
+                          placeholder="Search tx hash or campaign..."
+                          value={searchQueryReceipts}
+                          onChange={(e) => setSearchQueryReceipts(e.target.value)}
+                          style={{
+                            width: '100%',
+                            background: 'rgba(30, 41, 59, 0.9)',
+                            color: '#fff',
+                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            borderRadius: '8px',
+                            padding: '6px 28px 6px 32px',
+                            fontSize: '0.82rem',
+                            outline: 'none'
+                          }}
+                        />
+                        {searchQueryReceipts && (
+                          <button
+                            onClick={() => setSearchQueryReceipts('')}
+                            style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.82rem', padding: 0 }}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Filter Receipts:</span>
                       <select

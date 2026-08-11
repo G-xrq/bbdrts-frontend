@@ -21,16 +21,19 @@ export default function OrganizationView({
   // Filter & Sort States for "All Campaigns"
   const [categoryFilterAll, setCategoryFilterAll] = useState('ALL');
   const [campaignSortAll, setCampaignSortAll] = useState('NEWEST');
+  const [searchQueryAll, setSearchQueryAll] = useState('');
   const [currentPageAll, setCurrentPageAll] = useState(1);
 
   // Filter & Sort States for "My Campaigns"
   const [categoryFilterMy, setCategoryFilterMy] = useState('ALL');
   const [campaignSortMy, setCampaignSortMy] = useState('NEWEST');
+  const [searchQueryMy, setSearchQueryMy] = useState('');
   const [currentPageMy, setCurrentPageMy] = useState(1);
 
   // Filter & Sort States for "Ledger"
   const [ledgerFilter, setLedgerFilter] = useState('ALL');
   const [ledgerSort, setLedgerSort] = useState('NEWEST');
+  const [searchQueryLedger, setSearchQueryLedger] = useState('');
   const [currentPageLedger, setCurrentPageLedger] = useState(1);
 
   const campaignsPerPage = 4;
@@ -55,15 +58,15 @@ export default function OrganizationView({
   // Reset pagination on filter change
   useEffect(() => {
     setCurrentPageAll(1);
-  }, [categoryFilterAll, campaignSortAll]);
+  }, [categoryFilterAll, campaignSortAll, searchQueryAll]);
 
   useEffect(() => {
     setCurrentPageMy(1);
-  }, [categoryFilterMy, campaignSortMy]);
+  }, [categoryFilterMy, campaignSortMy, searchQueryMy]);
 
   useEffect(() => {
     setCurrentPageLedger(1);
-  }, [ledgerFilter, ledgerSort]);
+  }, [ledgerFilter, ledgerSort, searchQueryLedger]);
 
   // Fetch Organization Received Donations
   const fetchOrgDonations = async () => {
@@ -93,11 +96,19 @@ export default function OrganizationView({
   // Filter & Sort All Campaigns
   const filteredAllCampaigns = campaigns
     .filter(c => {
-      if (categoryFilterAll === 'ALL') return true;
-      const displayTitle = formatCampaignTitle(c.title, c.id);
-      const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(displayTitle);
-      if (categoryFilterAll === 'DR') return !isCharity;
-      if (categoryFilterAll === 'CD') return isCharity;
+      if (categoryFilterAll !== 'ALL') {
+        const displayTitle = formatCampaignTitle(c.title, c.id);
+        const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(displayTitle);
+        if (categoryFilterAll === 'DR' && isCharity) return false;
+        if (categoryFilterAll === 'CD' && !isCharity) return false;
+      }
+      if (searchQueryAll.trim()) {
+        const q = searchQueryAll.toLowerCase().trim();
+        const displayTitle = formatCampaignTitle(c.title, c.id).toLowerCase();
+        const rawTitle = (c.title || '').toLowerCase();
+        const orgName = (c.orgName || '').toLowerCase();
+        return displayTitle.includes(q) || rawTitle.includes(q) || orgName.includes(q) || String(c.id).includes(q);
+      }
       return true;
     })
     .sort((a, b) => {
@@ -116,11 +127,18 @@ export default function OrganizationView({
   // Filter & Sort My Campaigns
   const filteredMyCampaigns = myCampaigns
     .filter(c => {
-      if (categoryFilterMy === 'ALL') return true;
-      const displayTitle = formatCampaignTitle(c.title, c.id);
-      const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(displayTitle);
-      if (categoryFilterMy === 'DR') return !isCharity;
-      if (categoryFilterMy === 'CD') return isCharity;
+      if (categoryFilterMy !== 'ALL') {
+        const displayTitle = formatCampaignTitle(c.title, c.id);
+        const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(displayTitle);
+        if (categoryFilterMy === 'DR' && isCharity) return false;
+        if (categoryFilterMy === 'CD' && !isCharity) return false;
+      }
+      if (searchQueryMy.trim()) {
+        const q = searchQueryMy.toLowerCase().trim();
+        const displayTitle = formatCampaignTitle(c.title, c.id).toLowerCase();
+        const rawTitle = (c.title || '').toLowerCase();
+        return displayTitle.includes(q) || rawTitle.includes(q) || String(c.id).includes(q);
+      }
       return true;
     })
     .sort((a, b) => {
@@ -139,12 +157,20 @@ export default function OrganizationView({
   // Filter & Sort Ledger Transactions
   const filteredLedger = (orgDonations || [])
     .filter(d => {
-      if (ledgerFilter === 'ALL') return true;
-      const matchCamp = campaigns.find(c => String(c.id) === String(d.campaignId));
-      const campTitle = matchCamp ? formatCampaignTitle(matchCamp.title, matchCamp.id) : '';
-      const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(campTitle);
-      if (ledgerFilter === 'DR') return !isCharity;
-      if (ledgerFilter === 'CD') return isCharity;
+      if (ledgerFilter !== 'ALL') {
+        const matchCamp = campaigns.find(c => String(c.id) === String(d.campaignId));
+        const campTitle = matchCamp ? formatCampaignTitle(matchCamp.title, matchCamp.id) : '';
+        const isCharity = /charity|school|orphan|food|feed|community|aid|blood|medical/i.test(campTitle);
+        if (ledgerFilter === 'DR' && isCharity) return false;
+        if (ledgerFilter === 'CD' && !isCharity) return false;
+      }
+      if (searchQueryLedger.trim()) {
+        const q = searchQueryLedger.toLowerCase().trim();
+        const txHash = (d.txHash || '').toLowerCase();
+        const matchCamp = campaigns.find(c => String(c.id) === String(d.campaignId));
+        const campTitle = matchCamp ? formatCampaignTitle(matchCamp.title, matchCamp.id).toLowerCase() : '';
+        return txHash.includes(q) || campTitle.includes(q) || String(d.campaignId).includes(q);
+      }
       return true;
     })
     .sort((a, b) => {
@@ -469,6 +495,39 @@ export default function OrganizationView({
                 borderRadius: '12px',
                 border: '1px solid rgba(255, 255, 255, 0.06)'
               }}>
+                {/* Search Input */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 240px', minWidth: '220px' }}>
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <span className="material-symbols-outlined" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '1.1rem', pointerEvents: 'none' }}>
+                      search
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Search campaign, NGO, or cause..."
+                      value={searchQueryAll}
+                      onChange={(e) => setSearchQueryAll(e.target.value)}
+                      style={{
+                        width: '100%',
+                        background: 'rgba(30, 41, 59, 0.9)',
+                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '8px',
+                        padding: '7px 30px 7px 34px',
+                        fontSize: '0.85rem',
+                        outline: 'none'
+                      }}
+                    />
+                    {searchQueryAll && (
+                      <button
+                        onClick={() => setSearchQueryAll('')}
+                        style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.85rem', padding: 0 }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Filter Category:</span>
                   <select
@@ -616,6 +675,39 @@ export default function OrganizationView({
                   borderRadius: '12px',
                   border: '1px solid rgba(255, 255, 255, 0.06)'
                 }}>
+                  {/* Search Input */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 240px', minWidth: '220px' }}>
+                    <div style={{ position: 'relative', width: '100%' }}>
+                      <span className="material-symbols-outlined" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '1.1rem', pointerEvents: 'none' }}>
+                        search
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="Search my campaigns..."
+                        value={searchQueryMy}
+                        onChange={(e) => setSearchQueryMy(e.target.value)}
+                        style={{
+                          width: '100%',
+                          background: 'rgba(30, 41, 59, 0.9)',
+                          color: '#fff',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '8px',
+                          padding: '7px 30px 7px 34px',
+                          fontSize: '0.85rem',
+                          outline: 'none'
+                        }}
+                      />
+                      {searchQueryMy && (
+                        <button
+                          onClick={() => setSearchQueryMy('')}
+                          style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.85rem', padding: 0 }}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Filter Category:</span>
                     <select
@@ -831,7 +923,7 @@ export default function OrganizationView({
               {orgDonations && orgDonations.length > 0 && (
                 <div style={{ 
                   display: 'flex', 
-                  justify: 'space-between', 
+                  justifyContent: 'space-between', 
                   alignItems: 'center', 
                   gap: '12px', 
                   marginTop: '16px', 
@@ -842,6 +934,39 @@ export default function OrganizationView({
                   borderRadius: '12px',
                   border: '1px solid rgba(255, 255, 255, 0.06)'
                 }}>
+                  {/* Search Input */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 240px', minWidth: '220px' }}>
+                    <div style={{ position: 'relative', width: '100%' }}>
+                      <span className="material-symbols-outlined" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '1.1rem', pointerEvents: 'none' }}>
+                        search
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="Search tx hash or campaign..."
+                        value={searchQueryLedger}
+                        onChange={(e) => setSearchQueryLedger(e.target.value)}
+                        style={{
+                          width: '100%',
+                          background: 'rgba(30, 41, 59, 0.9)',
+                          color: '#fff',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '8px',
+                          padding: '7px 30px 7px 34px',
+                          fontSize: '0.85rem',
+                          outline: 'none'
+                        }}
+                      />
+                      {searchQueryLedger && (
+                        <button
+                          onClick={() => setSearchQueryLedger('')}
+                          style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.85rem', padding: 0 }}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600 }}>Filter Category:</span>
                     <select
