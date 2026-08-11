@@ -17,116 +17,30 @@ export const progressPct = (current, target) => {
 };
 
 export const getOrgDisplayName = (orgAddress, orgName, campaignId) => {
-  if (orgName && typeof orgName === 'string') {
-    const lower = orgName.toLowerCase();
-    if (lower.includes('redcross') || lower.includes('red cross')) return 'Red Cross';
-    if (lower.includes('ccs')) return 'CCS';
+  if (orgName && typeof orgName === 'string' && orgName.trim() && orgName !== 'Unknown Org') {
+    return orgName.trim();
   }
   
   if (orgAddress && typeof orgAddress === 'string') {
     const addrLower = orgAddress.toLowerCase();
-    if (addrLower.startsWith('0x206e')) return 'Red Cross';
-    if (addrLower.startsWith('0x8898')) return 'CCS';
+    if (addrLower.startsWith('0x206e')) return 'Red Cross Philippines';
+    if (addrLower.startsWith('0x8898')) return 'CCS Relief Org';
+    return shortAddr(orgAddress);
   }
 
-  return String(campaignId) === '2' || String(campaignId) === '4' ? 'CCS' : 'Red Cross';
+  return 'NGO Relief Organization';
 };
 
 export const formatCampaignTitle = (title, id) => {
-  if (!title) return `Disaster Relief Campaign #${id}`;
-  const lower = String(title).toLowerCase().trim();
-  if (lower === 'blood donation') {
-    return 'Red Cross Emergency Blood & Medical Aid Drive';
-  }
-  if (lower.startsWith('campaign #') || lower.startsWith('disaster relief campaign #')) {
-    const titles = {
-      '1': 'Red Cross Emergency Blood & Medical Aid Drive',
-      '2': 'Super Typhoon Odette Emergency Disaster Relief',
-      '3': 'Visayas Community Food & Relief Operations',
-      '4': 'Southern Leyte Landslide Recovery & Shelter Aid',
-      '5': 'Bohol Earthquake Rehabilitation & Infrastructure Aid'
-    };
-    return titles[String(id)] || `Emergency Relief Operation #${id}`;
-  }
-  return title;
+  if (!title || !String(title).trim()) return `Disaster Relief Campaign #${id}`;
+  return title.trim();
 };
 
 export const getCampaignAuditDetails = (id, title, camp = {}) => {
   const sId = String(id);
-  const detailsMap = {
-    '1': {
-      region: 'Southern Leyte Regional Hospital & Red Cross Center',
-      gps: '10.1333° N, 124.8667° E (Maasin City)',
-      beneficiaries: '~1,200 Emergency Trauma Patients & Medical Facilities',
-      allocations: [
-        { label: '💉 Blood Bag Storage & Refrigeration', pct: 40, icon: 'vaccines' },
-        { label: '🩺 Medical Testing & Transfusion Kits', pct: 35, icon: 'medical_services' },
-        { label: '🚑 Mobile Drive & Donor Transport', pct: 15, icon: 'minor_crash' },
-        { label: '🍎 Donor Care & Nutrition Packs', pct: 10, icon: 'nutrition' }
-      ],
-      contact: 'redcross.maasin@bbdrts.org • (053) 570-8899',
-      logisticsHub: 'Red Cross Maasin Command Post',
-      urgency: 'HIGH (CRITICAL MEDICAL AID)'
-    },
-    '2': {
-      region: 'Ground Zero Coastal Communities, Maasin & Sogod Sector',
-      gps: '10.3800° N, 124.9800° E (Sogod Bay Sector)',
-      beneficiaries: '~4,500 Displaced Families & Evacuation Centers',
-      allocations: [
-        { label: '🍲 Emergency Food Packs & Clean Water Drums', pct: 40, icon: 'rice_bowl' },
-        { label: '⛺ Heavy-Duty Tarpaulins & Roofing Kits', pct: 30, icon: 'roofing' },
-        { label: '🔦 Solar Emergency Lamps & Hygiene Kits', pct: 18, icon: 'lightbulb' },
-        { label: '🚚 Evacuation Transport & Field Fuel', pct: 12, icon: 'local_shipping' }
-      ],
-      contact: 'disaster.relief@redcross.org.ph',
-      logisticsHub: 'Maasin Disaster Coordination Center',
-      urgency: 'CRITICAL (TYPHOON RELIEF)'
-    },
-    '3': {
-      region: 'Rural Barangay Relief Hubs, Visayas Sector',
-      gps: '10.2000° N, 125.0000° E (Visayas Command)',
-      beneficiaries: '~2,800 Underprivileged Children & Households',
-      allocations: [
-        { label: '🍚 Bulk Rice & Staple Grain Supplies', pct: 45, icon: 'rice_bowl' },
-        { label: '🚰 Clean Water Filtration Drums', pct: 25, icon: 'water_drop' },
-        { label: '👶 Infant Care & High-Nutrient Milk', pct: 18, icon: 'child_care' },
-        { label: '📦 Logistics & Distribution Center Operations', pct: 12, icon: 'inventory_2' }
-      ],
-      contact: 'community.aid@redcross.org.ph',
-      logisticsHub: 'Tacloban Regional Logistics Hub',
-      urgency: 'MEDIUM-HIGH'
-    },
-    '4': {
-      region: 'St. Bernard & Southern Leyte Landslide Sector',
-      gps: '10.3200° N, 125.1300° E (St. Bernard Sector)',
-      beneficiaries: '~1,800 Relocated Families & Survivors',
-      allocations: [
-        { label: '🛠️ Temporary Housing & Construction Materials', pct: 45, icon: 'foundation' },
-        { label: '🏥 Field Trauma Medical First-Responders', pct: 25, icon: 'emergency' },
-        { label: '🧥 Emergency Bedding & Thermal Blankets', pct: 18, icon: 'bed' },
-        { label: '🚛 Search & Rescue Heavy Machinery Fuel', pct: 12, icon: 'engineering' }
-      ],
-      contact: 'ccs.disaster@ccs.edu.ph',
-      logisticsHub: 'CCS St. Bernard Field Post',
-      urgency: 'HIGH (LANDSLIDE RECOVERY)'
-    },
-    '5': {
-      region: 'Bohol Epicenter & Community Rehabilitation Hubs',
-      gps: '9.8500° N, 124.1400° E (Bohol Sector)',
-      beneficiaries: '~3,200 Affected Earthquake Survivors',
-      allocations: [
-        { label: '🏗️ School & Clinic Structural Shoring Kits', pct: 40, icon: 'domain' },
-        { label: '💧 Community Water Purification Stations', pct: 30, icon: 'water' },
-        { label: '📦 Family Survival Kits & Dry Goods', pct: 20, icon: 'package' },
-        { label: '🚒 Mobile Command Unit Support', pct: 10, icon: 'local_fire_department' }
-      ],
-      contact: 'bohol.relief@bbdrts.org',
-      logisticsHub: 'Tagbilaran Emergency Warehouse',
-      urgency: 'MEDIUM'
-    }
-  };
 
-  const preset = detailsMap[sId] || {
+  // Default fallback presets ONLY used if the campaign has no DB fields whatsoever (e.g. raw blockchain seed without backend record)
+  const defaultFallback = {
     region: 'Visayas Disaster Management Zone',
     gps: '10.1333° N, 124.8667° E',
     beneficiaries: '~2,500 Registered Relief Beneficiaries',
@@ -138,7 +52,8 @@ export const getCampaignAuditDetails = (id, title, camp = {}) => {
     ],
     contact: 'operations@bbdrts.org',
     logisticsHub: 'Central Regional Relief Depot',
-    urgency: 'HIGH'
+    urgency: 'HIGH (EMERGENCY AID)',
+    description: 'Disaster relief operation deployed on Sepolia EVM protocol.'
   };
 
   // Parse allocationsJson if present (supports camelCase & snake_case)
@@ -165,16 +80,16 @@ export const getCampaignAuditDetails = (id, title, camp = {}) => {
   const documentUrl = camp.documentUrl || camp.document_url;
 
   return {
-    region: region || preset.region,
-    gps: gps || preset.gps,
-    beneficiaries: beneficiaries || preset.beneficiaries,
-    allocations: customAllocations || preset.allocations,
-    contact: contact || preset.contact,
-    logisticsHub: preset.logisticsHub,
-    urgency: urgency || preset.urgency,
-    description: description || preset.description || 'Full disaster relief deployment and distribution scope logged under official NGO smart contract instance.',
-    targetDate: targetDate || preset.targetDate || '',
-    documentUrl: documentUrl || preset.documentUrl || ''
+    region: region || defaultFallback.region,
+    gps: gps || defaultFallback.gps,
+    beneficiaries: beneficiaries || defaultFallback.beneficiaries,
+    allocations: customAllocations || defaultFallback.allocations,
+    contact: contact || defaultFallback.contact,
+    logisticsHub: defaultFallback.logisticsHub,
+    urgency: urgency || defaultFallback.urgency,
+    description: description || defaultFallback.description,
+    targetDate: targetDate || '',
+    documentUrl: documentUrl || ''
   };
 };
 
