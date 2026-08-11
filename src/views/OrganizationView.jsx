@@ -44,6 +44,11 @@ export default function OrganizationView({
   const [targetAmount, setTargetAmount] = useState('');
   const [category, setCategory] = useState('DR');
   const [locationRegion, setLocationRegion] = useState('');
+  const [street, setStreet] = useState('');
+  const [barangay, setBarangay] = useState('');
+  const [city, setCity] = useState('');
+  const [province, setProvince] = useState('');
+  const [country, setCountry] = useState('Philippines');
   const [gpsCoordinates, setGpsCoordinates] = useState('');
   const [beneficiariesImpact, setBeneficiariesImpact] = useState('');
   const [contactInfo, setContactInfo] = useState('');
@@ -75,9 +80,14 @@ export default function OrganizationView({
     setCurrentPageMy(1);
   }, [categoryFilterMy, campaignSortMy, searchQueryMy]);
 
-  useEffect(() => {
-    setCurrentPageLedger(1);
-  }, [ledgerFilter, ledgerSort, searchQueryLedger]);
+  const handleGranularAddressFromMap = ({ street: s, barangay: b, city: c, province: p, country: cnt, fullAddress }) => {
+    if (s) setStreet(s);
+    if (b) setBarangay(b);
+    if (c) setCity(c);
+    if (p) setProvince(p);
+    if (cnt) setCountry(cnt);
+    setLocationRegion(fullAddress || [s, b, c, p, cnt].filter(Boolean).join(', '));
+  };
 
   // Fetch Organization Received Donations
   const fetchOrgDonations = async () => {
@@ -941,18 +951,158 @@ export default function OrganizationView({
                       </div>
                     </div>
 
-                    {/* Section 2: Interactive Location Map & Geocoding */}
+                    {/* Section 2: Interactive Location Map & Geocoding (2-Column Grid) */}
                     <div style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '14px', padding: '20px' }}>
-                      <h3 style={{ margin: '0 0 14px 0', fontSize: '0.95rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <h3 style={{ margin: '0 0 16px 0', fontSize: '0.95rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>map</span> 2. Target Location & Interactive Pin Map
                       </h3>
-                      <LocationMapPicker
-                        address={locationRegion}
-                        gps={gpsCoordinates}
-                        onChangeAddress={(addr) => setLocationRegion(addr)}
-                        onChangeGps={(coords) => setGpsCoordinates(coords)}
-                        height="260px"
-                      />
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '20px', alignItems: 'start' }}>
+                        {/* Left Column (50%): Granular Address Fields */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: '#ef4444' }}>location_on</span> Granular Address Details
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                              Street / Building / House No.
+                            </label>
+                            <input
+                              className="input"
+                              type="text"
+                              placeholder="e.g., Rizal Street, Block 4"
+                              value={street}
+                              onChange={(e) => {
+                                setStreet(e.target.value);
+                                setLocationRegion([e.target.value, barangay, city, province, country].filter(Boolean).join(', '));
+                              }}
+                              disabled={creating}
+                              style={{ fontSize: '0.85rem' }}
+                            />
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                                Barangay / Village
+                              </label>
+                              <input
+                                className="input"
+                                type="text"
+                                placeholder="e.g., Barangay Abgao"
+                                value={barangay}
+                                onChange={(e) => {
+                                  setBarangay(e.target.value);
+                                  setLocationRegion([street, e.target.value, city, province, country].filter(Boolean).join(', '));
+                                }}
+                                disabled={creating}
+                                style={{ fontSize: '0.85rem' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                                Municipality / City *
+                              </label>
+                              <input
+                                className="input"
+                                type="text"
+                                required
+                                placeholder="e.g., Maasin City"
+                                value={city}
+                                onChange={(e) => {
+                                  setCity(e.target.value);
+                                  setLocationRegion([street, barangay, e.target.value, province, country].filter(Boolean).join(', '));
+                                }}
+                                disabled={creating}
+                                style={{ fontSize: '0.85rem' }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                                Province / State *
+                              </label>
+                              <input
+                                className="input"
+                                type="text"
+                                required
+                                placeholder="e.g., Southern Leyte"
+                                value={province}
+                                onChange={(e) => {
+                                  setProvince(e.target.value);
+                                  setLocationRegion([street, barangay, city, e.target.value, country].filter(Boolean).join(', '));
+                                }}
+                                disabled={creating}
+                                style={{ fontSize: '0.85rem' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '4px' }}>
+                                Country
+                              </label>
+                              <input
+                                className="input"
+                                type="text"
+                                placeholder="e.g., Philippines"
+                                value={country}
+                                onChange={(e) => {
+                                  setCountry(e.target.value);
+                                  setLocationRegion([street, barangay, city, province, e.target.value].filter(Boolean).join(', '));
+                                }}
+                                disabled={creating}
+                                style={{ fontSize: '0.85rem' }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Combined Address Preview */}
+                          <div style={{ background: 'rgba(30, 41, 59, 0.6)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '8px', padding: '10px 12px' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              📍 Formatted Full Address:
+                            </div>
+                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#38bdf8', marginTop: '2px', wordBreak: 'break-word' }}>
+                              {locationRegion || 'Fill inputs above or select a point on the map →'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Column (50%): Square Leaflet Map View */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: '#38bdf8' }}>pin_drop</span> Square Map View
+                            </span>
+                            <span style={{ fontSize: '0.72rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>
+                              Auto-Sync Pin
+                            </span>
+                          </div>
+
+                          <div style={{
+                            width: '100%',
+                            aspectRatio: '1 / 1',
+                            minHeight: '280px',
+                            borderRadius: '14px',
+                            overflow: 'hidden',
+                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                            background: '#0f172a'
+                          }}>
+                            <LocationMapPicker
+                              address={locationRegion}
+                              gps={gpsCoordinates}
+                              onChangeAddress={(addr) => setLocationRegion(addr)}
+                              onChangeGranularAddress={handleGranularAddressFromMap}
+                              onChangeGps={(coords) => setGpsCoordinates(coords)}
+                              height="100%"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Section 3: Purpose & Contact */}
