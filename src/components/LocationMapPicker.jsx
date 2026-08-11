@@ -151,80 +151,40 @@ export default function LocationMapPicker({
           const newGps = `${latFormatted}° N, ${lngFormatted}° E`;
 
           setGeocoding(true);
+
+          // Priority 1: OpenStreetMap Nominatim zoom=18 for pinpoint Barangay resolution
           try {
-            // Concurrent Reverse Geocoding via Nominatim zoom=18 & BigDataCloud
-            const [nomRes, bdcRes] = await Promise.allSettled([
-              fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&zoom=18&lat=${lat}&lon=${lng}`),
-              fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`)
-            ]);
-
-            let nomData = null;
-            if (nomRes.status === 'fulfilled' && nomRes.value.ok) {
-              nomData = await nomRes.value.json();
-            }
-
-            let bdcData = null;
-            if (bdcRes.status === 'fulfilled' && bdcRes.value.ok) {
-              bdcData = await bdcRes.value.json();
-            }
-
-            // Priority 1: Nominatim Detailed Address Object
-            let addr = nomData?.address || {};
-            let street = addr.road || addr.street || addr.house_number || addr.building || addr.pedestrian || addr.amenity || '';
-            let barangay = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || addr.hamlet || addr.subdistrict || '';
-            let city = addr.city || addr.town || addr.municipality || addr.city_district || addr.county || '';
-            let province = addr.state || addr.region || addr.province || addr.state_district || '';
-            let country = addr.country || 'Philippines';
-            let zip = addr.postcode || addr.zip || addr.postal_code || '';
-
-            // Priority 2: BigDataCloud Administrative Hierarchy Fallback
-            if (bdcData) {
-              const admin = bdcData?.localityInfo?.administrative || [];
-              const bdcBarangayObj = admin.find(a => a.adminLevel === 7 || a.adminLevel === 8 || a.adminLevel === 9);
-              const bdcCityObj = admin.find(a => a.adminLevel === 6);
-              const bdcProvinceObj = admin.find(a => a.adminLevel === 4);
-
-              if (!barangay && bdcBarangayObj?.name) barangay = bdcBarangayObj.name;
-              if (!barangay && bdcData.locality) barangay = bdcData.locality;
-              if (!city && bdcCityObj?.name) city = bdcCityObj.name;
-              if (!city && bdcData.city) city = bdcData.city;
-              if (!province && bdcProvinceObj?.name) province = bdcProvinceObj.name;
-              if (!province && bdcData.principalSubdivision) province = bdcData.principalSubdivision;
-              if (!zip && bdcData.postcode) zip = bdcData.postcode;
-            }
-
-            // Format Prefixes & Cleanups
-            if (barangay.toLowerCase().startsWith('barangay ')) barangay = barangay.substring(9).trim();
-            if (barangay.toLowerCase().startsWith('bgy. ')) barangay = barangay.substring(5).trim();
-            if (city.toLowerCase().startsWith('city of ')) city = city.substring(8).trim() + ' City';
-
-            // Duplicate Filtering
-            if (street && barangay && street.trim().toLowerCase() === barangay.trim().toLowerCase()) street = '';
-            if (street && city && street.trim().toLowerCase() === city.trim().toLowerCase()) street = '';
-            if (barangay && city && barangay.trim().toLowerCase() === city.trim().toLowerCase()) barangay = '';
-
-            const formatted = [street, barangay, city, province, zip, country].filter(Boolean).join(', ');
-
-            isMapClickingRef.current = true;
-            if (onChangeAddress) onChangeAddress(formatted);
-
-            if (onChangeGranularAddress) {
-              onChangeGranularAddress({
-                street,
-                barangay,
-                city,
-                province,
-                country,
-                zip,
-                fullAddress: formatted
-              });
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&zoom=18&lat=${lat}&lon=${lng}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.address) {
+                updateFromReverseData(data, data.display_name, lat, lng);
+                return;
+              }
             }
           } catch (err) {
-            console.warn('Reverse geocode error:', err);
-            updateFromReverseData({}, `Selected Pin (${newGps})`, lat, lng);
-          } finally {
-            setGeocoding(false);
+            console.warn('Nominatim reverse error:', err);
           }
+
+          // Priority 2: Photon API Fallback
+          try {
+            const photonRes = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`);
+            if (photonRes.ok) {
+              const photonData = await photonRes.json();
+              if (photonData?.features?.length > 0) {
+                const props = photonData.features[0].properties;
+                const formatted = [props.name, props.district, props.city, props.state, props.country].filter(Boolean).join(', ');
+                updateFromReverseData({ properties: props }, formatted || `Selected Location (${newGps})`, lat, lng);
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn('Photon reverse error:', e);
+          }
+
+          // Fallback if both APIs fail
+          updateFromReverseData({}, `Selected Pin (${newGps})`, lat, lng);
+          setGeocoding(false);
         };
 
         map.on('click', (e) => {
