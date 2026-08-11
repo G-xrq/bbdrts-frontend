@@ -71,7 +71,7 @@ export const getCampaignAuditDetails = (id, title, camp = {}) => {
     region: region || '',
     gps: gps || '',
     beneficiaries: beneficiaries || '',
-    allocations: customAllocations || defaultAllocations,
+    allocations: customAllocations || null,
     contact: contact || '',
     urgency: urgency || 'HIGH (EMERGENCY AID)',
     description: description || '',
@@ -887,36 +887,38 @@ export default function CampaignCard(props) {
                 )}
               </div>
 
-              {/* 2. Fund Allocation Breakdown */}
-              <div style={{ marginBottom: '20px' }}>
-                <h4 style={{ fontSize: '0.92rem', color: '#f8fafc', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="material-symbols-outlined" style={{ color: '#38bdf8', fontSize: '1.2rem' }}>pie_chart</span>
-                  Transparency Allocation & Necessities Breakdown
-                </h4>
+              {/* 2. Fund Allocation Breakdown (Only if allocations were provided) */}
+              {audit.allocations && Array.isArray(audit.allocations) && audit.allocations.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{ fontSize: '0.92rem', color: '#f8fafc', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="material-symbols-outlined" style={{ color: '#38bdf8', fontSize: '1.2rem' }}>pie_chart</span>
+                    Transparency Allocation & Necessities Breakdown
+                  </h4>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
-                  {audit.allocations.map((item, idx) => (
-                    <div key={idx} style={{
-                      background: 'rgba(30, 41, 59, 0.6)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '10px',
-                      padding: '12px 14px'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '0.83rem', fontWeight: 600, color: '#e2e8f0' }}>
-                          {item.label}
-                        </span>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#38bdf8' }}>
-                          {item.pct}%
-                        </span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
+                    {audit.allocations.map((item, idx) => (
+                      <div key={idx} style={{
+                        background: 'rgba(30, 41, 59, 0.6)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '10px',
+                        padding: '12px 14px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.83rem', fontWeight: 600, color: '#e2e8f0' }}>
+                            {item.label}
+                          </span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#38bdf8' }}>
+                            {item.pct}%
+                          </span>
+                        </div>
+                        <div style={{ background: 'rgba(15, 23, 42, 0.8)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+                          <div style={{ width: `${item.pct}%`, height: '100%', background: 'linear-gradient(90deg, #0284c7, #38bdf8)' }} />
+                        </div>
                       </div>
-                      <div style={{ background: 'rgba(15, 23, 42, 0.8)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ width: `${item.pct}%`, height: '100%', background: 'linear-gradient(90deg, #0284c7, #38bdf8)' }} />
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
 
 
