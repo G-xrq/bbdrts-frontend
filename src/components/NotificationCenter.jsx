@@ -3,11 +3,11 @@ import './NotificationCenter.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-// Clean formatting for notification text (amounts bolded, titles crisp, no harsh neon colors)
+// Rich text formatter to highlight important details (Amounts, ETH, Quotes, References, Legal Acts)
 function renderFormattedMessage(text) {
   if (!text) return null;
 
-  const regex = /(\*\*.*?\*\*|"[^"]+?"|₱[\d,]+(?:\.\d+)?|\b\d+(?:\.\d+)?\s*ETH\b)/g;
+  const regex = /(\*\*.*?\*\*|"[^"]+?"|₱[\d,]+(?:\.\d+)?|\b\d+(?:\.\d+)?\s*ETH\b|\bRef:\s*[\w-]+\b|\bTransaction Ref:\s*[\w-]+\b|Republic Act 11232|SEC eSPARC|Sepolia EVM|Sepolia|2FA|Solidity|Approved|Rejected|Verified)/g;
 
   const parts = text.split(regex);
   return parts.map((part, index) => {
@@ -16,10 +16,24 @@ function renderFormattedMessage(text) {
       return <strong key={index} className="bbdrts-notif-highlight">{part.slice(2, -2)}</strong>;
     }
     if (part.startsWith('"') && part.endsWith('"')) {
-      return <span key={index} className="bbdrts-notif-campaign-title">{part}</span>;
+      return <strong key={index} className="bbdrts-notif-campaign-title">{part}</strong>;
     }
-    if (part.startsWith('₱') || part.includes('ETH')) {
-      return <strong key={index} className="bbdrts-notif-amount-highlight">{part}</strong>;
+    if (
+      part.startsWith('₱') ||
+      part.includes('ETH') ||
+      part.startsWith('Ref:') ||
+      part.startsWith('Transaction Ref:') ||
+      part === 'Republic Act 11232' ||
+      part === 'SEC eSPARC' ||
+      part === 'Sepolia EVM' ||
+      part === 'Sepolia' ||
+      part === '2FA' ||
+      part === 'Solidity' ||
+      part === 'Approved' ||
+      part === 'Rejected' ||
+      part === 'Verified'
+    ) {
+      return <strong key={index} className="bbdrts-notif-highlight">{part}</strong>;
     }
     return part;
   });
@@ -129,7 +143,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
     return () => clearInterval(clockInterval);
   }, []);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside (Modal clicks & dropdown clicks never close dropdown)
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (selectedNotif) return;
@@ -155,6 +169,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
   // Mark all notifications as read for current user
   const handleMarkAllAsRead = async () => {
     const token = localStorage.getItem('bbdrts_token');
+    // Optimistic UI update
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     setUnreadCount(0);
     try {
@@ -191,6 +206,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
     setActiveMenuId(null);
     const newStatus = !notif.isRead;
 
+    // Optimistic update
     setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: newStatus } : n));
     setUnreadCount(prev => newStatus ? Math.max(0, prev - 1) : prev + 1);
     if (selectedNotif && selectedNotif.id === notif.id) {
@@ -214,6 +230,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
     if (e) e.stopPropagation();
     setActiveMenuId(null);
 
+    // Optimistic removal from inbox
     if (!notif.isRead) {
       setUnreadCount(prev => Math.max(0, prev - 1));
     }
@@ -223,6 +240,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
       setSelectedNotif(null);
     }
 
+    // Set Undo state with 6-second window
     setUndoItem({ id: notif.id, notif });
     setTimeout(() => {
       setUndoItem(prev => (prev?.id === notif.id ? null : prev));
@@ -239,12 +257,13 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
     }
   };
 
-  // Restore notification from Trash
+  // Restore notification from Trash (Keeps Read/Unread State Intact)
   const handleRestore = async (e, notif) => {
     if (e) e.stopPropagation();
     setActiveMenuId(null);
     setUndoItem(null);
 
+    // Optimistic update
     setTrashCount(prev => Math.max(0, prev - 1));
     if (filter === 'trash') {
       setNotifications(prev => prev.filter(n => n.id !== notif.id));
@@ -339,6 +358,21 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
     }
   };
 
+  // Color mapping
+  const getTypeColor = (type) => {
+    const t = (type || '').toUpperCase();
+    switch (t) {
+      case 'DONATION': return '#22c55e';
+      case 'CAMPAIGN': return '#f59e0b';
+      case 'VERIFICATION':
+      case 'KYC': return '#38bdf8';
+      case 'SECURITY': return '#a855f7';
+      case 'ACCOUNT': return '#ec4899';
+      case 'WITHDRAWAL': return '#10b981';
+      default: return 'var(--accent, #22c55e)';
+    }
+  };
+
   // User-friendly label
   const getTypeLabel = (type) => {
     const t = (type || '').toUpperCase();
@@ -354,7 +388,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
     }
   };
 
-  // Dynamic Relative Time Formatter
+  // Dynamic Relative Time Formatter (authoritative database timestamp vs live clock)
   const formatTimeAgo = (dateStr) => {
     if (!dateStr) return 'Just now';
     const timestamp = new Date(dateStr).getTime();
@@ -387,6 +421,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
     return `${diffInYears}y ago`;
   };
 
+  // Full formatted exact date in user's local timezone
   const formatExactDate = (dateStr) => {
     if (!dateStr) return new Date().toLocaleString();
     try {
@@ -396,7 +431,8 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
         day: 'numeric',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        second: '2-digit'
       });
     } catch (_) {
       return dateStr;
@@ -413,7 +449,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
           setIsOpen(prev => !prev);
           setActiveMenuId(null);
         }}
-        title="Notifications"
+        title="Protocol Notifications & Alerts"
         aria-label="Notifications"
       >
         <span className="material-symbols-outlined bbdrts-notif-icon">notifications</span>
@@ -453,10 +489,10 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
           {/* Panel Header */}
           <div className="bbdrts-notif-header">
             <div className="bbdrts-notif-header-title">
-              <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--text-primary, #ffffff)' }}>
-                {filter === 'trash' ? 'auto_delete' : 'notifications'}
+              <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent, #22c55e)' }}>
+                {filter === 'trash' ? 'auto_delete' : 'notifications_active'}
               </span>
-              <strong>{filter === 'trash' ? 'Trash' : 'Notifications'}</strong>
+              <strong>{filter === 'trash' ? 'Trash Bin' : 'Notifications'}</strong>
               {filter !== 'trash' && unreadCount > 0 && (
                 <span className="bbdrts-notif-unread-pill">{unreadCount} New</span>
               )}
@@ -469,6 +505,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
                   type="button"
                   className="bbdrts-notif-mark-btn"
                   onClick={handleMarkAllAsRead}
+                  title="Mark all notifications as read"
                 >
                   Mark all read
                 </button>
@@ -484,7 +521,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
                 }}
                 title={filter === 'trash' ? "Return to Notifications Inbox" : "Open 30-Day Trash Bin"}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
                   {filter === 'trash' ? 'inbox' : 'delete'}
                 </span>
                 <span>{filter === 'trash' ? 'Inbox' : 'Trash'}</span>
@@ -546,7 +583,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
           <div className="bbdrts-notif-list">
             {notifications.length === 0 ? (
               <div className="bbdrts-notif-empty">
-                <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--text-muted, #71717a)' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--text-muted)' }}>
                   {filter === 'trash' ? 'delete_sweep' : 'notifications_off'}
                 </span>
                 <p>No {filter !== 'all' ? (filter === 'trash' ? 'deleted' : filter.toLowerCase()) : ''} notifications.</p>
@@ -559,6 +596,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
             ) : (
               <>
                 {notifications.map((n, idx) => {
+                  // For row 1, 2, 3... expand menu upwards (align-bottom) so it NEVER cuts off at the bottom!
                   const isAlignBottom = idx > 0;
                   const isMenuActive = activeMenuId === n.id;
                   const inTrash = Boolean(n.isDeleted);
@@ -569,34 +607,34 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
                       className={`bbdrts-notif-item ${!n.isRead && !inTrash ? 'unread' : 'is-read'} ${isMenuActive ? 'menu-active' : ''} ${inTrash ? 'in-trash' : ''}`}
                       onClick={() => handleItemClick(n)}
                     >
-                      {/* Clean Icon Box */}
-                      <div className="bbdrts-notif-item-icon">
+                      <div
+                        className="bbdrts-notif-item-icon"
+                        style={{
+                          backgroundColor: inTrash ? 'rgba(239, 68, 68, 0.1)' : `${getTypeColor(n.type)}18`,
+                          color: inTrash ? '#ef4444' : getTypeColor(n.type),
+                          borderColor: inTrash ? 'rgba(239, 68, 68, 0.3)' : `${getTypeColor(n.type)}35`
+                        }}
+                      >
                         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
                           {inTrash ? 'delete' : getTypeIcon(n.type)}
                         </span>
                       </div>
 
-                      {/* Content Area */}
                       <div className="bbdrts-notif-item-content">
                         <div className="bbdrts-notif-item-header">
                           <strong className="bbdrts-notif-item-title">{n.title}</strong>
-                          
-                          <div className="bbdrts-notif-item-header-meta">
-                            {inTrash ? (
-                              <span className="bbdrts-notif-item-trash-pill" title={`Deleted on ${formatExactDate(n.deletedAt)}`}>
-                                {n.daysRemaining !== undefined ? `${n.daysRemaining}d left` : '30d left'}
-                              </span>
-                            ) : (
-                              <span className="bbdrts-notif-item-time" title={formatExactDate(n.createdAt)}>
-                                {formatTimeAgo(n.createdAt)}
-                              </span>
-                            )}
-
-                            {/* Crisp Unread Indicator Dot */}
-                            {!n.isRead && !inTrash && (
-                              <span className="bbdrts-notif-dot" title="Unread" />
-                            )}
-                          </div>
+                          {inTrash ? (
+                            <span className="bbdrts-notif-item-trash-pill" title={`Deleted on ${formatExactDate(n.deletedAt)}`}>
+                              {n.daysRemaining !== undefined ? `${n.daysRemaining}d left` : '30d left'}
+                            </span>
+                          ) : (
+                            <span
+                              className="bbdrts-notif-item-time"
+                              title={formatExactDate(n.createdAt)}
+                            >
+                              {formatTimeAgo(n.createdAt)}
+                            </span>
+                          )}
                         </div>
 
                         <p className="bbdrts-notif-item-desc">
@@ -604,7 +642,7 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
                         </p>
 
                         <div className="bbdrts-notif-item-footer">
-                          <span className="bbdrts-notif-tag">
+                          <span className="bbdrts-notif-tag" style={{ color: inTrash ? '#a3a3a3' : getTypeColor(n.type) }}>
                             ● {getTypeLabel(n.type)}
                           </span>
                           {n.referenceId && (
@@ -614,6 +652,11 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
                           )}
                         </div>
                       </div>
+
+                      {/* Unread Visual Indicator Bullet (Only when not in trash) */}
+                      {!n.isRead && !inTrash && (
+                        <span className="bbdrts-notif-dot" title="Unread notification" />
+                      )}
 
                       {/* 3-Dots Action Button */}
                       <div
@@ -733,18 +776,18 @@ export default function NotificationCenter({ dbUser, theme, onSelectNotification
         <div className="bbdrts-notif-modal-backdrop" onClick={() => setSelectedNotif(null)}>
           <div className="bbdrts-notif-card-modal" onClick={e => e.stopPropagation()} data-theme={theme}>
             
-            {/* Modal Header */}
+            {/* Modal Header — Clean Category Pill + Close */}
             <div className="bbdrts-notif-card-header">
               <div className="bbdrts-notif-card-badge-row">
                 <span
                   className="bbdrts-notif-card-type-pill"
                   style={{
-                    backgroundColor: selectedNotif.isDeleted ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 255, 255, 0.08)',
-                    color: selectedNotif.isDeleted ? '#ef4444' : 'var(--text-primary, #ffffff)',
-                    borderColor: selectedNotif.isDeleted ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.12)'
+                    backgroundColor: selectedNotif.isDeleted ? 'rgba(239, 68, 68, 0.15)' : `${getTypeColor(selectedNotif.type)}20`,
+                    color: selectedNotif.isDeleted ? '#ef4444' : getTypeColor(selectedNotif.type),
+                    borderColor: selectedNotif.isDeleted ? 'rgba(239, 68, 68, 0.3)' : `${getTypeColor(selectedNotif.type)}40`
                   }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
                     {selectedNotif.isDeleted ? 'delete' : getTypeIcon(selectedNotif.type)}
                   </span>
                   {selectedNotif.isDeleted ? 'In Trash Bin' : getTypeLabel(selectedNotif.type)}
