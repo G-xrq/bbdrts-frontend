@@ -5,6 +5,8 @@ import { ROLES, ROLE_META } from '../roleConfig';
 import { shortAddr } from './CampaignCard';
 import { useToast } from '../context/ToastContext';
 
+import EditProfileModal from './EditProfileModal';
+
 export default function SettingsPanel({ 
   contract, 
   currentUser, 
@@ -15,7 +17,8 @@ export default function SettingsPanel({
   theme, 
   setTheme,
   textSize,
-  setTextSize
+  setTextSize,
+  onProfileUpdated
 }) {
   const { showSuccess, showError } = useToast();
   const [manualWallet, setManualWallet] = useState('');
@@ -645,157 +648,16 @@ export default function SettingsPanel({
 
       </div>
 
-      {/* ── 5. EDIT PROFILE DETAILS MODAL ── */}
-      {editModalOpen && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          background: 'rgba(5, 7, 12, 0.82)', backdropFilter: 'blur(12px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999
-        }} className="fade-in">
-          
-          <div className="card bounce-in" style={{ 
-            width: '520px', 
-            maxWidth: '92vw', 
-            padding: '28px', 
-            background: 'var(--bg-card, #0f172a)', 
-            border: '1px solid var(--border, rgba(34, 197, 94, 0.3))', 
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(34, 197, 94, 0.15)', 
-            borderRadius: '20px',
-            color: 'var(--text-primary, #f8fafc)'
-          }}>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border, rgba(255,255,255,0.1))', paddingBottom: '14px', marginBottom: '18px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="material-symbols-outlined" style={{ color: '#22c55e', fontSize: '1.4rem' }}>manage_accounts</span>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary, #fff)', fontWeight: 700 }}>
-                  Edit Profile & Contact Details
-                </h3>
-              </div>
-              <button 
-                onClick={() => setEditModalOpen(false)}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border, rgba(255, 255, 255, 0.1))',
-                  color: 'var(--text-muted, #94a3b8)',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1rem'
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted, #94a3b8)', marginBottom: '4px', fontWeight: 600 }}>
-                  Full Name / Entity Identifier
-                </label>
-                <input 
-                  type="text" 
-                  value={profileName}
-                  onChange={(e) => setProfileName(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    background: 'var(--bg-input, rgba(30, 41, 59, 0.8))',
-                    border: '1px solid var(--border, rgba(255, 255, 255, 0.15))',
-                    color: 'var(--text-primary, #fff)',
-                    fontSize: '0.88rem'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted, #94a3b8)', marginBottom: '4px', fontWeight: 600 }}>
-                  Contact Phone Number
-                </label>
-                <input 
-                  type="text" 
-                  value={profilePhone}
-                  onChange={(e) => setProfilePhone(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    background: 'var(--bg-input, rgba(30, 41, 59, 0.8))',
-                    border: '1px solid var(--border, rgba(255, 255, 255, 0.15))',
-                    color: 'var(--text-primary, #fff)',
-                    fontSize: '0.88rem'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted, #94a3b8)', marginBottom: '4px', fontWeight: 600 }}>
-                  Operational Base / Location
-                </label>
-                <input 
-                  type="text" 
-                  value={profileLocation}
-                  onChange={(e) => setProfileLocation(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    background: 'var(--bg-input, rgba(30, 41, 59, 0.8))',
-                    border: '1px solid var(--border, rgba(255, 255, 255, 0.15))',
-                    color: 'var(--text-primary, #fff)',
-                    fontSize: '0.88rem'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted, #94a3b8)', marginBottom: '4px', fontWeight: 600 }}>
-                  Advocacy / Bio Note
-                </label>
-                <textarea 
-                  value={profileBio}
-                  onChange={(e) => setProfileBio(e.target.value)}
-                  rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    background: 'var(--bg-input, rgba(30, 41, 59, 0.8))',
-                    border: '1px solid var(--border, rgba(255, 255, 255, 0.15))',
-                    color: 'var(--text-primary, #fff)',
-                    fontSize: '0.85rem',
-                    resize: 'none'
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button 
-                  type="button" 
-                  className="btn btn-outline" 
-                  style={{ flex: 1 }}
-                  onClick={() => setEditModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary" 
-                  style={{ flex: 1.5 }}
-                >
-                  Save Profile
-                </button>
-              </div>
-            </form>
-
-          </div>
-        </div>,
-        document.body
+      {/* ── 5. COMPREHENSIVE EDIT PROFILE MODAL ── */}
+      {editModalOpen && (
+        <EditProfileModal
+          currentUser={currentUser}
+          onClose={() => setEditModalOpen(false)}
+          onProfileUpdated={(updated) => {
+            if (onProfileUpdated) onProfileUpdated(updated);
+          }}
+          theme={theme}
+        />
       )}
 
     </div>

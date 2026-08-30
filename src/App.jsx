@@ -564,6 +564,7 @@ export default function App() {
               setTheme={setTheme}
               textSize={textSize}
               setTextSize={setTextSize}
+              onProfileUpdated={(updated) => setDbUser(updated)}
             />
           </div>
         </div>
