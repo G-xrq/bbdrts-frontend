@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import NotificationCenter from './NotificationCenter.jsx';
+import EditProfileModal from './EditProfileModal.jsx';
 import './Header.css';
 
 export default function Header({
@@ -12,10 +13,12 @@ export default function Header({
   setShowSettingsModal,
   theme,
   toggleTheme,
-  onOpenNgoProfile
+  onOpenNgoProfile,
+  onProfileUpdated
 }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -179,7 +182,13 @@ export default function Header({
                   className={`bbdrts-profile-chip ${isProfileOpen ? 'active' : ''}`}
                   onClick={() => setIsProfileOpen(prev => !prev)}
                 >
-                  <div className="bbdrts-profile-avatar">{userInitials}</div>
+                  <div className="bbdrts-profile-avatar">
+                    {dbUser?.avatar_url ? (
+                      <img src={dbUser.avatar_url} alt={userDisplayName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      userInitials
+                    )}
+                  </div>
                   <div className="bbdrts-profile-meta">
                     <span className="bbdrts-profile-name">{userDisplayName}</span>
                     <span className="bbdrts-profile-role-badge">{roleLabel}</span>
@@ -213,9 +222,17 @@ export default function Header({
                         <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#38bdf8' }}>corporate_fare</span>
                         <span>View Verified NGO Profile</span>
                       </a>
-                      <a href="#" className="bbdrts-dropdown-link" onClick={(e) => { e.preventDefault(); setShowSettingsModal(true); setIsProfileOpen(false); }}>
+                      <a
+                        href="#"
+                        className="bbdrts-dropdown-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowEditProfile(true);
+                          setIsProfileOpen(false);
+                        }}
+                      >
                         <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#eab308' }}>manage_accounts</span>
-                        <span>Edit Profile & Settings</span>
+                        <span>Edit Profile</span>
                       </a>
                       <a href="#campaigns" className="bbdrts-dropdown-link" onClick={() => setIsProfileOpen(false)}>
                         <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#eab308' }}>volunteer_activism</span>
@@ -271,6 +288,18 @@ export default function Header({
           </div>
         )}
       </header>
+
+      {/* ── Edit Profile Modal ── */}
+      {showEditProfile && (
+        <EditProfileModal
+          currentUser={dbUser}
+          onClose={() => setShowEditProfile(false)}
+          onProfileUpdated={(updated) => {
+            if (onProfileUpdated) onProfileUpdated(updated);
+          }}
+          theme={theme}
+        />
+      )}
     </>
   );
 }

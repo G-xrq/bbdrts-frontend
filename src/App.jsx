@@ -495,6 +495,7 @@ export default function App() {
         theme={theme}
         toggleTheme={toggleTheme}
         onOpenNgoProfile={(id) => setSelectedNgoForProfile(id || 3)}
+        onProfileUpdated={(updated) => setDbUser(updated)}
       />
 
       {/* ── Unauthenticated Views: Default Landing Page vs Auth Portal ── */}
