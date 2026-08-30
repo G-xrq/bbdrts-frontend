@@ -117,21 +117,6 @@ export default function Header({
                 </a>
               </li>
               <li className="bbdrts-nav-item">
-                <a
-                  href="#ngos"
-                  className="bbdrts-nav-link"
-                  onClick={(e) => {
-                    if (onOpenNgoProfile) {
-                      e.preventDefault();
-                      onOpenNgoProfile(3);
-                    }
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>domain_verification</span>
-                  <span>Verified NGOs</span>
-                </a>
-              </li>
-              <li className="bbdrts-nav-item">
                 <a href="#transparency" className="bbdrts-nav-link">
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>verified</span>
                   <span>Smart Contract</span>

@@ -396,6 +396,7 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
                         role={ROLES.DONOR}
                         walletAddress={walletAddress}
                         onDonated={fetchCampaigns}
+                        onOpenNgoProfile={onOpenNgoProfile}
                       />
                     ))}
                   </div>
