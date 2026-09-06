@@ -437,11 +437,15 @@ export default function App() {
             }
 
             if (onChainData) {
+              const onChainEth = parseFloat(ethers.formatEther(onChainData[3])) || 0;
+              const dbEth = parseFloat(dbCamp.currentAmount || 0) || 0;
+              const finalCurrent = Math.max(onChainEth, dbEth);
+
               synced.push({
                 ...dbCamp,
                 orgAddress: onChainData[0] || dbCamp.orgAddress,
                 targetAmount: ethers.formatEther(onChainData[2]),
-                currentAmount: ethers.formatEther(onChainData[3]),
+                currentAmount: finalCurrent.toString(),
                 isActive: onChainData[4]
               });
             } else {

@@ -621,13 +621,57 @@ export default function CampaignCard(props) {
 
   const isPublic = role === ROLES.PUBLIC;
   const canDonate = role !== ROLES.ADMIN && camp.isActive;
-  const pct = progressPct(camp.currentAmount, camp.targetAmount);
-
-  // Multi-Rail Breakdown & Segment Calculations
+  // Multi-Rail Breakdown & Segment Calculations (Calculates from history transactions, API railBreakdown, or fallback)
   const breakdown = useMemo(() => {
+    // 1. If history is loaded and has records, dynamically compute live telemetry directly from actual ledger transactions
+    if (Array.isArray(history) && history.length > 0) {
+      let ethAmt = 0, ethCnt = 0;
+      let gcashAmt = 0, gcashCnt = 0;
+      let mayaAmt = 0, mayaCnt = 0;
+      let bankAmt = 0, bankCnt = 0;
+
+      history.forEach((tx) => {
+        const amt = parseFloat(tx.rawAmount || tx.amount || 0) || 0;
+        const hash = (tx.txHash || tx.Tx_Hash || '').toUpperCase();
+        if (hash.startsWith('FIAT-GCAS') || hash.includes('GCASH')) {
+          gcashAmt += amt;
+          gcashCnt++;
+        } else if (hash.startsWith('FIAT-MAYA') || hash.includes('MAYA')) {
+          mayaAmt += amt;
+          mayaCnt++;
+        } else if (hash.startsWith('FIAT-BANK') || hash.startsWith('FIAT-CARD') || hash.startsWith('FIAT-CRED') || hash.includes('BANK') || hash.includes('CARD')) {
+          bankAmt += amt;
+          bankCnt++;
+        } else {
+          ethAmt += amt;
+          ethCnt++;
+        }
+      });
+
+      const totalTracked = ethAmt + gcashAmt + mayaAmt + bankAmt;
+      const currentEth = parseFloat(camp.currentAmount || 0);
+      if (currentEth > totalTracked) {
+        ethAmt += (currentEth - totalTracked);
+        if (ethCnt === 0) ethCnt = 1;
+      }
+
+      return {
+        eth: { amount: ethAmt, php: Math.round(ethAmt * 170000), count: ethCnt },
+        gcash: { amount: gcashAmt, php: Math.round(gcashAmt * 170000), count: gcashCnt },
+        maya: { amount: mayaAmt, php: Math.round(mayaAmt * 170000), count: mayaCnt },
+        bank: { amount: bankAmt, php: Math.round(bankAmt * 170000), count: bankCnt },
+        totalRaisedEth: Math.max(totalTracked, currentEth),
+        totalRaisedPhp: Math.round(Math.max(totalTracked, currentEth) * 170000),
+        totalBackers: ethCnt + gcashCnt + mayaCnt + bankCnt
+      };
+    }
+
+    // 2. If camp.railBreakdown is provided by API
     if (camp.railBreakdown && typeof camp.railBreakdown === 'object') {
       return camp.railBreakdown;
     }
+
+    // 3. Fallback
     const currentEth = parseFloat(camp.currentAmount || 0);
     return {
       eth: { amount: currentEth, php: Math.round(currentEth * 170000), count: currentEth > 0 ? 1 : 0 },
@@ -638,10 +682,12 @@ export default function CampaignCard(props) {
       totalRaisedPhp: Math.round(currentEth * 170000),
       totalBackers: currentEth > 0 ? 1 : 0
     };
-  }, [camp.railBreakdown, camp.currentAmount]);
+  }, [camp.railBreakdown, camp.currentAmount, history]);
 
+  const displayCurrentEth = Math.max(parseFloat(camp.currentAmount || 0), breakdown.totalRaisedEth || 0);
   const targetGoal = Math.max(0.0001, parseFloat(camp.targetAmount || 1));
-  const currentTotal = parseFloat(camp.currentAmount || 0);
+  const currentTotal = displayCurrentEth;
+  const pct = progressPct(displayCurrentEth, camp.targetAmount);
   const totalBarPct = Math.min(100, Math.max(0, (currentTotal / targetGoal) * 100));
 
   // Compute segment widths on the bar (total sum === totalBarPct)
@@ -1175,6 +1221,13 @@ export default function CampaignCard(props) {
     if (opening) fetchHistory(true);
   };
 
+  // Auto-fetch transaction history on mount so multi-rail breakdown and public ledger telemetry are immediately populated
+  useEffect(() => {
+    if (camp.id) {
+      fetchHistory();
+    }
+  }, [camp.id]);
+
   /* ── Render ───────────────────────────────────── */
   return (
     <div className={`card glow campaign-card fade-in ${!camp.isActive ? 'campaign-closed' : ''} ${showRailTelemetry ? 'telemetry-dropdown-active' : ''}`}>
@@ -1266,7 +1319,7 @@ export default function CampaignCard(props) {
             {/* Header: Goal & Total Percent */}
             <div className="multi-rail-header">
               <span className="multi-rail-goal-text">
-                <strong>{formatEthAmt(camp.currentAmount)} ETH</strong> of {formatEthAmt(camp.targetAmount)} ETH goal
+                <strong>{formatEthAmt(displayCurrentEth)} ETH</strong> of {formatEthAmt(camp.targetAmount)} ETH goal
               </span>
               <button
                 type="button"
@@ -1487,9 +1540,9 @@ export default function CampaignCard(props) {
               title="Click to inspect Multi-Rail breakdown"
             >
               <span className="amount-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Raised</span>
-              <span className="amount-value accent" style={{ fontSize: '1.25rem' }}>{formatEthAmt(camp.currentAmount)} ETH</span>
+              <span className="amount-value accent" style={{ fontSize: '1.25rem' }}>{formatEthAmt(displayCurrentEth)} ETH</span>
               <span style={{ fontSize: '0.82rem', color: '#0284c7', fontWeight: 600, marginTop: '2px' }}>
-                ≈ ₱{(parseFloat(camp.currentAmount || 0) * 170000).toLocaleString('en-US', { maximumFractionDigits: 0 })} PHP
+                ≈ ₱{(displayCurrentEth * 170000).toLocaleString('en-US', { maximumFractionDigits: 0 })} PHP
               </span>
             </div>
             <div 
