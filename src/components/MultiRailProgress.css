@@ -180,41 +180,79 @@
 }
 
 /* ============================================================
-   Inline Telemetry Drawer (Sleek, integrated into card)
+   Dropdown Popup Card (Floating overlay, does not stretch card)
    ============================================================ */
-.multi-rail-drawer {
-  margin-top: 10px;
-  background: var(--bg-card-hover, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+.campaign-card.telemetry-dropdown-active {
+  z-index: 60 !important;
+}
+
+.multi-rail-dropdown-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(14, 20, 32, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(34, 197, 94, 0.3);
   border-radius: 12px;
   padding: 12px;
-  animation: drawerSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05), 0 8px 24px rgba(34, 197, 94, 0.12);
+  animation: dropdownPopupSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme="light"] .multi-rail-drawer {
-  background: #f8fafc;
-  border-color: #e2e8f0;
+[data-theme="light"] .multi-rail-dropdown-popup {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-[data-theme="cyber"] .multi-rail-drawer {
-  background: rgba(10, 15, 30, 0.9);
-  border-color: rgba(0, 255, 200, 0.25);
-  box-shadow: 0 0 15px rgba(0, 255, 200, 0.08);
+[data-theme="cyber"] .multi-rail-dropdown-popup {
+  background: rgba(8, 12, 24, 0.98);
+  border: 1px solid rgba(0, 255, 200, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 255, 200, 0.18);
 }
 
-@keyframes drawerSlideDown {
+@keyframes dropdownPopupSlide {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-8px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-.drawer-header {
+/* Caret pointing up to the trigger button */
+.multi-rail-dropdown-popup::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 28px;
+  width: 10px;
+  height: 10px;
+  background: rgba(14, 20, 32, 0.97);
+  border-left: 1px solid rgba(34, 197, 94, 0.3);
+  border-top: 1px solid rgba(34, 197, 94, 0.3);
+  transform: rotate(45deg);
+  z-index: 1;
+}
+
+[data-theme="light"] .multi-rail-dropdown-popup::before {
+  background: rgba(255, 255, 255, 0.98);
+  border-left-color: rgba(0, 0, 0, 0.12);
+  border-top-color: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="cyber"] .multi-rail-dropdown-popup::before {
+  background: rgba(8, 12, 24, 0.98);
+  border-left-color: rgba(0, 255, 200, 0.35);
+  border-top-color: rgba(0, 255, 200, 0.35);
+}
+
+.dropdown-popup-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -223,8 +261,47 @@
   margin-bottom: 10px;
 }
 
-[data-theme="light"] .drawer-header {
+[data-theme="light"] .dropdown-popup-header {
   border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+.dropdown-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-popup-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.dropdown-popup-close-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+[data-theme="light"] .dropdown-popup-close-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #64748b;
+}
+
+[data-theme="light"] .dropdown-popup-close-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
 }
 
 .drawer-header-left {
@@ -411,239 +488,3 @@
   color: var(--accent, #22c55e);
   text-decoration: underline;
 }
-
-/* ============================================================
-   Multi-Rail Telemetry Modal Window (Portal to document.body)
-   Preserves Campaign Card geometry without downward stretching
-   ============================================================ */
-.multi-rail-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(4, 7, 13, 0.82);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999999;
-  padding: 16px;
-}
-
-.multi-rail-modal-window {
-  width: 580px;
-  max-width: 95vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  background: var(--bg-card, #0d121c);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(34, 197, 94, 0.15);
-  border-radius: 20px;
-  padding: 22px 24px;
-  color: var(--text-primary, #ffffff);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-[data-theme="light"] .multi-rail-modal-window {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
-  color: #0f172a;
-}
-
-[data-theme="cyber"] .multi-rail-modal-window {
-  background: #060a12;
-  border-color: rgba(0, 255, 200, 0.35);
-  box-shadow: 0 0 40px rgba(0, 255, 200, 0.18);
-}
-
-.rail-modal-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="light"] .rail-modal-header {
-  border-bottom-color: rgba(0, 0, 0, 0.08);
-}
-
-.rail-modal-header-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-}
-
-.rail-modal-tag {
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  color: var(--accent, #22c55e);
-  margin-bottom: 3px;
-}
-
-.rail-modal-title {
-  font-size: 1.12rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-primary, #ffffff);
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 440px;
-}
-
-[data-theme="light"] .rail-modal-title {
-  color: #0f172a;
-}
-
-.rail-modal-close-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary, #94a3b8);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  flex-shrink: 0;
-}
-
-[data-theme="light"] .rail-modal-close-btn {
-  background: #f1f5f9;
-  border-color: #e2e8f0;
-  color: #475569;
-}
-
-.rail-modal-close-btn:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #ef4444;
-}
-
-/* Modal Overview Box */
-.rail-modal-overview-box {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
-  padding: 14px 16px;
-}
-
-[data-theme="light"] .rail-modal-overview-box {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-}
-
-.rail-overview-amounts-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.rail-overview-caption {
-  font-size: 0.74rem;
-  color: var(--text-muted, #94a3b8);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  margin-bottom: 3px;
-}
-
-.rail-overview-num-wrap {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.rail-overview-eth {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--accent, #22c55e);
-}
-
-.rail-overview-php {
-  font-size: 0.85rem;
-  color: #0284c7;
-  font-weight: 600;
-}
-
-.rail-overview-pct-box {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.rail-overview-pct {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--text-primary, #ffffff);
-}
-
-[data-theme="light"] .rail-overview-pct {
-  color: #0f172a;
-}
-
-.rail-overview-goal {
-  font-size: 0.72rem;
-  color: var(--text-muted, #94a3b8);
-  font-weight: 500;
-}
-
-.rail-modal-bar-track {
-  width: 100%;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 9999px;
-  overflow: hidden;
-  margin: 6px 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-[data-theme="light"] .rail-modal-bar-track {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-.rail-modal-subtrack-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: var(--text-muted, #94a3b8);
-  font-weight: 600;
-}
-
-.rail-badge-verified {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--accent, #22c55e);
-}
-
-/* Modal Bottom Actions Bar */
-.rail-modal-bottom-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 4px;
-}
-
-[data-theme="light"] .rail-modal-bottom-bar {
-  border-top-color: rgba(0, 0, 0, 0.08);
-}
-
