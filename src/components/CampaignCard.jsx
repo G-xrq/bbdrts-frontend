@@ -343,6 +343,7 @@ export default function CampaignCard(props) {
   const [cardCountry, setCardCountry] = useState('Philippines');
   const [hideCardDetails, setHideCardDetails] = useState(false);
   const [showRailTelemetry, setShowRailTelemetry] = useState(false);
+  const [isRailPinned, setIsRailPinned] = useState(false);
 
   // Optical True-Zoom Magnifier Lens (280px, 1.5x Magnification, Symmetrical Invariance)
   const [magnifierActive, setMagnifierActive] = useState(false);
@@ -659,6 +660,7 @@ export default function CampaignCard(props) {
   const gcashShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.gcash.raw / currentTotal) * 100)) : 0;
   const mayaShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.maya.raw / currentTotal) * 100)) : 0;
   const bankShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.bank.raw / currentTotal) * 100)) : 0;
+  const isTelemetryVisible = showRailTelemetry || isRailPinned;
 
   // Fixed 4-chip incremental donation amounts (+₱50, +₱100, +₱500, +₱1000)
   const presetIncrements = [50, 100, 500, 1000];
@@ -1274,19 +1276,22 @@ export default function CampaignCard(props) {
             {/* Header: Goal & Total Percent */}
             <div className="multi-rail-header">
               <span className="multi-rail-goal-text">
-                <strong>{camp.currentAmount} ETH</strong> of {camp.targetAmount} ETH goal
+                <strong>{formatEthClean(camp.currentAmount)} ETH</strong> of {formatEthClean(camp.targetAmount)} ETH goal
               </span>
-              <span 
-                className="multi-rail-pct-badge"
+              <button 
+                type="button"
+                className={`multi-rail-pct-badge ${isTelemetryVisible ? 'is-open' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
+                  setIsRailPinned(prev => !prev);
                   setShowRailTelemetry(prev => !prev);
                 }}
-                title="Click or hover to inspect payment rail breakdown"
+                title="Click to pin/unpin multi-rail breakdown"
               >
                 <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>insights</span>
                 {pct}% funded
-              </span>
+                <span className="material-symbols-outlined badge-arrow">expand_more</span>
+              </button>
             </div>
 
             {/* Segmented Multi-Rail Track */}
@@ -1294,9 +1299,9 @@ export default function CampaignCard(props) {
               className="multi-rail-track-wrap"
               onClick={(e) => {
                 e.stopPropagation();
-                setShowRailTelemetry(prev => !prev);
+                setIsRailPinned(prev => !prev);
               }}
-              title="Hover to view multi-rail contributions (ETH, GCash, Maya, Bank)"
+              title="Multi-rail progress: ETH, GCash, Maya, Bank Transfer"
             >
               <div className="multi-rail-track-inner">
                 {ethSegmentPct > 0 && (
@@ -1333,143 +1338,146 @@ export default function CampaignCard(props) {
               </div>
             </div>
 
-            {/* Streamlined Theme-Aligned Micro Rail Indicator */}
-            <div className="multi-rail-hint-strip">
-              <div className="multi-rail-legend-dots" onClick={() => setShowRailTelemetry(prev => !prev)}>
-                <span className="rail-dot-item" title="Ethereum Web3">
-                  <span className="rail-dot dot-eth"></span> ETH
+            {/* Multi-Rail Legend Strip with Live Percentages */}
+            <div className="multi-rail-legend-bar">
+              <div className="multi-rail-legend-items">
+                <span className="legend-chip chip-eth" title={`ETH: ${breakdown.eth.amount} ETH (${ethShare}%)`}>
+                  <span className="legend-dot dot-eth"></span>
+                  <span className="legend-name">ETH</span>
+                  <span className="legend-pct">{ethShare}%</span>
                 </span>
-                <span className="rail-dot-item" title="GCash E-Wallet">
-                  <span className="rail-dot dot-gcash"></span> GCash
+                <span className="legend-chip chip-gcash" title={`GCash: ₱${breakdown.gcash.php.toLocaleString()} (${gcashShare}%)`}>
+                  <span className="legend-dot dot-gcash"></span>
+                  <span className="legend-name">GCash</span>
+                  <span className="legend-pct">{gcashShare}%</span>
                 </span>
-                <span className="rail-dot-item" title="Maya Digital Bank">
-                  <span className="rail-dot dot-maya"></span> Maya
+                <span className="legend-chip chip-maya" title={`Maya: ₱${breakdown.maya.php.toLocaleString()} (${mayaShare}%)`}>
+                  <span className="legend-dot dot-maya"></span>
+                  <span className="legend-name">Maya</span>
+                  <span className="legend-pct">{mayaShare}%</span>
                 </span>
-                <span className="rail-dot-item" title="Bank Transfer & Card">
-                  <span className="rail-dot dot-bank"></span> Bank
+                <span className="legend-chip chip-bank" title={`Bank: ₱${breakdown.bank.php.toLocaleString()} (${bankShare}%)`}>
+                  <span className="legend-dot dot-bank"></span>
+                  <span className="legend-name">Bank</span>
+                  <span className="legend-pct">{bankShare}%</span>
                 </span>
               </div>
               <button 
                 type="button" 
-                className="multi-rail-inspect-btn"
+                className={`legend-toggle-btn ${isTelemetryVisible ? 'is-active' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
+                  setIsRailPinned(prev => !prev);
                   setShowRailTelemetry(prev => !prev);
                 }}
-                title="Toggle payment rail breakdown"
+                title="Toggle rail telemetry breakdown"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>insights</span>
-                <span>{showRailTelemetry ? 'Close' : 'Details'}</span>
+                <span>{isTelemetryVisible ? 'Hide' : 'Details'}</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>
+                  {isTelemetryVisible ? 'expand_less' : 'expand_more'}
+                </span>
               </button>
             </div>
 
-            {/* Interactive Hover Telemetry Flyout */}
-            {showRailTelemetry && (
-              <div className="multi-rail-popover" onClick={(e) => e.stopPropagation()}>
-                {/* Top bar */}
+            {/* Inline Expanding Telemetry Drawer */}
+            <div className={`multi-rail-drawer ${isTelemetryVisible ? 'is-expanded' : ''}`}>
+              <div className="multi-rail-panel-inner">
+                {/* Panel Header */}
                 <div className="popover-top-bar">
                   <div className="popover-title-row">
                     <div className="popover-pulse-beacon"></div>
-                    <span className="popover-title">Multi-Rail Fund Telemetry</span>
+                    <span className="popover-title">Multi-Rail Payment Breakdown</span>
                   </div>
                   <span className="popover-backers-badge">
                     <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>group</span>
-                    {breakdown.totalBackers || 0} Backers
+                    {breakdown.totalBackers || 0} Total Backer{breakdown.totalBackers === 1 ? '' : 's'}
                   </span>
                 </div>
 
-                {/* Rail breakdown items */}
-                <div className="popover-rail-list">
-                  {/* Ethereum Web3 */}
-                  <div className="popover-rail-item">
-                    <div className="popover-rail-left">
-                      <div className="popover-rail-icon-box icon-box-eth">
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>currency_exchange</span>
-                      </div>
-                      <div className="popover-rail-name-box">
-                        <span className="popover-rail-name">Ethereum (Sepolia)</span>
-                        <span className="popover-rail-meta">{ethShare}% of raised · {breakdown.eth.count || 0} on-chain txs</span>
+                {/* 2x2 Telemetry Cards Grid */}
+                <div className="popover-rail-grid">
+                  {/* Ethereum Card */}
+                  <div className="popover-rail-card card-eth">
+                    <div className="rail-card-left">
+                      <span className="rail-card-dot dot-eth"></span>
+                      <div>
+                        <div className="rail-card-label">Ethereum Web3</div>
+                        <div className="rail-card-meta">{breakdown.eth.count || 0} tx · {ethShare}%</div>
                       </div>
                     </div>
-                    <div className="popover-rail-right">
-                      <span className="popover-rail-amt-primary" style={{ color: '#10b981' }}>{breakdown.eth.amount} ETH</span>
-                      <span className="popover-rail-amt-secondary">≈ ₱{breakdown.eth.php.toLocaleString()} PHP</span>
+                    <div className="rail-card-right">
+                      <div className="rail-card-val val-eth">{breakdown.eth.amount} ETH</div>
+                      <div className="rail-card-subval">≈ ₱{breakdown.eth.php.toLocaleString()}</div>
                     </div>
                   </div>
 
-                  {/* GCash */}
-                  <div className="popover-rail-item">
-                    <div className="popover-rail-left">
-                      <div className="popover-rail-icon-box icon-box-gcash">
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>phone_android</span>
-                      </div>
-                      <div className="popover-rail-name-box">
-                        <span className="popover-rail-name">GCash E-Wallet</span>
-                        <span className="popover-rail-meta">{gcashShare}% of raised · {breakdown.gcash.count || 0} contributions</span>
+                  {/* GCash Card */}
+                  <div className="popover-rail-card card-gcash">
+                    <div className="rail-card-left">
+                      <span className="rail-card-dot dot-gcash"></span>
+                      <div>
+                        <div className="rail-card-label">GCash E-Wallet</div>
+                        <div className="rail-card-meta">{breakdown.gcash.count || 0} donor{breakdown.gcash.count === 1 ? '' : 's'} · {gcashShare}%</div>
                       </div>
                     </div>
-                    <div className="popover-rail-right">
-                      <span className="popover-rail-amt-primary" style={{ color: '#007dfe' }}>₱{breakdown.gcash.php.toLocaleString()} PHP</span>
-                      <span className="popover-rail-amt-secondary">{breakdown.gcash.amount} ETH</span>
+                    <div className="rail-card-right">
+                      <div className="rail-card-val val-gcash">₱{breakdown.gcash.php.toLocaleString()}</div>
+                      <div className="rail-card-subval">{breakdown.gcash.amount} ETH</div>
                     </div>
                   </div>
 
-                  {/* Maya */}
-                  <div className="popover-rail-item">
-                    <div className="popover-rail-left">
-                      <div className="popover-rail-icon-box icon-box-maya">
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>qr_code_scanner</span>
-                      </div>
-                      <div className="popover-rail-name-box">
-                        <span className="popover-rail-name">Maya Digital Bank</span>
-                        <span className="popover-rail-meta">{mayaShare}% of raised · {breakdown.maya.count || 0} contributions</span>
+                  {/* Maya Card */}
+                  <div className="popover-rail-card card-maya">
+                    <div className="rail-card-left">
+                      <span className="rail-card-dot dot-maya"></span>
+                      <div>
+                        <div className="rail-card-label">Maya Digital Bank</div>
+                        <div className="rail-card-meta">{breakdown.maya.count || 0} donor{breakdown.maya.count === 1 ? '' : 's'} · {mayaShare}%</div>
                       </div>
                     </div>
-                    <div className="popover-rail-right">
-                      <span className="popover-rail-amt-primary" style={{ color: '#00d665' }}>₱{breakdown.maya.php.toLocaleString()} PHP</span>
-                      <span className="popover-rail-amt-secondary">{breakdown.maya.amount} ETH</span>
+                    <div className="rail-card-right">
+                      <div className="rail-card-val val-maya">₱{breakdown.maya.php.toLocaleString()}</div>
+                      <div className="rail-card-subval">{breakdown.maya.amount} ETH</div>
                     </div>
                   </div>
 
-                  {/* Bank Transfer / Card */}
-                  <div className="popover-rail-item">
-                    <div className="popover-rail-left">
-                      <div className="popover-rail-icon-box icon-box-bank">
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>account_balance</span>
-                      </div>
-                      <div className="popover-rail-name-box">
-                        <span className="popover-rail-name">Bank Transfer & Card</span>
-                        <span className="popover-rail-meta">{bankShare}% of raised · {breakdown.bank.count || 0} deposits</span>
+                  {/* Bank Card */}
+                  <div className="popover-rail-card card-bank">
+                    <div className="rail-card-left">
+                      <span className="rail-card-dot dot-bank"></span>
+                      <div>
+                        <div className="rail-card-label">Bank Transfer / Card</div>
+                        <div className="rail-card-meta">{breakdown.bank.count || 0} deposit{breakdown.bank.count === 1 ? '' : 's'} · {bankShare}%</div>
                       </div>
                     </div>
-                    <div className="popover-rail-right">
-                      <span className="popover-rail-amt-primary" style={{ color: '#8b5cf6' }}>₱{breakdown.bank.php.toLocaleString()} PHP</span>
-                      <span className="popover-rail-amt-secondary">{breakdown.bank.amount} ETH</span>
+                    <div className="rail-card-right">
+                      <div className="rail-card-val val-bank">₱{breakdown.bank.php.toLocaleString()}</div>
+                      <div className="rail-card-subval">{breakdown.bank.amount} ETH</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Footer audit stamp */}
+                {/* Panel Footer */}
                 <div className="popover-footer">
                   <div className="popover-audit-tag">
-                    <span className="material-symbols-outlined">verified_user</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '13px', color: 'var(--accent, #22c55e)' }}>verified</span>
                     <span>Cross-Ledger Verified</span>
                   </div>
                   <button 
                     type="button" 
                     className="popover-ledger-btn"
-                    onClick={() => {
-                      setShowRailTelemetry(false);
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setLedgerOpen(true);
                       fetchHistory(true);
                     }}
                   >
                     <span>View Public Ledger</span>
-                    <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>arrow_forward</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>arrow_forward</span>
                   </button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="campaign-amounts" style={{ marginTop: '12px' }}>
@@ -1478,11 +1486,14 @@ export default function CampaignCard(props) {
               style={{ cursor: 'pointer' }}
               onMouseEnter={() => setShowRailTelemetry(true)} 
               onMouseLeave={() => setShowRailTelemetry(false)}
-              onClick={() => setShowRailTelemetry(prev => !prev)}
+              onClick={() => {
+                setIsRailPinned(prev => !prev);
+                setShowRailTelemetry(prev => !prev);
+              }}
               title="Click or hover to inspect Multi-Rail breakdown"
             >
               <span className="amount-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Raised</span>
-              <span className="amount-value accent" style={{ fontSize: '1.25rem' }}>{camp.currentAmount} ETH</span>
+              <span className="amount-value accent" style={{ fontSize: '1.25rem' }}>{formatEthClean(camp.currentAmount)} ETH</span>
               <span style={{ fontSize: '0.82rem', color: '#0284c7', fontWeight: 600, marginTop: '2px' }}>
                 ≈ ₱{(parseFloat(camp.currentAmount || 0) * 170000).toLocaleString('en-US', { maximumFractionDigits: 0 })} PHP
               </span>
@@ -1492,11 +1503,14 @@ export default function CampaignCard(props) {
               style={{ cursor: 'pointer' }}
               onMouseEnter={() => setShowRailTelemetry(true)} 
               onMouseLeave={() => setShowRailTelemetry(false)}
-              onClick={() => setShowRailTelemetry(prev => !prev)}
+              onClick={() => {
+                setIsRailPinned(prev => !prev);
+                setShowRailTelemetry(prev => !prev);
+              }}
               title="Click or hover to inspect Multi-Rail breakdown"
             >
               <span className="amount-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Target Goal</span>
-              <span className="amount-value" style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>{camp.targetAmount} ETH</span>
+              <span className="amount-value" style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>{formatEthClean(camp.targetAmount)} ETH</span>
               <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '2px' }}>
                 ≈ ₱{(parseFloat(camp.targetAmount || 0) * 170000).toLocaleString('en-US', { maximumFractionDigits: 0 })} PHP
               </span>

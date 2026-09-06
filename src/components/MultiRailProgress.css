@@ -1,33 +1,32 @@
 /* ============================================================
-   BBDRTS Multi-Rail Donation Progress Bar & Telemetry Popover
-   Strictly adheres to BBDRTS theme design system:
-   - Surface: var(--bg-card, #222) / var(--bg-surface, #1a1a1a)
-   - Accent: var(--accent, #22c55e)
-   - Text: var(--text-primary, #fff), var(--text-secondary, #a3a3a3)
-   - Border: var(--border, rgba(255,255,255,0.08))
+   BBDRTS Multi-Rail Donation Progress Bar & Telemetry Panel
+   Theme-Integrated Inline Architecture (No floating obstruction)
    ============================================================ */
 
 .multi-rail-wrapper {
   position: relative;
   margin-top: 14px;
-  user-select: none;
 }
 
-/* ── Goal Text & % Funded Badge ────────────────────────────── */
+/* ── 1. Header: Goal text & Pct Badge ──────────────────────── */
 .multi-rail-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
+  gap: 8px;
 }
 
 .multi-rail-goal-text {
-  font-size: 0.84rem;
+  font-size: 0.83rem;
   color: var(--text-secondary, #a3a3a3);
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .multi-rail-goal-text strong {
@@ -36,35 +35,46 @@
 }
 
 .multi-rail-pct-badge {
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.76rem;
+  font-weight: 600;
   color: var(--accent, #22c55e);
   display: inline-flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  padding: 3px 9px;
-  border-radius: 9999px;
-  background: var(--accent-dim, rgba(34, 197, 94, 0.12));
-  border: 1px solid var(--border-focus, rgba(34, 197, 94, 0.3));
-  transition: all 0.2s ease;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--accent-dim, rgba(34, 197, 94, 0.1));
+  border: 1px solid var(--border-focus, rgba(34, 197, 94, 0.25));
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .multi-rail-pct-badge:hover {
-  background: var(--accent-glow, rgba(34, 197, 94, 0.22));
-  transform: translateY(-1px);
+  background: var(--accent-glow, rgba(34, 197, 94, 0.2));
+  border-color: var(--accent, #22c55e);
 }
 
-/* ── The Segmented Progress Bar Track ──────────────────────── */
+.multi-rail-pct-badge .badge-arrow {
+  font-size: 14px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.multi-rail-pct-badge.is-open .badge-arrow {
+  transform: rotate(180deg);
+}
+
+/* ── 2. Segmented Progress Bar Track ────────────────────────── */
 .multi-rail-track-wrap {
   position: relative;
   width: 100%;
   height: 8px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
-  overflow: visible;
+  overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: height 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
 }
 
@@ -76,27 +86,25 @@
 .multi-rail-track-wrap:hover {
   height: 10px;
   border-color: var(--accent, #22c55e);
-  box-shadow: 0 0 14px var(--accent-glow, rgba(34, 197, 94, 0.3));
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
 }
 
 .multi-rail-track-inner {
-  position: relative;
   width: 100%;
   height: 100%;
   border-radius: 9999px;
-  overflow: hidden;
   display: flex;
 }
 
-/* Multi-Rail Segments */
+/* Payment Rail Color Fill Gradients */
 .multi-rail-segment {
   height: 100%;
+  transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .rail-segment-eth {
-  background: linear-gradient(90deg, #16a34a, #22c55e);
+  background: linear-gradient(90deg, #15803d, #22c55e);
 }
 
 .rail-segment-gcash {
@@ -117,141 +125,131 @@
   background: transparent;
 }
 
-/* ── Minimalist Hint Bar Below Track ───────────────────────── */
-.multi-rail-hint-strip {
+/* ── 3. Multi-Rail Micro Legend Strip ───────────────────────── */
+.multi-rail-legend-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 6px;
   padding: 0 2px;
+  gap: 4px;
 }
 
-.multi-rail-legend-dots {
+.multi-rail-legend-items {
   display: flex;
   align-items: center;
-  gap: 12px;
-  cursor: pointer;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.rail-dot-item {
+.legend-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
+  gap: 4px;
+  font-size: 0.69rem;
+  color: var(--text-secondary, #a3a3a3);
   font-weight: 500;
-  color: var(--text-muted, #737373);
   transition: color 0.15s ease;
 }
 
-.rail-dot-item:hover {
-  color: var(--text-secondary, #a3a3a3);
+.legend-chip:hover {
+  color: var(--text-primary, #ffffff);
 }
 
-.rail-dot {
+.legend-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  display: inline-block;
+  flex-shrink: 0;
 }
 
-.dot-eth { background: var(--accent, #22c55e); }
-.dot-gcash { background: #38bdf8; }
-.dot-maya { background: #10b981; }
-.dot-bank { background: #a855f7; }
+.dot-eth { background: #22c55e; box-shadow: 0 0 5px rgba(34, 197, 94, 0.5); }
+.dot-gcash { background: #38bdf8; box-shadow: 0 0 5px rgba(56, 189, 248, 0.5); }
+.dot-maya { background: #10b981; box-shadow: 0 0 5px rgba(16, 185, 129, 0.5); }
+.dot-bank { background: #a855f7; box-shadow: 0 0 5px rgba(168, 85, 247, 0.5); }
 
-.multi-rail-inspect-btn {
+.legend-name {
+  font-weight: 500;
+}
+
+.legend-pct {
+  font-size: 0.64rem;
+  color: var(--text-muted, #737373);
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-toggle-btn {
   background: transparent;
   border: none;
   color: var(--text-muted, #737373);
-  font-size: 0.72rem;
-  font-weight: 500;
+  font-size: 0.69rem;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   cursor: pointer;
-  padding: 0;
-  transition: color 0.15s ease;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.multi-rail-inspect-btn:hover {
+.legend-toggle-btn:hover,
+.legend-toggle-btn.is-active {
   color: var(--accent, #22c55e);
+  background: var(--accent-dim, rgba(34, 197, 94, 0.08));
 }
 
-/* ============================================================
-   Premium Obsidian Popover (Matches Card Surface & Borders)
-   ============================================================ */
-.multi-rail-popover {
-  position: absolute;
-  bottom: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 320px;
-  max-width: calc(100vw - 32px);
-  background: var(--bg-surface, #1a1a1a);
-  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.1);
-  z-index: 100;
-  animation: popoverReveal 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: auto;
+/* ── 4. Inline Expanding Telemetry Drawer (Zero Layout Blocking) ── */
+.multi-rail-drawer {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.22s ease,
+              margin 0.25s ease;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
-[data-theme="light"] .multi-rail-popover {
-  background: #ffffff;
-  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.1);
+.multi-rail-drawer.is-expanded {
+  max-height: 260px;
+  opacity: 1;
+  margin-top: 10px;
+  margin-bottom: 4px;
 }
 
-[data-theme="cyber"] .multi-rail-popover {
-  background: #111217;
+.multi-rail-panel-inner {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  padding: 10px 12px;
+  position: relative;
+}
+
+[data-theme="light"] .multi-rail-panel-inner {
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="cyber"] .multi-rail-panel-inner {
+  background: rgba(0, 255, 163, 0.03);
   border: 1px solid rgba(0, 255, 163, 0.2);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 255, 163, 0.1);
+  box-shadow: inset 0 0 16px rgba(0, 255, 163, 0.04);
 }
 
-/* Pointer Triangle */
-.multi-rail-popover::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 6px;
-  border-style: solid;
-  border-color: var(--bg-surface, #1a1a1a) transparent transparent transparent;
-}
-
-[data-theme="light"] .multi-rail-popover::after {
-  border-color: #ffffff transparent transparent transparent;
-}
-
-[data-theme="cyber"] .multi-rail-popover::after {
-  border-color: #111217 transparent transparent transparent;
-}
-
-@keyframes popoverReveal {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 6px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
-
-/* Header */
+/* Telemetry Header */
 .popover-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   margin-bottom: 8px;
 }
 
 [data-theme="light"] .popover-top-bar {
-  border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .popover-title-row {
@@ -265,179 +263,168 @@
   height: 6px;
   border-radius: 50%;
   background: var(--accent, #22c55e);
+  box-shadow: 0 0 6px var(--accent, #22c55e);
+  animation: beaconPulse 2s infinite ease-in-out;
+}
+
+@keyframes beaconPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
 }
 
 .popover-title {
-  font-size: 0.76rem;
+  font-size: 0.71rem;
   font-weight: 700;
-  color: var(--text-primary, #ffffff);
+  color: var(--text-secondary, #a3a3a3);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .popover-backers-badge {
+  font-size: 0.69rem;
+  font-weight: 600;
+  color: var(--text-muted, #737373);
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-secondary, #a3a3a3);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 2px 7px;
-  border-radius: 6px;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  gap: 4px;
 }
 
-[data-theme="light"] .popover-backers-badge {
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
-  color: var(--text-secondary, #334155);
+/* ── 5. Balanced 2x2 Telemetry Cards Grid ──────────────────── */
+.popover-rail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
 }
 
-/* Rail Breakdown List */
-.popover-rail-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+@media (max-width: 420px) {
+  .popover-rail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.popover-rail-item {
+.popover-rail-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px;
-  background: var(--bg-card, #222222);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
-  border-radius: 8px;
+  padding: 6px 9px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 7px;
   transition: all 0.15s ease;
+  min-width: 0;
 }
 
-[data-theme="light"] .popover-rail-item {
-  background: #f8fafc;
-  border: 1px solid var(--border, rgba(0, 0, 0, 0.06));
+.popover-rail-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.popover-rail-item:hover {
-  border-color: var(--border-strong, rgba(255, 255, 255, 0.18));
-  background: var(--bg-card-hover, #2a2a2a);
+[data-theme="light"] .popover-rail-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-[data-theme="light"] .popover-rail-item:hover {
+[data-theme="light"] .popover-rail-card:hover {
   background: #f1f5f9;
 }
 
-.popover-rail-left {
+.rail-card-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  min-width: 0;
 }
 
-.popover-rail-icon-box {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.rail-card-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.icon-box-eth {
-  background: var(--accent-dim, rgba(34, 197, 94, 0.12));
-  color: var(--accent, #22c55e);
-}
-
-.icon-box-gcash {
-  background: rgba(2, 132, 199, 0.12);
-  color: #38bdf8;
-}
-
-.icon-box-maya {
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-}
-
-.icon-box-bank {
-  background: rgba(147, 51, 234, 0.12);
-  color: #a855f7;
-}
-
-.popover-rail-name-box {
-  display: flex;
-  flex-direction: column;
-}
-
-.popover-rail-name {
-  font-size: 0.76rem;
+.rail-card-label {
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-primary, #ffffff);
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.popover-rail-meta {
-  font-size: 0.66rem;
+[data-theme="light"] .rail-card-label {
+  color: #0f172a;
+}
+
+.rail-card-meta {
+  font-size: 0.63rem;
   color: var(--text-muted, #737373);
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
-.popover-rail-right {
+.rail-card-right {
   text-align: right;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-shrink: 0;
+  margin-left: 6px;
 }
 
-.popover-rail-amt-primary {
-  font-size: 0.78rem;
+.rail-card-val {
+  font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
-.popover-rail-amt-secondary {
-  font-size: 0.66rem;
+.val-eth { color: var(--accent, #22c55e); }
+.val-gcash { color: #38bdf8; }
+.val-maya { color: #10b981; }
+.val-bank { color: #a855f7; }
+
+.rail-card-subval {
+  font-size: 0.62rem;
   color: var(--text-muted, #737373);
-  font-weight: 500;
+  line-height: 1.1;
 }
 
-/* Footer */
+/* ── 6. Panel Footer ───────────────────────────────────────── */
 .popover-footer {
   margin-top: 8px;
-  padding-top: 7px;
-  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 [data-theme="light"] .popover-footer {
-  border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .popover-audit-tag {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.67rem;
-  color: var(--accent, #22c55e);
-  font-weight: 600;
-}
-
-.popover-audit-tag span {
-  font-size: 12px;
+  font-size: 0.65rem;
+  color: var(--text-muted, #737373);
+  font-weight: 500;
 }
 
 .popover-ledger-btn {
   background: transparent;
   border: none;
-  color: var(--text-secondary, #a3a3a3);
-  font-size: 0.68rem;
+  color: var(--accent, #22c55e);
+  font-size: 0.67rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   padding: 0;
-  transition: color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .popover-ledger-btn:hover {
-  color: var(--accent, #22c55e);
+  text-decoration: underline;
+  opacity: 0.85;
 }
