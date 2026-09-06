@@ -595,19 +595,52 @@ export default function CampaignCard(props) {
   const pct = progressPct(camp.currentAmount, camp.targetAmount);
 
   // Multi-Rail Breakdown & Segment Calculations
+  const formatEthClean = (val) => {
+    const num = parseFloat(val || 0);
+    if (!num || isNaN(num)) return '0';
+    if (num < 0.0001) return num.toFixed(6).replace(/\.?0+$/, '');
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  };
+
   const breakdown = useMemo(() => {
-    if (camp.railBreakdown && typeof camp.railBreakdown === 'object') {
-      return camp.railBreakdown;
-    }
+    const b = camp.railBreakdown && typeof camp.railBreakdown === 'object'
+      ? camp.railBreakdown
+      : null;
     const currentEth = parseFloat(camp.currentAmount || 0);
+    
+    const ethAmt = b?.eth?.amount ?? currentEth;
+    const gcashAmt = b?.gcash?.amount ?? 0;
+    const mayaAmt = b?.maya?.amount ?? 0;
+    const bankAmt = b?.bank?.amount ?? 0;
+
     return {
-      eth: { amount: currentEth, php: Math.round(currentEth * 170000), count: currentEth > 0 ? 1 : 0 },
-      gcash: { amount: 0, php: 0, count: 0 },
-      maya: { amount: 0, php: 0, count: 0 },
-      bank: { amount: 0, php: 0, count: 0 },
-      totalRaisedEth: currentEth,
+      eth: { 
+        amount: formatEthClean(ethAmt), 
+        raw: ethAmt, 
+        php: b?.eth?.php ?? Math.round(ethAmt * 170000), 
+        count: b?.eth?.count ?? (ethAmt > 0 ? 1 : 0) 
+      },
+      gcash: { 
+        amount: formatEthClean(gcashAmt), 
+        raw: gcashAmt, 
+        php: b?.gcash?.php ?? Math.round(gcashAmt * 170000), 
+        count: b?.gcash?.count ?? 0 
+      },
+      maya: { 
+        amount: formatEthClean(mayaAmt), 
+        raw: mayaAmt, 
+        php: b?.maya?.php ?? Math.round(mayaAmt * 170000), 
+        count: b?.maya?.count ?? 0 
+      },
+      bank: { 
+        amount: formatEthClean(bankAmt), 
+        raw: bankAmt, 
+        php: b?.bank?.php ?? Math.round(bankAmt * 170000), 
+        count: b?.bank?.count ?? 0 
+      },
+      totalRaisedEth: formatEthClean(currentEth),
       totalRaisedPhp: Math.round(currentEth * 170000),
-      totalBackers: currentEth > 0 ? 1 : 0
+      totalBackers: b?.totalBackers ?? (currentEth > 0 ? 1 : 0)
     };
   }, [camp.railBreakdown, camp.currentAmount]);
 
@@ -616,16 +649,16 @@ export default function CampaignCard(props) {
   const totalBarPct = Math.min(100, Math.max(0, (currentTotal / targetGoal) * 100));
 
   // Compute segment widths on the bar (total sum === totalBarPct)
-  const ethSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct, (breakdown.eth.amount / targetGoal) * 100) : 0;
-  const gcashSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct - ethSegmentPct, (breakdown.gcash.amount / targetGoal) * 100) : 0;
-  const mayaSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct - ethSegmentPct - gcashSegmentPct, (breakdown.maya.amount / targetGoal) * 100) : 0;
-  const bankSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct - ethSegmentPct - gcashSegmentPct - mayaSegmentPct, (breakdown.bank.amount / targetGoal) * 100) : 0;
+  const ethSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct, (breakdown.eth.raw / targetGoal) * 100) : 0;
+  const gcashSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct - ethSegmentPct, (breakdown.gcash.raw / targetGoal) * 100) : 0;
+  const mayaSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct - ethSegmentPct - gcashSegmentPct, (breakdown.maya.raw / targetGoal) * 100) : 0;
+  const bankSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct - ethSegmentPct - gcashSegmentPct - mayaSegmentPct, (breakdown.bank.raw / targetGoal) * 100) : 0;
 
   // Percentage shares of total funds raised
-  const ethShare = currentTotal > 0 ? Math.round((breakdown.eth.amount / currentTotal) * 100) : 0;
-  const gcashShare = currentTotal > 0 ? Math.round((breakdown.gcash.amount / currentTotal) * 100) : 0;
-  const mayaShare = currentTotal > 0 ? Math.round((breakdown.maya.amount / currentTotal) * 100) : 0;
-  const bankShare = currentTotal > 0 ? Math.round((breakdown.bank.amount / currentTotal) * 100) : 0;
+  const ethShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.eth.raw / currentTotal) * 100)) : 0;
+  const gcashShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.gcash.raw / currentTotal) * 100)) : 0;
+  const mayaShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.maya.raw / currentTotal) * 100)) : 0;
+  const bankShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.bank.raw / currentTotal) * 100)) : 0;
 
   // Fixed 4-chip incremental donation amounts (+₱50, +₱100, +₱500, +₱1000)
   const presetIncrements = [50, 100, 500, 1000];
@@ -1300,19 +1333,19 @@ export default function CampaignCard(props) {
               </div>
             </div>
 
-            {/* Mini Legend Indicator with Interactive Trigger */}
+            {/* Streamlined Theme-Aligned Micro Rail Indicator */}
             <div className="multi-rail-hint-strip">
-              <div className="multi-rail-legend-dots">
-                <span className="rail-dot-item" title="Ethereum Web3" onClick={() => setShowRailTelemetry(true)}>
+              <div className="multi-rail-legend-dots" onClick={() => setShowRailTelemetry(prev => !prev)}>
+                <span className="rail-dot-item" title="Ethereum Web3">
                   <span className="rail-dot dot-eth"></span> ETH
                 </span>
-                <span className="rail-dot-item" title="GCash Mobile E-Wallet" onClick={() => setShowRailTelemetry(true)}>
+                <span className="rail-dot-item" title="GCash E-Wallet">
                   <span className="rail-dot dot-gcash"></span> GCash
                 </span>
-                <span className="rail-dot-item" title="Maya Digital Banking" onClick={() => setShowRailTelemetry(true)}>
+                <span className="rail-dot-item" title="Maya Digital Bank">
                   <span className="rail-dot dot-maya"></span> Maya
                 </span>
-                <span className="rail-dot-item" title="Bank Transfer / Card" onClick={() => setShowRailTelemetry(true)}>
+                <span className="rail-dot-item" title="Bank Transfer & Card">
                   <span className="rail-dot dot-bank"></span> Bank
                 </span>
               </div>
@@ -1323,9 +1356,10 @@ export default function CampaignCard(props) {
                   e.stopPropagation();
                   setShowRailTelemetry(prev => !prev);
                 }}
+                title="Toggle payment rail breakdown"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>visibility</span>
-                <span>{showRailTelemetry ? 'Hide' : 'Breakdown'}</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>insights</span>
+                <span>{showRailTelemetry ? 'Close' : 'Details'}</span>
               </button>
             </div>
 

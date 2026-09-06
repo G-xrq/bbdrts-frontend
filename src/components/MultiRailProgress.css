@@ -1,6 +1,10 @@
 /* ============================================================
    BBDRTS Multi-Rail Donation Progress Bar & Telemetry Popover
-   Supports: Web3 Ethereum (ETH), GCash, Maya, and Bank Transfer
+   Strictly adheres to BBDRTS theme design system:
+   - Surface: var(--bg-card, #222) / var(--bg-surface, #1a1a1a)
+   - Accent: var(--accent, #22c55e)
+   - Text: var(--text-primary, #fff), var(--text-secondary, #a3a3a3)
+   - Border: var(--border, rgba(255,255,255,0.08))
    ============================================================ */
 
 .multi-rail-wrapper {
@@ -9,7 +13,7 @@
   user-select: none;
 }
 
-/* ── Container & Header Bar ───────────────────────────────── */
+/* ── Goal Text & % Funded Badge ────────────────────────────── */
 .multi-rail-header {
   display: flex;
   align-items: center;
@@ -19,7 +23,7 @@
 
 .multi-rail-goal-text {
   font-size: 0.84rem;
-  color: var(--text-secondary, #94a3b8);
+  color: var(--text-secondary, #a3a3a3);
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -27,52 +31,52 @@
 }
 
 .multi-rail-goal-text strong {
-  color: var(--text-primary, #f8fafc);
+  color: var(--text-primary, #ffffff);
   font-weight: 700;
 }
 
 .multi-rail-pct-badge {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  color: #10b981;
-  display: flex;
+  color: var(--accent, #22c55e);
+  display: inline-flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 9999px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: var(--accent-dim, rgba(34, 197, 94, 0.12));
+  border: 1px solid var(--border-focus, rgba(34, 197, 94, 0.3));
+  transition: all 0.2s ease;
 }
 
 .multi-rail-pct-badge:hover {
-  background: rgba(16, 185, 129, 0.2);
+  background: var(--accent-glow, rgba(34, 197, 94, 0.22));
   transform: translateY(-1px);
 }
 
-/* ── The Interactive Track ─────────────────────────────────── */
+/* ── The Segmented Progress Bar Track ──────────────────────── */
 .multi-rail-track-wrap {
   position: relative;
   width: 100%;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.08);
+  height: 8px;
+  background: rgba(255, 255, 255, 0.07);
   border-radius: 9999px;
   overflow: visible;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
 }
 
 [data-theme="light"] .multi-rail-track-wrap {
-  background: rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
 }
 
 .multi-rail-track-wrap:hover {
-  height: 12px;
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+  height: 10px;
+  border-color: var(--accent, #22c55e);
+  box-shadow: 0 0 14px var(--accent-glow, rgba(34, 197, 94, 0.3));
 }
 
 .multi-rail-track-inner {
@@ -84,132 +88,128 @@
   display: flex;
 }
 
-/* ── Multi-Rail Segments ──────────────────────────────────── */
+/* Multi-Rail Segments */
 .multi-rail-segment {
   height: 100%;
   position: relative;
   transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Segment 1: Ethereum (Web3) */
 .rail-segment-eth {
-  background: linear-gradient(90deg, #059669, #10b981);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(90deg, #16a34a, #22c55e);
 }
 
-/* Segment 2: GCash (Philippines) */
 .rail-segment-gcash {
-  background: linear-gradient(90deg, #0284c7, #007dfe);
-  box-shadow: 0 0 8px rgba(0, 125, 254, 0.4);
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
 }
 
-/* Segment 3: Maya (PayMaya) */
 .rail-segment-maya {
-  background: linear-gradient(90deg, #10b981, #00d665);
-  box-shadow: 0 0 8px rgba(0, 214, 101, 0.4);
+  background: linear-gradient(90deg, #059669, #10b981);
 }
 
-/* Segment 4: Bank Transfer / Card */
 .rail-segment-bank {
-  background: linear-gradient(90deg, #6366f1, #8b5cf6);
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+  background: linear-gradient(90deg, #7c3aed, #a855f7);
 }
 
-/* Empty fallback if no funds yet */
 .rail-segment-empty {
   width: 100%;
   height: 100%;
   background: transparent;
 }
 
-/* Subtle micro hover line */
+/* ── Minimalist Hint Bar Below Track ───────────────────────── */
 .multi-rail-hint-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 5px;
-  font-size: 0.74rem;
-  color: var(--text-muted, #64748b);
+  margin-top: 6px;
+  padding: 0 2px;
 }
 
 .multi-rail-legend-dots {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  cursor: pointer;
 }
 
 .rail-dot-item {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-muted, #737373);
   transition: color 0.15s ease;
 }
 
 .rail-dot-item:hover {
-  filter: brightness(1.2);
+  color: var(--text-secondary, #a3a3a3);
 }
 
 .rail-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   display: inline-block;
 }
 
-.dot-eth { background: #10b981; box-shadow: 0 0 5px rgba(16, 185, 129, 0.6); }
-.dot-gcash { background: #007dfe; box-shadow: 0 0 5px rgba(0, 125, 254, 0.6); }
-.dot-maya { background: #00d665; box-shadow: 0 0 5px rgba(0, 214, 101, 0.6); }
-.dot-bank { background: #8b5cf6; box-shadow: 0 0 5px rgba(139, 92, 246, 0.6); }
+.dot-eth { background: var(--accent, #22c55e); }
+.dot-gcash { background: #38bdf8; }
+.dot-maya { background: #10b981; }
+.dot-bank { background: #a855f7; }
 
 .multi-rail-inspect-btn {
   background: transparent;
   border: none;
-  color: var(--accent, #10b981);
-  font-size: 0.73rem;
-  font-weight: 600;
+  color: var(--text-muted, #737373);
+  font-size: 0.72rem;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 3px;
   cursor: pointer;
   padding: 0;
+  transition: color 0.15s ease;
 }
 
 .multi-rail-inspect-btn:hover {
-  text-decoration: underline;
+  color: var(--accent, #22c55e);
 }
 
 /* ============================================================
-   Interactive Telemetry Popover (Floating Dashboard)
+   Premium Obsidian Popover (Matches Card Surface & Borders)
    ============================================================ */
 .multi-rail-popover {
   position: absolute;
-  bottom: calc(100% + 10px);
+  bottom: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%);
-  width: 330px;
+  width: 320px;
   max-width: calc(100vw - 32px);
-  background: rgba(13, 17, 26, 0.96);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.7), 0 0 24px rgba(16, 185, 129, 0.12);
+  background: var(--bg-surface, #1a1a1a);
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 100;
-  animation: popoverFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: popoverReveal 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: auto;
 }
 
 [data-theme="light"] .multi-rail-popover {
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.18), 0 0 20px rgba(16, 185, 129, 0.1);
+  background: #ffffff;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
-/* Arrow Pointer */
+[data-theme="cyber"] .multi-rail-popover {
+  background: #111217;
+  border: 1px solid rgba(0, 255, 163, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 255, 163, 0.1);
+}
+
+/* Pointer Triangle */
 .multi-rail-popover::after {
   content: '';
   position: absolute;
@@ -218,17 +218,21 @@
   transform: translateX(-50%);
   border-width: 6px;
   border-style: solid;
-  border-color: rgba(13, 17, 26, 0.96) transparent transparent transparent;
+  border-color: var(--bg-surface, #1a1a1a) transparent transparent transparent;
 }
 
 [data-theme="light"] .multi-rail-popover::after {
-  border-color: rgba(255, 255, 255, 0.98) transparent transparent transparent;
+  border-color: #ffffff transparent transparent transparent;
 }
 
-@keyframes popoverFadeIn {
+[data-theme="cyber"] .multi-rail-popover::after {
+  border-color: #111217 transparent transparent transparent;
+}
+
+@keyframes popoverReveal {
   from {
     opacity: 0;
-    transform: translate(-50%, 8px);
+    transform: translate(-50%, 6px);
   }
   to {
     opacity: 1;
@@ -236,18 +240,18 @@
   }
 }
 
-/* Popover Header */
+/* Header */
 .popover-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 9px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  margin-bottom: 8px;
 }
 
 [data-theme="light"] .popover-top-bar {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.08));
 }
 
 .popover-title-row {
@@ -257,71 +261,69 @@
 }
 
 .popover-pulse-beacon {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-  animation: beaconPulse 1.8s infinite;
-}
-
-@keyframes beaconPulse {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #10b981; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+  background: var(--accent, #22c55e);
 }
 
 .popover-title {
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  color: var(--text-primary, #f8fafc);
+  color: var(--text-primary, #ffffff);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
 .popover-backers-badge {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.1);
+  color: var(--text-secondary, #a3a3a3);
+  background: rgba(255, 255, 255, 0.05);
   padding: 2px 7px;
   border-radius: 6px;
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+[data-theme="light"] .popover-backers-badge {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  color: var(--text-secondary, #334155);
 }
 
 /* Rail Breakdown List */
 .popover-rail-list {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .popover-rail-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 9px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 6px 8px;
+  background: var(--bg-card, #222222);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
   border-radius: 8px;
   transition: all 0.15s ease;
 }
 
 [data-theme="light"] .popover-rail-item {
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #f8fafc;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.06));
 }
 
 .popover-rail-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  transform: translateX(2px);
+  border-color: var(--border-strong, rgba(255, 255, 255, 0.18));
+  background: var(--bg-card-hover, #2a2a2a);
 }
 
 [data-theme="light"] .popover-rail-item:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: #f1f5f9;
 }
 
 .popover-rail-left {
@@ -331,19 +333,33 @@
 }
 
 .popover-rail-icon-box {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
 }
 
-.icon-box-eth { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.icon-box-gcash { background: rgba(0, 125, 254, 0.15); color: #007dfe; }
-.icon-box-maya { background: rgba(0, 214, 101, 0.15); color: #00d665; }
-.icon-box-bank { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+.icon-box-eth {
+  background: var(--accent-dim, rgba(34, 197, 94, 0.12));
+  color: var(--accent, #22c55e);
+}
+
+.icon-box-gcash {
+  background: rgba(2, 132, 199, 0.12);
+  color: #38bdf8;
+}
+
+.icon-box-maya {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.icon-box-bank {
+  background: rgba(147, 51, 234, 0.12);
+  color: #a855f7;
+}
 
 .popover-rail-name-box {
   display: flex;
@@ -351,14 +367,15 @@
 }
 
 .popover-rail-name {
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.76rem;
+  font-weight: 600;
   color: var(--text-primary, #ffffff);
+  line-height: 1.2;
 }
 
 .popover-rail-meta {
-  font-size: 0.68rem;
-  color: var(--text-muted, #94a3b8);
+  font-size: 0.66rem;
+  color: var(--text-muted, #737373);
 }
 
 .popover-rail-right {
@@ -369,49 +386,49 @@
 }
 
 .popover-rail-amt-primary {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--text-primary, #ffffff);
+  line-height: 1.2;
 }
 
 .popover-rail-amt-secondary {
-  font-size: 0.68rem;
-  color: var(--text-muted, #94a3b8);
+  font-size: 0.66rem;
+  color: var(--text-muted, #737373);
   font-weight: 500;
 }
 
-/* Popover Footer */
+/* Footer */
 .popover-footer {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 [data-theme="light"] .popover-footer {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
 }
 
 .popover-audit-tag {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.68rem;
-  color: #10b981;
+  font-size: 0.67rem;
+  color: var(--accent, #22c55e);
   font-weight: 600;
 }
 
 .popover-audit-tag span {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .popover-ledger-btn {
   background: transparent;
   border: none;
-  color: var(--text-secondary, #94a3b8);
-  font-size: 0.7rem;
+  color: var(--text-secondary, #a3a3a3);
+  font-size: 0.68rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -422,5 +439,5 @@
 }
 
 .popover-ledger-btn:hover {
-  color: var(--accent, #10b981);
+  color: var(--accent, #22c55e);
 }
