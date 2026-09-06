@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import CampaignCard from '../components/CampaignCard';
+import DisasterRadarHeatmap from '../components/DisasterRadarHeatmap';
 import { contractAddress } from '../contractConfig';
 import './LandingView.css';
 
-export default function LandingView({ onConnect, hasMetaMask, contract, onOpenNgoProfile }) {
+export default function LandingView({ onConnect, hasMetaMask, contract, onOpenNgoProfile, theme }) {
   const [stats, setStats] = useState({
     donors: 0,
     orgs: 0,
@@ -59,6 +60,29 @@ export default function LandingView({ onConnect, hasMetaMask, contract, onOpenNg
     };
 
     fetchLandingData();
+  }, []);
+
+  // Global Navigation Listener for Landing View
+  useEffect(() => {
+    const handleRadarNav = () => {
+      setTimeout(() => {
+        const el = document.getElementById('radar-heatmap');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    };
+    const handleCampaignsNav = () => {
+      setTimeout(() => {
+        const el = document.getElementById('campaigns');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    };
+
+    window.addEventListener('bbdrts_navigate_radar', handleRadarNav);
+    window.addEventListener('bbdrts_navigate_campaigns', handleCampaignsNav);
+    return () => {
+      window.removeEventListener('bbdrts_navigate_radar', handleRadarNav);
+      window.removeEventListener('bbdrts_navigate_campaigns', handleCampaignsNav);
+    };
   }, []);
 
   // Pagination state (2 causes per page)
@@ -146,7 +170,7 @@ export default function LandingView({ onConnect, hasMetaMask, contract, onOpenNg
                 onClick={() => onOpenNgoProfile && onOpenNgoProfile()}
                 title="Click to view Verified NGO Institutional Profile"
               >
-                <div className="bbdrts-stat-val" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>{stats.orgs}</div>
+                <div className="bbdrts-stat-val" style={{ color: 'var(--accent)' }}>{stats.orgs}</div>
                 <div className="bbdrts-stat-lbl" style={{ color: 'var(--accent)' }}>Accredited NGOs ↗</div>
               </div>
               <div className="bbdrts-stat-item">
@@ -160,6 +184,25 @@ export default function LandingView({ onConnect, hasMetaMask, contract, onOpenNg
             </div>
 
           </div>
+        </div>
+      </section>
+
+      {/* ── 1.5 Live Philippine Disaster Relief Radar Heatmap ── */}
+      <section className="bbdrts-radar-section" id="radar-heatmap" style={{ padding: '0 0 1.5rem 0', scrollMarginTop: '90px' }}>
+        <div className="container">
+          <DisasterRadarHeatmap
+            campaigns={campaigns}
+            theme={theme}
+            onSelectCampaign={(c) => {
+              setActiveCategory('ALL');
+              setSearchQuery(c.title || '');
+              setCurrentPage(1);
+              setTimeout(() => {
+                const el = document.getElementById(`campaign-${c.id}`) || document.getElementById('campaigns');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 80);
+            }}
+          />
         </div>
       </section>
 
@@ -260,15 +303,16 @@ export default function LandingView({ onConnect, hasMetaMask, contract, onOpenNg
             <>
               <div className="campaigns-list" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {paginatedCampaigns.map(campaign => (
-                  <CampaignCard
-                    key={campaign.id}
-                    camp={campaign}
-                    onDonate={() => onConnect()}
-                    userRole="PUBLIC"
-                    walletAddress=""
-                    contract={contract}
-                    onOpenNgoProfile={onOpenNgoProfile}
-                  />
+                  <div key={campaign.id} id={`campaign-${campaign.id}`} style={{ scrollMarginTop: '100px' }}>
+                    <CampaignCard
+                      camp={campaign}
+                      onDonate={() => onConnect()}
+                      userRole="PUBLIC"
+                      walletAddress=""
+                      contract={contract}
+                      onOpenNgoProfile={onOpenNgoProfile}
+                    />
+                  </div>
                 ))}
               </div>
 

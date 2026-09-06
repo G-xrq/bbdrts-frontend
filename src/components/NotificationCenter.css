@@ -70,69 +70,6 @@
   }
 }
 
-/* Action Toast Feedback */
-.bbdrts-notif-toast {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: var(--bg-card, #222222);
-  color: var(--text-primary, #ffffff);
-  border: 1px solid var(--accent, #22c55e);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  padding: 6px 12px;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.76rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 10001;
-  animation: toastFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Move to Trash Floating Undo Banner */
-.bbdrts-notif-undo-toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: var(--bg-card, #222222);
-  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
-  padding: 10px 16px;
-  border-radius: var(--radius-md, 12px);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.82rem;
-  color: var(--text-primary, #ffffff);
-  font-weight: 600;
-  z-index: 99999999;
-  animation: toastFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.bbdrts-notif-undo-btn {
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid var(--accent, #22c55e);
-  color: var(--accent, #22c55e);
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 3px 10px;
-  border-radius: var(--radius-sm, 6px);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.bbdrts-notif-undo-btn:hover {
-  background: var(--accent, #22c55e);
-  color: #0b1016;
-}
-
-@keyframes toastFadeIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* ── Notification Dropdown Panel ── */
 .bbdrts-notif-panel {
   position: absolute;

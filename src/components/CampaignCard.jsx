@@ -1177,8 +1177,9 @@ export default function CampaignCard(props) {
             {formatCampaignTitle(camp.title, camp.id)}
           </h3>
 
-          {/* Sleek Polished Managing Org Badge (Clickable to view NGO profile & campaigns) */}
-          <div
+          {/* Sleek Polished Managing Org Pill (Clickable to view NGO profile & campaigns) */}
+          <button
+            type="button"
             className="campaign-org-badge"
             title="Click to view verified NGO institutional profile & all campaigns"
             onClick={(e) => {
@@ -1187,16 +1188,14 @@ export default function CampaignCard(props) {
                 onOpenNgoProfile(camp.orgId || camp.orgAddress || camp.orgName || 3);
               }
             }}
-            style={{ cursor: 'pointer' }}
           >
             <span className="material-symbols-outlined campaign-org-icon">domain</span>
-            <span className="campaign-org-label">Managing Org:</span>
-            <span className="campaign-org-name" style={{ textDecoration: 'underline' }}>{getOrgDisplayName(camp.orgAddress, camp.orgName, camp.id)}</span>
-            <span className="campaign-org-addr-tag" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: 700 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '11px' }}>verified</span>
-              SEC Verified Non-Profit
+            <span className="campaign-org-name">{getOrgDisplayName(camp.orgAddress, camp.orgName, camp.id)}</span>
+            <span className="campaign-org-verified-badge" title="SEC Verified NGO">
+              <span className="material-symbols-outlined">verified</span>
             </span>
-          </div>
+            <span className="material-symbols-outlined campaign-org-arrow">chevron_right</span>
+          </button>
 
           {/* Progress Bar */}
           <div style={{ marginTop: '14px' }}>
@@ -1407,7 +1406,15 @@ export default function CampaignCard(props) {
                         </span>
                       </div>
                       <div className="ledger-donor-text">
-                        <span className="ledger-donor-name">{rec.donor}</span>
+                        <span className="ledger-donor-name">
+                          {rec.isAnonymous 
+                            ? '🕵️ Anonymous Patron' 
+                            : (rec.donor && !rec.donor.includes('@') 
+                                ? rec.donor 
+                                : (rec.donor ? rec.donor.split('@')[0].replace(/[\._\d]/g, ' ').trim().split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Verified Donor' : 'Verified Donor')
+                              )
+                          }
+                        </span>
                         {rec.wallet && !rec.isAnonymous && (
                           <span className="ledger-wallet-tag" title={rec.wallet}>
                             {shortAddr(rec.wallet)}
@@ -2468,6 +2475,15 @@ export default function CampaignCard(props) {
                             </strong>
                           </div>
 
+                          {((gatewayMethod === 'Maya' && (camp.mayaName || camp.maya_name)) || (gatewayMethod === 'GCash' && (camp.gcashName || camp.gcash_name))) && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                              <span style={{ color: 'var(--text-muted, #94a3b8)' }}>Account Name:</span>
+                              <strong style={{ color: 'var(--text-primary, #ffffff)', textAlign: 'right', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {gatewayMethod === 'Maya' ? (camp.mayaName || camp.maya_name) : (camp.gcashName || camp.gcash_name)}
+                              </strong>
+                            </div>
+                          )}
+
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', background: gatewayMethod === 'Maya' ? 'rgba(0, 214, 143, 0.08)' : 'rgba(34, 197, 94, 0.08)', padding: '6px 8px', borderRadius: '8px', border: gatewayMethod === 'Maya' ? '1.5px solid rgba(0, 214, 143, 0.3)' : '1px solid rgba(34, 197, 94, 0.2)' }}>
                             <span style={{ color: 'var(--text-secondary, #cbd5e1)', fontWeight: 600 }}>{gatewayMethod} No:</span>
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
@@ -2905,20 +2921,22 @@ export default function CampaignCard(props) {
                   <h2 style={{ margin: 0, fontSize: '1.35rem', color: 'var(--text-primary, #ffffff)', fontWeight: 800, lineHeight: 1.3 }}>
                     {displayTitle}
                   </h2>
-                  <div style={{ margin: '6px 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted, #94a3b8)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                    <span>
-                      Managed by{' '}
-                      <strong
-                        style={{ color: '#38bdf8', cursor: 'pointer', textDecoration: 'underline' }}
-                        onClick={() => {
-                          setDetailsOpen(false);
-                          if (onOpenNgoProfile) onOpenNgoProfile(camp.orgId || 3);
-                        }}
-                        title="Click to view verified NGO institutional profile & all campaigns"
-                      >
-                        {orgDisplayName}
-                      </strong>
-                    </span>
+                  <div style={{ margin: '8px 0 0 0', fontSize: '0.84rem', color: 'var(--text-muted, #94a3b8)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span>Managed by</span>
+                    <button
+                      type="button"
+                      className="campaign-modal-org-btn"
+                      onClick={() => {
+                        setDetailsOpen(false);
+                        if (onOpenNgoProfile) onOpenNgoProfile(camp.orgId || 3);
+                      }}
+                      title="Click to view verified NGO institutional profile & all campaigns"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '15px', color: 'var(--accent, #22c55e)' }}>domain</span>
+                      <span>{orgDisplayName}</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--accent, #22c55e)' }}>verified</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: '13px', opacity: 0.6 }}>chevron_right</span>
+                    </button>
                     <span>•</span>
                     <span style={{ color: '#22c55e', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                       <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>verified</span> Smart Contract Verified

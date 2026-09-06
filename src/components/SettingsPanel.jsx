@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './SettingsPanel.css';
 import { ROLES, ROLE_META } from '../roleConfig';
@@ -78,10 +78,17 @@ export default function SettingsPanel({
 
   // Edit Profile Modal State
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [profileName, setProfileName] = useState(currentUser?.name || currentUser?.email || 'Valued User');
+  const [profileName, setProfileName] = useState(currentUser?.display_name || currentUser?.name || currentUser?.email || 'Valued User');
   const [profilePhone, setProfilePhone] = useState(currentUser?.phone || '+63 912 345 6789');
   const [profileLocation, setProfileLocation] = useState(currentUser?.location || 'Southern Leyte, Philippines');
   const [profileBio, setProfileBio] = useState(currentUser?.bio || 'Committed to transparent and verifiable blockchain disaster relief.');
+
+  useEffect(() => {
+    setProfileName(currentUser?.display_name || currentUser?.name || currentUser?.email || 'Valued User');
+    setProfilePhone(currentUser?.phone || '+63 912 345 6789');
+    setProfileLocation(currentUser?.location || 'Southern Leyte, Philippines');
+    setProfileBio(currentUser?.bio || 'Committed to transparent and verifiable blockchain disaster relief.');
+  }, [currentUser]);
 
   if (!currentUser) return null;
   const roleMeta = ROLE_META[currentUser.role] || ROLE_META[ROLES.PUBLIC];
@@ -170,9 +177,16 @@ export default function SettingsPanel({
                 color: '#fff', fontWeight: '800', fontSize: '1.6rem',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 0 20px rgba(22, 163, 74, 0.35)',
-                border: '2px solid rgba(255,255,255,0.2)'
+                border: '2px solid rgba(255,255,255,0.2)',
+                overflow: 'hidden'
               }}>
-                {userInitials}
+                {currentUser?.avatar_url && (currentUser.avatar_url.startsWith('data:') || currentUser.avatar_url.startsWith('http')) ? (
+                  <img src={currentUser.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : currentUser?.avatar_url && currentUser.avatar_url.length < 30 ? (
+                  <span className="material-symbols-outlined" style={{ fontSize: '32px', color: '#fff' }}>{currentUser.avatar_url}</span>
+                ) : (
+                  userInitials
+                )}
               </div>
 
               <div>
@@ -657,6 +671,7 @@ export default function SettingsPanel({
             if (onProfileUpdated) onProfileUpdated(updated);
           }}
           theme={theme}
+          setTheme={setTheme}
         />
       )}
 

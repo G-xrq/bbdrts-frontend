@@ -12,6 +12,7 @@ import CampaignCard, {
 import LocationMapPicker from '../components/LocationMapPicker';
 import { ROLES } from '../roleConfig';
 import SettingsPanel from '../components/SettingsPanel';
+import DisasterRadarHeatmap from '../components/DisasterRadarHeatmap';
 import { useToast } from '../context/ToastContext';
 import './ReferenceDashboard.css';
 
@@ -40,6 +41,31 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
   useEffect(() => {
     setCurrentPage(1);
   }, [categoryFilter, campaignSort, searchQuery]);
+
+  // Global Header Navigation Listener
+  useEffect(() => {
+    const handleRadarNav = () => {
+      setActiveTab('radar-heatmap');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const handleCampaignsNav = () => {
+      setActiveTab('campaigns');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const handleHomeNav = () => {
+      setActiveTab('dashboard');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.addEventListener('bbdrts_navigate_radar', handleRadarNav);
+    window.addEventListener('bbdrts_navigate_campaigns', handleCampaignsNav);
+    window.addEventListener('bbdrts_navigate_home', handleHomeNav);
+    return () => {
+      window.removeEventListener('bbdrts_navigate_radar', handleRadarNav);
+      window.removeEventListener('bbdrts_navigate_campaigns', handleCampaignsNav);
+      window.removeEventListener('bbdrts_navigate_home', handleHomeNav);
+    };
+  }, []);
 
   // Filter & Sort campaigns
   const filteredCampaigns = campaigns
@@ -138,7 +164,7 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
       });
   }, [myDonations, receiptFilter, searchQueryReceipts, receiptSort, campaigns]);
 
-  let userDisplayName = currentUser?.name || currentUser?.email || 'Valued Donor';
+  let userDisplayName = currentUser?.display_name || currentUser?.name || currentUser?.email || 'Valued Donor';
   if (userDisplayName.includes('@')) {
     const handle = userDisplayName.split('@')[0];
     if (handle.toLowerCase() === 'gestermacaldo') {
@@ -156,7 +182,15 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
         {/* ── Left Sidebar Navigation Panel ── */}
         <aside className="ref-sidebar">
           <div className="ref-sidebar-user">
-            <div className="ref-sidebar-avatar">{userInitials}</div>
+            <div className="ref-sidebar-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {currentUser?.avatar_url && (currentUser.avatar_url.startsWith('data:') || currentUser.avatar_url.startsWith('http')) ? (
+                <img src={currentUser.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : currentUser?.avatar_url && currentUser.avatar_url.length < 30 ? (
+                <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--accent)' }}>{currentUser.avatar_url}</span>
+              ) : (
+                userInitials
+              )}
+            </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="ref-sidebar-name" title={userDisplayName}>{userDisplayName}</div>
               <div className="ref-sidebar-id">BBDRTS-DONOR-2026-0001</div>
@@ -186,6 +220,14 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
             >
               <span className="material-symbols-outlined">history</span>
               <span>My Contributions</span>
+            </button>
+
+            <button 
+              className={`ref-nav-item ${activeTab === 'radar-heatmap' ? 'active' : ''}`}
+              onClick={() => setActiveTab('radar-heatmap')}
+            >
+              <span className="material-symbols-outlined" style={{ color: activeTab === 'radar-heatmap' ? '#38bdf8' : 'inherit' }}>radar</span>
+              <span>Relief Radar</span>
             </button>
 
             <button 
@@ -282,7 +324,15 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
               {/* Top Hero Banner */}
               <div className="ref-welcome-card">
                 <div className="ref-welcome-header">
-                  <div className="ref-welcome-avatar">{userInitials}</div>
+                  <div className="ref-welcome-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {currentUser?.avatar_url && (currentUser.avatar_url.startsWith('data:') || currentUser.avatar_url.startsWith('http')) ? (
+                      <img src={currentUser.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : currentUser?.avatar_url && currentUser.avatar_url.length < 30 ? (
+                      <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--accent)' }}>{currentUser.avatar_url}</span>
+                    ) : (
+                      userInitials
+                    )}
+                  </div>
                   <div className="ref-welcome-text">
                     <h1>{userDisplayName || 'Donor Dashboard'}</h1>
                     <p>
@@ -880,23 +930,23 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
                             </h3>
 
                             <div className="receipt-meta-chips">
-                              <div
+                              <button
+                                type="button"
                                 className="campaign-org-badge"
                                 onClick={() => {
                                   if (onOpenNgoProfile) {
                                     onOpenNgoProfile(matchCamp.orgId || 3);
                                   }
                                 }}
-                                style={{ cursor: 'pointer' }}
                                 title="Click to view verified NGO institutional profile"
                               >
                                 <span className="material-symbols-outlined campaign-org-icon">domain</span>
-                                <span className="campaign-org-label">Managing Org:</span>
-                                <span className="campaign-org-name" style={{ textDecoration: 'underline' }}>{orgName}</span>
-                                {matchCamp.orgAddress && (
-                                  <span className="campaign-org-addr-tag">{shortAddr(matchCamp.orgAddress)}</span>
-                                )}
-                              </div>
+                                <span className="campaign-org-name">{orgName}</span>
+                                <span className="campaign-org-verified-badge" title="SEC Verified NGO">
+                                  <span className="material-symbols-outlined">verified</span>
+                                </span>
+                                <span className="material-symbols-outlined campaign-org-arrow">chevron_right</span>
+                              </button>
                             </div>
                           </div>
 
@@ -1021,20 +1071,22 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
                       <h2 style={{ margin: 0, fontSize: '1.35rem', color: 'var(--text-primary, #ffffff)', fontWeight: 800, lineHeight: 1.3 }}>
                         {displayTitle}
                       </h2>
-                      <div style={{ margin: '6px 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted, #94a3b8)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                        <span>
-                          Managed by{' '}
-                          <strong
-                            style={{ color: '#38bdf8', cursor: 'pointer', textDecoration: 'underline' }}
-                            onClick={() => {
-                              setSelectedCampaignForProof(null);
-                              if (onOpenNgoProfile) onOpenNgoProfile(camp.orgId || 3);
-                            }}
-                            title="Click to view verified institutional profile"
-                          >
-                            {orgDisplayName}
-                          </strong>
-                        </span>
+                      <div style={{ margin: '8px 0 0 0', fontSize: '0.84rem', color: 'var(--text-muted, #94a3b8)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span>Managed by</span>
+                        <button
+                          type="button"
+                          className="campaign-modal-org-btn"
+                          onClick={() => {
+                            setSelectedCampaignForProof(null);
+                            if (onOpenNgoProfile) onOpenNgoProfile(camp.orgId || 3);
+                          }}
+                          title="Click to view verified institutional profile"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '15px', color: 'var(--accent, #22c55e)' }}>domain</span>
+                          <span>{orgDisplayName}</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--accent, #22c55e)' }}>verified</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: '13px', opacity: 0.6 }}>chevron_right</span>
+                        </button>
                         <span>•</span>
                         <span style={{ color: '#22c55e', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                           <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>verified</span> Smart Contract Verified
@@ -1257,6 +1309,33 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
               document.body
             );
           })()}
+
+          {/* ── 3.5. DISASTER RELIEF RADAR HEATMAP TAB ── */}
+          {activeTab === 'radar-heatmap' && (
+            <div style={{ marginTop: '8px' }}>
+              <div className="section-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '16px' }}>
+                <div>
+                  <h2 className="section-title" style={{ fontSize: '1.4rem' }}>
+                    <span className="material-symbols-outlined section-title-icon" style={{ marginRight: '8px', color: 'var(--accent)' }}>radar</span>
+                    Disaster Relief Radar Heatmap
+                  </h2>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    Meteorological Doppler precipitation density map tracking humanitarian relief concentration across Philippine disaster zones.
+                  </p>
+                </div>
+              </div>
+
+              <DisasterRadarHeatmap
+                campaigns={campaigns}
+                height="620px"
+                theme={theme}
+                onSelectCampaign={(c) => {
+                  setActiveTab('campaigns');
+                  setSearchQuery(c.title || '');
+                }}
+              />
+            </div>
+          )}
 
           {/* ── 4. SETTINGS TAB (Hides 4 boxes & welcome card) ── */}
           {activeTab === 'settings' && (

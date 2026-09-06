@@ -42,9 +42,25 @@ export default function NgoProfileModal({ orgId, orgData, onClose, onSelectCampa
   const location = profile?.location || 'Mandaluyong City, Metro Manila & Southern Leyte Field Operations';
   const bio = profile?.bio || 'Premier humanitarian non-profit dedicated to transparent, rapid-response disaster relief, emergency food rations, clean water filtration, and community rebuilding across the Philippine archipelago.';
   const website = profile?.website || 'https://redcross.org.ph';
-  const gcashNo = profile?.gcash_number || '0917-890-1430';
-  const mayaNo = profile?.maya_number || '0918-765-1430';
-  const bankDetails = profile?.bank_details || 'Land Bank of the Philippines (LBP) • Acct: 0142-8891-23';
+  const gcashName = profile?.gcash_name || profile?.gcashName || 'Philippine Red Cross';
+  const gcashNo = profile?.gcash_number || profile?.gcashNumber || '0917-890-1430';
+  const gcashQrUrl = profile?.gcash_qr_url || profile?.gcashQrUrl || '';
+  const mayaName = profile?.maya_name || profile?.mayaName || 'Philippine Red Cross';
+  const mayaNo = profile?.maya_number || profile?.mayaNumber || '0918-765-1430';
+  const mayaQrUrl = profile?.maya_qr_url || profile?.mayaQrUrl || '';
+  const bankName = profile?.bank_name || profile?.bankName || '';
+  const bankAccountName = profile?.bank_account_name || profile?.bankAccountName || '';
+  const bankAccountNumber = profile?.bank_account_number || profile?.bankAccountNumber || '';
+  const bankDetails = profile?.bank_details || profile?.bankDetails || 'Land Bank of the Philippines (LBP) • Acct: 0142-8891-23';
+  const bankQrUrl = profile?.bank_qr_url || profile?.bankQrUrl || '';
+  const bannerUrl = profile?.banner_url || profile?.banner || '';
+  const avatarUrl = profile?.avatar_url || profile?.avatar || '';
+
+  const verifiedDateStr = profile?.verified_date
+    ? new Date(profile.verified_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : profile?.created_at
+      ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      : 'October 2024';
 
   const boardList = Array.isArray(profile?.boardMembers)
     ? profile.boardMembers
@@ -81,17 +97,28 @@ export default function NgoProfileModal({ orgId, orgData, onClose, onSelectCampa
 
   return (
     <div className="ngo-profile-backdrop" onClick={onClose} data-theme={theme}>
-      <div className="ngo-profile-modal" onClick={e => e.stopPropagation()}>
-        
-        {/* Modal Top Header Bar */}
-        <div className="ngo-modal-topbar">
-          <div className="ngo-modal-topbar-title">
+      <div className="ngo-split-modal" onClick={e => e.stopPropagation()}>
+
+        {/* ── Modal Topbar ── */}
+        <div className="ngo-split-topbar">
+          <div className="ngo-split-topbar-left">
             <span className="material-symbols-outlined" style={{ color: 'var(--accent, #22c55e)', fontSize: '20px' }}>
               domain
             </span>
-            <span>Verified Non-Profit Humanitarian Organization Profile</span>
+            <span className="ngo-split-topbar-title">{orgName}</span>
+            <span className="ngo-split-topbar-badge">
+              <span className="material-symbols-outlined">verified</span>
+              SEC Verified Institutional Non-Profit
+            </span>
           </div>
-          <button type="button" className="ngo-profile-close-btn" onClick={onClose} aria-label="Close Profile">
+
+          <button
+            type="button"
+            className="ngo-split-close-btn"
+            onClick={onClose}
+            aria-label="Close Profile"
+            title="Close Profile"
+          >
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -99,7 +126,7 @@ export default function NgoProfileModal({ orgId, orgData, onClose, onSelectCampa
         {loading ? (
           <div className="ngo-profile-loading">
             <div className="spinner" style={{ width: '36px', height: '36px' }} />
-            <p>Hydrating Verified Organization Profile & On-Chain Audit Records...</p>
+            <p>Loading Organization Profile & On-Chain Audit Records...</p>
           </div>
         ) : error ? (
           <div className="ngo-profile-error">
@@ -108,143 +135,183 @@ export default function NgoProfileModal({ orgId, orgData, onClose, onSelectCampa
             <button className="btn btn-outline btn-sm" onClick={onClose}>Close</button>
           </div>
         ) : (
-          <div className="ngo-profile-scroll-body">
+          <div className="ngo-split-body">
             
-            {/* ── Hero Banner Section ── */}
-            <div className="ngo-hero-banner">
-              <div className="ngo-hero-backdrop-glow" />
-              <div className="ngo-hero-content">
-                
-                <div className="ngo-avatar-wrapper">
-                  <div className="ngo-avatar-circle">
-                    {getInitials(orgName)}
+            {/* ════════ LEFT COLUMN: Institutional Profile (~360px) ════════ */}
+            <aside className="ngo-split-left-pane">
+              {/* Mini Cover Banner */}
+              <div
+                className="ngo-left-banner"
+                style={
+                  bannerUrl && (bannerUrl.startsWith('data:') || bannerUrl.startsWith('http') || bannerUrl.startsWith('/') || bannerUrl.includes('.jpg') || bannerUrl.includes('.png'))
+                    ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                    : bannerUrl && bannerUrl.startsWith('linear-gradient')
+                    ? { background: bannerUrl }
+                    : {}
+                }
+              >
+                <div className="ngo-left-banner-overlay" />
+              </div>
+
+              {/* Identity Section */}
+              <div className="ngo-left-identity-content">
+                <div className="ngo-left-avatar-wrap">
+                  <div className="ngo-left-avatar-circle">
+                    {avatarUrl && (avatarUrl.startsWith('data:') || avatarUrl.startsWith('http')) ? (
+                      <img src={avatarUrl} alt={orgName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : avatarUrl && avatarUrl.length < 30 ? (
+                      <span className="material-symbols-outlined" style={{ fontSize: '38px', color: 'var(--accent, #22c55e)' }}>{avatarUrl}</span>
+                    ) : (
+                      getInitials(orgName)
+                    )}
                   </div>
-                  <span className="ngo-verified-avatar-badge" title="SEC Verified & DSWD Accredited">
+                  <span className="ngo-left-verified-badge" title={`SEC Verified NGO • Accredited ${verifiedDateStr}`}>
                     <span className="material-symbols-outlined">verified</span>
                   </span>
                 </div>
 
-                <div className="ngo-hero-details">
-                  <div className="ngo-hero-title-row">
-                    <h2 className="ngo-hero-title">{orgName}</h2>
+                <h3 className="ngo-left-title">{orgName}</h3>
+                <p className="ngo-left-subtext">Verified Non-Profit Humanitarian Organization • Verified {verifiedDateStr}</p>
+
+                <div className="ngo-left-location-row">
+                  <span className="material-symbols-outlined">location_on</span>
+                  <span>{location}</span>
+                </div>
+
+                {/* SEC & DSWD Badges */}
+                <div className="ngo-left-badges-row">
+                  <span className="ngo-left-pill sec">
+                    <span className="material-symbols-outlined">assured_workload</span>
+                    SEC: {secRegNo}
+                  </span>
+                  <span className="ngo-left-pill dswd">
+                    <span className="material-symbols-outlined">verified_user</span>
+                    DSWD: {dswdNo}
+                  </span>
+                </div>
+
+                {/* Mission Bio */}
+                <div className="ngo-left-bio-card">
+                  <span className="ngo-left-card-label">Organization Mission</span>
+                  <p>{bio}</p>
+                </div>
+
+                {/* Sepolia Treasury Box */}
+                <div className="ngo-left-treasury-card">
+                  <div className="ngo-left-treasury-header">
+                    <span className="material-symbols-outlined" style={{ color: '#38bdf8' }}>account_balance_wallet</span>
+                    <span>Sepolia EVM Multi-Sig</span>
                   </div>
-
-                  <p className="ngo-hero-bio">{bio}</p>
-
-                  <div className="ngo-hero-tags">
-                    <span className="ngo-tag-pill sec">
-                      <span className="material-symbols-outlined">verified</span>
-                      SEC Reg: {secRegNo}
-                    </span>
-                    <span className="ngo-tag-pill dswd">
-                      <span className="material-symbols-outlined">policy</span>
-                      DSWD License: {dswdNo}
-                    </span>
-                    <span className="ngo-tag-pill loc">
-                      <span className="material-symbols-outlined">location_on</span>
-                      {location}
-                    </span>
+                  <code className="ngo-left-treasury-code">{walletAddr}</code>
+                  <div className="ngo-left-treasury-actions">
+                    <button
+                      type="button"
+                      className="ngo-left-action-btn"
+                      onClick={handleCopyWallet}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>
+                        {copiedWallet ? 'check' : 'content_copy'}
+                      </span>
+                      <span>{copiedWallet ? 'Copied!' : 'Copy Address'}</span>
+                    </button>
+                    <a
+                      href={`https://sepolia.etherscan.io/address/${walletAddr}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ngo-left-action-btn"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>open_in_new</span>
+                      <span>Etherscan</span>
+                    </a>
                   </div>
                 </div>
 
-              </div>
-
-              {/* Wallet Quick Action Bar */}
-              <div className="ngo-wallet-action-bar">
-                <div className="ngo-wallet-code-box">
-                  <span className="material-symbols-outlined" style={{ color: '#38bdf8', fontSize: '16px' }}>account_balance_wallet</span>
-                  <span className="ngo-wallet-label">Sepolia EVM Multi-Sig:</span>
-                  <code className="ngo-wallet-code">{walletAddr}</code>
+                {/* Contact & Official Portal Quick Links */}
+                <div className="ngo-left-contact-list">
+                  <div className="ngo-left-contact-item">
+                    <span className="material-symbols-outlined" style={{ color: '#ef4444' }}>emergency</span>
+                    <div>
+                      <small>24/7 Hotline</small>
+                      <strong>{phone}</strong>
+                    </div>
+                  </div>
+                  {website && (
+                    <a href={website} target="_blank" rel="noopener noreferrer" className="ngo-left-portal-link">
+                      <span className="material-symbols-outlined">language</span>
+                      <span>Visit Official Portal</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>open_in_new</span>
+                    </a>
+                  )}
                 </div>
-                <div className="ngo-wallet-btns">
-                  <button
-                    type="button"
-                    className="ngo-wallet-copy-btn"
-                    onClick={handleCopyWallet}
-                    title="Copy Treasury Wallet Address"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-                      {copiedWallet ? 'check' : 'content_copy'}
-                    </span>
-                    <span>{copiedWallet ? 'Copied!' : 'Copy Address'}</span>
-                  </button>
-                  <a
-                    href={`https://sepolia.etherscan.io/address/${walletAddr}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ngo-etherscan-link-btn"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>open_in_new</span>
-                    <span>Etherscan</span>
-                  </a>
+
+              </div>
+            </aside>
+
+            {/* ════════ RIGHT COLUMN: Activity & Operations ════════ */}
+            <main className="ngo-split-right-pane">
+              
+              {/* Impact Metric Strip */}
+              <div className="ngo-right-metrics-strip">
+                <div className="ngo-right-metric-item">
+                  <span className="ngo-right-metric-lbl">Verified Relief Raised</span>
+                  <strong className="ngo-right-metric-val">₱{stats.totalRaisedPhp}</strong>
+                  <small>{stats.totalRaisedEth} ETH on Sepolia</small>
+                </div>
+                <div className="ngo-right-metric-divider" />
+                <div className="ngo-right-metric-item">
+                  <span className="ngo-right-metric-lbl">Active Causes</span>
+                  <strong className="ngo-right-metric-val">{stats.totalCampaigns} Operations</strong>
+                  <small>100% Escrow Backed</small>
+                </div>
+                <div className="ngo-right-metric-divider" />
+                <div className="ngo-right-metric-item">
+                  <span className="ngo-right-metric-lbl">Accreditation</span>
+                  <strong className="ngo-right-metric-val" style={{ color: 'var(--accent, #22c55e)' }}>Compliant & Active</strong>
+                  <small>RA 11232 Audited</small>
                 </div>
               </div>
-            </div>
 
-            {/* ── Key Relief Statistics Row ── */}
-            <div className="ngo-metrics-grid">
-              <div className="ngo-metric-card">
-                <span className="ngo-metric-label">Verified Relief Raised</span>
-                <strong className="ngo-metric-value">₱{stats.totalRaisedPhp}</strong>
-                <span className="ngo-metric-sub">{stats.totalRaisedEth} ETH on Sepolia EVM</span>
+              {/* Right Pane Navigation Tabs */}
+              <div className="ngo-right-tabs-bar">
+                <button
+                  type="button"
+                  className={`ngo-right-tab-btn ${activeTab === 'campaigns' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('campaigns')}
+                >
+                  <span className="material-symbols-outlined">volunteer_activism</span>
+                  <span>Relief Operations ({campaigns.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`ngo-right-tab-btn ${activeTab === 'governance' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('governance')}
+                >
+                  <span className="material-symbols-outlined">assured_workload</span>
+                  <span>Governance & SEC</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`ngo-right-tab-btn ${activeTab === 'transparency' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('transparency')}
+                >
+                  <span className="material-symbols-outlined">account_balance_wallet</span>
+                  <span>Payment Channels</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`ngo-right-tab-btn ${activeTab === 'contact' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('contact')}
+                >
+                  <span className="material-symbols-outlined">contact_support</span>
+                  <span>Dispatch & Hotlines</span>
+                </button>
               </div>
 
-              <div className="ngo-metric-card">
-                <span className="ngo-metric-label">Managed Campaigns</span>
-                <strong className="ngo-metric-value">{stats.totalCampaigns} Operations</strong>
-                <span className="ngo-metric-sub">100% On-Chain Milestone Escrow</span>
-              </div>
-
-              <div className="ngo-metric-card">
-                <span className="ngo-metric-label">Accreditation Status</span>
-                <strong className="ngo-metric-value" style={{ color: 'var(--accent, #22c55e)', fontSize: '0.98rem' }}>
-                  Compliant & Active
-                </strong>
-                <span className="ngo-metric-sub">Republic Act 11232 Audited</span>
-              </div>
-            </div>
-
-            {/* ── Tabs Navigation Bar ── */}
-            <div className="ngo-profile-tabs">
-              <button
-                type="button"
-                className={`ngo-tab-btn ${activeTab === 'campaigns' ? 'active' : ''}`}
-                onClick={() => setActiveTab('campaigns')}
-              >
-                <span className="material-symbols-outlined">volunteer_activism</span>
-                <span>Relief Campaigns ({campaigns.length})</span>
-              </button>
-
-              <button
-                type="button"
-                className={`ngo-tab-btn ${activeTab === 'governance' ? 'active' : ''}`}
-                onClick={() => setActiveTab('governance')}
-              >
-                <span className="material-symbols-outlined">assured_workload</span>
-                <span>SEC Governance & Board</span>
-              </button>
-
-              <button
-                type="button"
-                className={`ngo-tab-btn ${activeTab === 'transparency' ? 'active' : ''}`}
-                onClick={() => setActiveTab('transparency')}
-              >
-                <span className="material-symbols-outlined">account_balance_wallet</span>
-                <span>Payment & Treasury</span>
-              </button>
-
-              <button
-                type="button"
-                className={`ngo-tab-btn ${activeTab === 'contact' ? 'active' : ''}`}
-                onClick={() => setActiveTab('contact')}
-              >
-                <span className="material-symbols-outlined">contact_support</span>
-                <span>Hotline & Operations</span>
-              </button>
-            </div>
-
-            {/* ── Tab Content Area ── */}
-            <div className="ngo-tab-content">
+              {/* Scrollable Tab Content Area */}
+              <div className="ngo-right-content-scroll">
               
               {/* Tab 1: Campaigns Portfolio */}
               {activeTab === 'campaigns' && (
@@ -414,8 +481,37 @@ export default function NgoProfileModal({ orgId, orgData, onClose, onSelectCampa
                           <span className="material-symbols-outlined" style={{ color: '#007dfe' }}>phone_android</span>
                           <strong>Official GCash Humanitarian Hub</strong>
                         </div>
+                        {gcashName && (
+                          <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>
+                            Account: <strong>{gcashName}</strong>
+                          </div>
+                        )}
                         <code className="ngo-channel-code">{gcashNo}</code>
                         <span className="ngo-channel-hint">Verified Non-Profit Electronic Wallet Account</span>
+                        {gcashQrUrl && (
+                          <div style={{ marginTop: '8px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setPreviewCertUrl(gcashQrUrl)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '5px 10px',
+                                borderRadius: '6px',
+                                background: 'rgba(0, 125, 254, 0.12)',
+                                border: '1px solid rgba(0, 125, 254, 0.3)',
+                                color: '#007dfe',
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>qr_code_scanner</span>
+                              View GCash QR Ph
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <div className="ngo-channel-card">
@@ -423,8 +519,37 @@ export default function NgoProfileModal({ orgId, orgData, onClose, onSelectCampa
                           <span className="material-symbols-outlined" style={{ color: '#00d084' }}>credit_card</span>
                           <strong>Official Maya Relief Account</strong>
                         </div>
+                        {mayaName && (
+                          <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>
+                            Account: <strong>{mayaName}</strong>
+                          </div>
+                        )}
                         <code className="ngo-channel-code">{mayaNo}</code>
                         <span className="ngo-channel-hint">Verified Institutional Merchant ID</span>
+                        {mayaQrUrl && (
+                          <div style={{ marginTop: '8px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setPreviewCertUrl(mayaQrUrl)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '5px 10px',
+                                borderRadius: '6px',
+                                background: 'rgba(0, 214, 143, 0.12)',
+                                border: '1px solid rgba(0, 214, 143, 0.3)',
+                                color: '#00d084',
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>qr_code_scanner</span>
+                              View Maya QR Ph
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <div className="ngo-channel-card">
@@ -432,8 +557,48 @@ export default function NgoProfileModal({ orgId, orgData, onClose, onSelectCampa
                           <span className="material-symbols-outlined" style={{ color: '#f59e0b' }}>assured_workload</span>
                           <strong>Official Commercial Bank Account</strong>
                         </div>
-                        <code className="ngo-channel-code">{bankDetails}</code>
-                        <span className="ngo-channel-hint">Designated Disaster Relief Account</span>
+                        {bankName ? (
+                          <div style={{ marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                              {bankName}
+                            </div>
+                            {bankAccountName && (
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                Holder: <strong>{bankAccountName}</strong>
+                              </div>
+                            )}
+                            <code className="ngo-channel-code" style={{ marginTop: '4px' }}>
+                              {bankAccountNumber ? `Acct: ${bankAccountNumber}` : bankDetails}
+                            </code>
+                          </div>
+                        ) : (
+                          <code className="ngo-channel-code">{bankDetails}</code>
+                        )}
+                        <span className="ngo-channel-hint">Designated Disaster Relief Account (InstaPay / PESONet)</span>
+                        {bankQrUrl && (
+                          <div style={{ marginTop: '8px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setPreviewCertUrl(bankQrUrl)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '5px 10px',
+                                borderRadius: '6px',
+                                background: 'rgba(245, 158, 11, 0.12)',
+                                border: '1px solid rgba(245, 158, 11, 0.3)',
+                                color: '#f59e0b',
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>qr_code_scanner</span>
+                              View Bank QR Code
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -494,8 +659,8 @@ export default function NgoProfileModal({ orgId, orgData, onClose, onSelectCampa
                 </div>
               )}
 
-            </div>
-
+              </div>
+            </main>
           </div>
         )}
 

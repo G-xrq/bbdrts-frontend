@@ -105,6 +105,16 @@ export default function App() {
       clearTimeout(failsafeTimer);
       setAuthLoading(false);
     }
+
+    const handleLiveProfileUpdate = (e) => {
+      if (e.detail) {
+        setDbUser(e.detail);
+      }
+    };
+    window.addEventListener('bbdrts_profile_updated', handleLiveProfileUpdate);
+    return () => {
+      window.removeEventListener('bbdrts_profile_updated', handleLiveProfileUpdate);
+    };
   }, []);
 
   /* ── 2. Handle Wallet Changes ───────────────────────── */
@@ -495,7 +505,6 @@ export default function App() {
         theme={theme}
         toggleTheme={toggleTheme}
         onOpenNgoProfile={(id) => setSelectedNgoForProfile(id || 3)}
-        onProfileUpdated={(updated) => setDbUser(updated)}
       />
 
       {/* ── Unauthenticated Views: Default Landing Page vs Auth Portal ── */}
@@ -505,6 +514,7 @@ export default function App() {
           hasMetaMask={hasMetaMask}
           contract={activeContract}
           onOpenNgoProfile={(id) => setSelectedNgoForProfile(id || 3)}
+          theme={theme}
         />
       )}
 
@@ -547,10 +557,10 @@ export default function App() {
       {/* ── Account Settings Modal Overlay ── */}
       {showSettingsModal && (
         <div className="modal-overlay" onClick={() => setShowSettingsModal(false)} style={{ zIndex: 10000 }}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '680px', width: '90%', background: '#131622', border: '1px solid #242a3c', borderRadius: '16px', padding: '24px', position: 'relative' }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '720px', width: '90%', maxHeight: '90vh', overflowY: 'auto', background: theme === 'light' ? '#ffffff' : '#131622', border: theme === 'light' ? '1px solid rgba(0,0,0,0.12)' : '1px solid #242a3c', borderRadius: '16px', padding: '24px', position: 'relative' }}>
             <button
               onClick={() => setShowSettingsModal(false)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '24px', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '24px', cursor: 'pointer', zIndex: 10 }}
             >
               ×
             </button>
