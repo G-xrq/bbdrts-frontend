@@ -343,7 +343,6 @@ export default function CampaignCard(props) {
   const [cardCountry, setCardCountry] = useState('Philippines');
   const [hideCardDetails, setHideCardDetails] = useState(false);
   const [showRailTelemetry, setShowRailTelemetry] = useState(false);
-  const [isRailPinned, setIsRailPinned] = useState(false);
 
   // Optical True-Zoom Magnifier Lens (280px, 1.5x Magnification, Symmetrical Invariance)
   const [magnifierActive, setMagnifierActive] = useState(false);
@@ -660,7 +659,6 @@ export default function CampaignCard(props) {
   const gcashShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.gcash.raw / currentTotal) * 100)) : 0;
   const mayaShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.maya.raw / currentTotal) * 100)) : 0;
   const bankShare = currentTotal > 0 ? Math.min(100, Math.round((breakdown.bank.raw / currentTotal) * 100)) : 0;
-  const isTelemetryVisible = showRailTelemetry || isRailPinned;
 
   // Fixed 4-chip incremental donation amounts (+₱50, +₱100, +₱500, +₱1000)
   const presetIncrements = [50, 100, 500, 1000];
@@ -1268,247 +1266,102 @@ export default function CampaignCard(props) {
           </button>
 
           {/* Multi-Rail Interactive Progress Bar */}
-          <div 
-            className="multi-rail-wrapper"
-            onMouseEnter={() => setShowRailTelemetry(true)}
-            onMouseLeave={() => setShowRailTelemetry(false)}
-          >
+          <div className="multi-rail-wrapper">
             {/* Header: Goal & Total Percent */}
             <div className="multi-rail-header">
               <span className="multi-rail-goal-text">
                 <strong>{formatEthClean(camp.currentAmount)} ETH</strong> of {formatEthClean(camp.targetAmount)} ETH goal
               </span>
-              <button 
-                type="button"
-                className={`multi-rail-pct-badge ${isTelemetryVisible ? 'is-open' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsRailPinned(prev => !prev);
-                  setShowRailTelemetry(prev => !prev);
-                }}
-                title="Click to pin/unpin multi-rail breakdown"
-              >
+              <span className="multi-rail-pct-badge">
                 <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>insights</span>
                 {pct}% funded
-                <span className="material-symbols-outlined badge-arrow">expand_more</span>
-              </button>
+              </span>
             </div>
 
-            {/* Segmented Multi-Rail Track */}
+            {/* Track Container with Floating HUD Tooltip on Hover */}
             <div 
-              className="multi-rail-track-wrap"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsRailPinned(prev => !prev);
-              }}
-              title="Multi-rail progress: ETH, GCash, Maya, Bank Transfer"
+              className="multi-rail-track-container"
+              onMouseEnter={() => setShowRailTelemetry(true)}
+              onMouseLeave={() => setShowRailTelemetry(false)}
             >
-              <div className="multi-rail-track-inner">
-                {ethSegmentPct > 0 && (
-                  <div 
-                    className="multi-rail-segment rail-segment-eth" 
-                    style={{ width: `${ethSegmentPct}%` }}
-                    title={`Ethereum: ${breakdown.eth.amount} ETH (${ethShare}%)`}
-                  />
-                )}
-                {gcashSegmentPct > 0 && (
-                  <div 
-                    className="multi-rail-segment rail-segment-gcash" 
-                    style={{ width: `${gcashSegmentPct}%` }}
-                    title={`GCash: ₱${breakdown.gcash.php.toLocaleString()} (${gcashShare}%)`}
-                  />
-                )}
-                {mayaSegmentPct > 0 && (
-                  <div 
-                    className="multi-rail-segment rail-segment-maya" 
-                    style={{ width: `${mayaSegmentPct}%` }}
-                    title={`Maya: ₱${breakdown.maya.php.toLocaleString()} (${mayaShare}%)`}
-                  />
-                )}
-                {bankSegmentPct > 0 && (
-                  <div 
-                    className="multi-rail-segment rail-segment-bank" 
-                    style={{ width: `${bankSegmentPct}%` }}
-                    title={`Bank / Card: ₱${breakdown.bank.php.toLocaleString()} (${bankShare}%)`}
-                  />
-                )}
-                {totalBarPct === 0 && (
-                  <div className="multi-rail-segment rail-segment-empty" />
-                )}
+              {/* Sleek Floating Hover Telemetry Tooltip (Zero Card Deformation) */}
+              <div className={`multi-rail-tooltip ${showRailTelemetry ? 'is-visible' : ''}`}>
+                <div className="tooltip-rail-item">
+                  <span className="tooltip-dot dot-eth"></span>
+                  <span className="tooltip-name">ETH:</span>
+                  <span className="tooltip-val val-eth">{breakdown.eth.amount} ETH</span>
+                  <span className="tooltip-count">({breakdown.eth.count || 0} {breakdown.eth.count === 1 ? 'tx' : 'txs'})</span>
+                </div>
+                <div className="tooltip-divider"></div>
+                <div className="tooltip-rail-item">
+                  <span className="tooltip-dot dot-gcash"></span>
+                  <span className="tooltip-name">GCash:</span>
+                  <span className="tooltip-val val-gcash">₱{breakdown.gcash.php.toLocaleString()}</span>
+                  <span className="tooltip-count">({breakdown.gcash.count || 0})</span>
+                </div>
+                <div className="tooltip-divider"></div>
+                <div className="tooltip-rail-item">
+                  <span className="tooltip-dot dot-maya"></span>
+                  <span className="tooltip-name">Maya:</span>
+                  <span className="tooltip-val val-maya">₱{breakdown.maya.php.toLocaleString()}</span>
+                  <span className="tooltip-count">({breakdown.maya.count || 0})</span>
+                </div>
+                <div className="tooltip-divider"></div>
+                <div className="tooltip-rail-item">
+                  <span className="tooltip-dot dot-bank"></span>
+                  <span className="tooltip-name">Bank:</span>
+                  <span className="tooltip-val val-bank">₱{breakdown.bank.php.toLocaleString()}</span>
+                  <span className="tooltip-count">({breakdown.bank.count || 0})</span>
+                </div>
               </div>
-            </div>
 
-            {/* Multi-Rail Legend Strip with Live Percentages */}
-            <div className="multi-rail-legend-bar">
-              <div className="multi-rail-legend-items">
-                <span className="legend-chip chip-eth" title={`ETH: ${breakdown.eth.amount} ETH (${ethShare}%)`}>
-                  <span className="legend-dot dot-eth"></span>
-                  <span className="legend-name">ETH</span>
-                  <span className="legend-pct">{ethShare}%</span>
-                </span>
-                <span className="legend-chip chip-gcash" title={`GCash: ₱${breakdown.gcash.php.toLocaleString()} (${gcashShare}%)`}>
-                  <span className="legend-dot dot-gcash"></span>
-                  <span className="legend-name">GCash</span>
-                  <span className="legend-pct">{gcashShare}%</span>
-                </span>
-                <span className="legend-chip chip-maya" title={`Maya: ₱${breakdown.maya.php.toLocaleString()} (${mayaShare}%)`}>
-                  <span className="legend-dot dot-maya"></span>
-                  <span className="legend-name">Maya</span>
-                  <span className="legend-pct">{mayaShare}%</span>
-                </span>
-                <span className="legend-chip chip-bank" title={`Bank: ₱${breakdown.bank.php.toLocaleString()} (${bankShare}%)`}>
-                  <span className="legend-dot dot-bank"></span>
-                  <span className="legend-name">Bank</span>
-                  <span className="legend-pct">{bankShare}%</span>
-                </span>
-              </div>
-              <button 
-                type="button" 
-                className={`legend-toggle-btn ${isTelemetryVisible ? 'is-active' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsRailPinned(prev => !prev);
-                  setShowRailTelemetry(prev => !prev);
-                }}
-                title="Toggle rail telemetry breakdown"
+              {/* Segmented Multi-Rail Track */}
+              <div 
+                className="multi-rail-track-wrap"
+                title="Hover to view payment breakdown: ETH, GCash, Maya, Bank"
               >
-                <span>{isTelemetryVisible ? 'Hide' : 'Details'}</span>
-                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>
-                  {isTelemetryVisible ? 'expand_less' : 'expand_more'}
-                </span>
-              </button>
-            </div>
-
-            {/* Inline Expanding Telemetry Drawer */}
-            <div className={`multi-rail-drawer ${isTelemetryVisible ? 'is-expanded' : ''}`}>
-              <div className="multi-rail-panel-inner">
-                {/* Panel Header */}
-                <div className="popover-top-bar">
-                  <div className="popover-title-row">
-                    <div className="popover-pulse-beacon"></div>
-                    <span className="popover-title">Multi-Rail Payment Breakdown</span>
-                  </div>
-                  <span className="popover-backers-badge">
-                    <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>group</span>
-                    {breakdown.totalBackers || 0} Total Backer{breakdown.totalBackers === 1 ? '' : 's'}
-                  </span>
-                </div>
-
-                {/* 2x2 Telemetry Cards Grid */}
-                <div className="popover-rail-grid">
-                  {/* Ethereum Card */}
-                  <div className="popover-rail-card card-eth">
-                    <div className="rail-card-left">
-                      <span className="rail-card-dot dot-eth"></span>
-                      <div>
-                        <div className="rail-card-label">Ethereum Web3</div>
-                        <div className="rail-card-meta">{breakdown.eth.count || 0} tx · {ethShare}%</div>
-                      </div>
-                    </div>
-                    <div className="rail-card-right">
-                      <div className="rail-card-val val-eth">{breakdown.eth.amount} ETH</div>
-                      <div className="rail-card-subval">≈ ₱{breakdown.eth.php.toLocaleString()}</div>
-                    </div>
-                  </div>
-
-                  {/* GCash Card */}
-                  <div className="popover-rail-card card-gcash">
-                    <div className="rail-card-left">
-                      <span className="rail-card-dot dot-gcash"></span>
-                      <div>
-                        <div className="rail-card-label">GCash E-Wallet</div>
-                        <div className="rail-card-meta">{breakdown.gcash.count || 0} donor{breakdown.gcash.count === 1 ? '' : 's'} · {gcashShare}%</div>
-                      </div>
-                    </div>
-                    <div className="rail-card-right">
-                      <div className="rail-card-val val-gcash">₱{breakdown.gcash.php.toLocaleString()}</div>
-                      <div className="rail-card-subval">{breakdown.gcash.amount} ETH</div>
-                    </div>
-                  </div>
-
-                  {/* Maya Card */}
-                  <div className="popover-rail-card card-maya">
-                    <div className="rail-card-left">
-                      <span className="rail-card-dot dot-maya"></span>
-                      <div>
-                        <div className="rail-card-label">Maya Digital Bank</div>
-                        <div className="rail-card-meta">{breakdown.maya.count || 0} donor{breakdown.maya.count === 1 ? '' : 's'} · {mayaShare}%</div>
-                      </div>
-                    </div>
-                    <div className="rail-card-right">
-                      <div className="rail-card-val val-maya">₱{breakdown.maya.php.toLocaleString()}</div>
-                      <div className="rail-card-subval">{breakdown.maya.amount} ETH</div>
-                    </div>
-                  </div>
-
-                  {/* Bank Card */}
-                  <div className="popover-rail-card card-bank">
-                    <div className="rail-card-left">
-                      <span className="rail-card-dot dot-bank"></span>
-                      <div>
-                        <div className="rail-card-label">Bank Transfer / Card</div>
-                        <div className="rail-card-meta">{breakdown.bank.count || 0} deposit{breakdown.bank.count === 1 ? '' : 's'} · {bankShare}%</div>
-                      </div>
-                    </div>
-                    <div className="rail-card-right">
-                      <div className="rail-card-val val-bank">₱{breakdown.bank.php.toLocaleString()}</div>
-                      <div className="rail-card-subval">{breakdown.bank.amount} ETH</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Panel Footer */}
-                <div className="popover-footer">
-                  <div className="popover-audit-tag">
-                    <span className="material-symbols-outlined" style={{ fontSize: '13px', color: 'var(--accent, #22c55e)' }}>verified</span>
-                    <span>Cross-Ledger Verified</span>
-                  </div>
-                  <button 
-                    type="button" 
-                    className="popover-ledger-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLedgerOpen(true);
-                      fetchHistory(true);
-                    }}
-                  >
-                    <span>View Public Ledger</span>
-                    <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>arrow_forward</span>
-                  </button>
+                <div className="multi-rail-track-inner">
+                  {ethSegmentPct > 0 && (
+                    <div 
+                      className="multi-rail-segment rail-segment-eth" 
+                      style={{ width: `${ethSegmentPct}%` }}
+                    />
+                  )}
+                  {gcashSegmentPct > 0 && (
+                    <div 
+                      className="multi-rail-segment rail-segment-gcash" 
+                      style={{ width: `${gcashSegmentPct}%` }}
+                    />
+                  )}
+                  {mayaSegmentPct > 0 && (
+                    <div 
+                      className="multi-rail-segment rail-segment-maya" 
+                      style={{ width: `${mayaSegmentPct}%` }}
+                    />
+                  )}
+                  {bankSegmentPct > 0 && (
+                    <div 
+                      className="multi-rail-segment rail-segment-bank" 
+                      style={{ width: `${bankSegmentPct}%` }}
+                    />
+                  )}
+                  {totalBarPct === 0 && (
+                    <div className="multi-rail-segment rail-segment-empty" />
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
           <div className="campaign-amounts" style={{ marginTop: '12px' }}>
-            <div 
-              className="amount-block" 
-              style={{ cursor: 'pointer' }}
-              onMouseEnter={() => setShowRailTelemetry(true)} 
-              onMouseLeave={() => setShowRailTelemetry(false)}
-              onClick={() => {
-                setIsRailPinned(prev => !prev);
-                setShowRailTelemetry(prev => !prev);
-              }}
-              title="Click or hover to inspect Multi-Rail breakdown"
-            >
+            <div className="amount-block">
               <span className="amount-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Raised</span>
               <span className="amount-value accent" style={{ fontSize: '1.25rem' }}>{formatEthClean(camp.currentAmount)} ETH</span>
               <span style={{ fontSize: '0.82rem', color: '#0284c7', fontWeight: 600, marginTop: '2px' }}>
                 ≈ ₱{(parseFloat(camp.currentAmount || 0) * 170000).toLocaleString('en-US', { maximumFractionDigits: 0 })} PHP
               </span>
             </div>
-            <div 
-              className="amount-block" 
-              style={{ cursor: 'pointer' }}
-              onMouseEnter={() => setShowRailTelemetry(true)} 
-              onMouseLeave={() => setShowRailTelemetry(false)}
-              onClick={() => {
-                setIsRailPinned(prev => !prev);
-                setShowRailTelemetry(prev => !prev);
-              }}
-              title="Click or hover to inspect Multi-Rail breakdown"
-            >
+            <div className="amount-block">
               <span className="amount-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Target Goal</span>
               <span className="amount-value" style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>{formatEthClean(camp.targetAmount)} ETH</span>
               <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '2px' }}>
