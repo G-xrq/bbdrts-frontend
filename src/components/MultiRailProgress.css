@@ -1,6 +1,6 @@
 /* ============================================================
-   BBDRTS Multi-Rail Donation Progress Bar & Hover Telemetry
-   Clean, Zero Layout-Shift Floating Tooltip HUD
+   BBDRTS Multi-Rail Donation Progress & Telemetry System
+   Theme-adaptive, sleek inline drawer, formatted typography
    ============================================================ */
 
 .multi-rail-wrapper {
@@ -8,239 +8,406 @@
   margin-top: 14px;
 }
 
-/* ── 1. Header: Goal text & Pct Badge ──────────────────────── */
+/* ── Header: Goal & Total Percent ─────────────────────────── */
 .multi-rail-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 7px;
-  gap: 8px;
+  margin-bottom: 6px;
 }
 
 .multi-rail-goal-text {
-  font-size: 0.83rem;
-  color: var(--text-secondary, #a3a3a3);
+  font-size: 0.84rem;
+  color: var(--text-secondary, #94a3b8);
   font-weight: 500;
   display: flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  align-items: baseline;
+  gap: 4px;
+  letter-spacing: -0.2px;
 }
 
 .multi-rail-goal-text strong {
   color: var(--text-primary, #ffffff);
   font-weight: 700;
-}
-
-[data-theme="light"] .multi-rail-goal-text strong {
-  color: #0f172a;
+  font-size: 0.95rem;
 }
 
 .multi-rail-pct-badge {
-  font-size: 0.76rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   color: var(--accent, #22c55e);
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: var(--accent-dim, rgba(34, 197, 94, 0.1));
-  border: 1px solid var(--border-focus, rgba(34, 197, 94, 0.25));
-  flex-shrink: 0;
-  user-select: none;
+  cursor: pointer;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ── 2. Track Container & Segmented Progress Bar ───────────── */
-.multi-rail-track-container {
-  position: relative;
-  width: 100%;
+.multi-rail-pct-badge:hover {
+  background: rgba(34, 197, 94, 0.16);
+  border-color: rgba(34, 197, 94, 0.4);
+  transform: translateY(-1px);
 }
 
+/* ── Segmented Progress Bar Track ─────────────────────────── */
 .multi-rail-track-wrap {
   position: relative;
   width: 100%;
   height: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 9999px;
   overflow: hidden;
   cursor: pointer;
-  transition: height 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.25s ease;
 }
 
 [data-theme="light"] .multi-rail-track-wrap {
   background: rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+  border-color: rgba(0, 0, 0, 0.06);
 }
 
 .multi-rail-track-wrap:hover {
   height: 10px;
-  border-color: var(--accent, #22c55e);
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
+  border-color: rgba(34, 197, 94, 0.35);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
 }
 
 .multi-rail-track-inner {
+  display: flex;
   width: 100%;
   height: 100%;
   border-radius: 9999px;
-  display: flex;
+  overflow: hidden;
 }
 
-/* Color Segments */
 .multi-rail-segment {
   height: 100%;
-  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 
 .rail-segment-eth {
-  background: linear-gradient(90deg, #15803d, #22c55e);
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
 }
 
 .rail-segment-gcash {
   background: linear-gradient(90deg, #0284c7, #38bdf8);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
 }
 
 .rail-segment-maya {
   background: linear-gradient(90deg, #059669, #10b981);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
 
 .rail-segment-bank {
   background: linear-gradient(90deg, #7c3aed, #a855f7);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
 }
 
-.rail-segment-empty {
-  width: 100%;
-  height: 100%;
-  background: transparent;
-}
-
-/* ── 3. Sleek Floating Hover Telemetry Tooltip (Zero Layout Shift) ─ */
-.multi-rail-tooltip {
-  position: absolute;
-  bottom: calc(100% + 7px);
-  left: 0;
-  right: 0;
-  width: 100%;
-  background: #141518;
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 14px rgba(34, 197, 94, 0.14);
-  border-radius: 7px;
-  padding: 5px 12px;
+/* ── Control / Legend Strip Under Bar ─────────────────────── */
+.multi-rail-controls-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: 6px;
+}
+
+.multi-rail-legend-pills {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  z-index: 60;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-wrap: wrap;
 }
 
-.multi-rail-tooltip.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Caret pointing down at the progress track */
-.multi-rail-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 5px;
-  border-style: solid;
-  border-color: #141518 transparent transparent transparent;
-}
-
-[data-theme="light"] .multi-rail-tooltip {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="light"] .multi-rail-tooltip::after {
-  border-color: #ffffff transparent transparent transparent;
-}
-
-[data-theme="cyber"] .multi-rail-tooltip {
-  background: #0d0f12;
-  border: 1px solid rgba(0, 255, 163, 0.4);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 16px rgba(0, 255, 163, 0.18);
-}
-
-[data-theme="cyber"] .multi-rail-tooltip::after {
-  border-color: #0d0f12 transparent transparent transparent;
-}
-
-.tooltip-rail-item {
+.rail-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   font-size: 0.72rem;
-  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
 
-.tooltip-dot {
+.rail-pill:hover {
+  color: var(--text-primary, #ffffff);
+}
+
+.rail-pip {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  flex-shrink: 0;
 }
 
-.dot-eth { background: #22c55e; box-shadow: 0 0 5px rgba(34, 197, 94, 0.6); }
-.dot-gcash { background: #38bdf8; box-shadow: 0 0 5px rgba(56, 189, 248, 0.6); }
-.dot-maya { background: #10b981; box-shadow: 0 0 5px rgba(16, 185, 129, 0.6); }
-.dot-bank { background: #a855f7; box-shadow: 0 0 5px rgba(168, 85, 247, 0.6); }
+.pip-eth { background: #22c55e; box-shadow: 0 0 4px #22c55e; }
+.pip-gcash { background: #38bdf8; box-shadow: 0 0 4px #38bdf8; }
+.pip-maya { background: #10b981; box-shadow: 0 0 4px #10b981; }
+.pip-bank { background: #a855f7; box-shadow: 0 0 4px #a855f7; }
 
-.tooltip-name {
-  color: var(--text-secondary, #a3a3a3);
+.multi-rail-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .multi-rail-expand-btn {
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #475569;
+}
+
+.multi-rail-expand-btn:hover,
+.multi-rail-expand-btn.is-active {
+  color: var(--accent, #22c55e);
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.06);
+}
+
+/* ============================================================
+   Inline Telemetry Drawer (Sleek, integrated into card)
+   ============================================================ */
+.multi-rail-drawer {
+  margin-top: 10px;
+  background: var(--bg-card-hover, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 12px;
+  animation: drawerSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+[data-theme="light"] .multi-rail-drawer {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+[data-theme="cyber"] .multi-rail-drawer {
+  background: rgba(10, 15, 30, 0.9);
+  border-color: rgba(0, 255, 200, 0.25);
+  box-shadow: 0 0 15px rgba(0, 255, 200, 0.08);
+}
+
+@keyframes drawerSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 10px;
+}
+
+[data-theme="light"] .drawer-header {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+.drawer-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.drawer-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent, #22c55e);
+  box-shadow: 0 0 6px var(--accent, #22c55e);
+}
+
+.drawer-backers-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent, #22c55e);
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  padding: 1px 7px;
+  border-radius: 6px;
+}
+
+/* 2x2 Grid of Rail Metrics */
+.drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .drawer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.drawer-rail-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 8px 10px;
+  transition: all 0.15s ease;
+}
+
+[data-theme="light"] .drawer-rail-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.drawer-rail-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .drawer-rail-card:hover {
+  background: #f1f5f9;
+}
+
+.drawer-rail-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.icon-eth { background: rgba(34, 197, 94, 0.12); color: #22c55e; }
+.icon-gcash { background: rgba(56, 189, 248, 0.12); color: #38bdf8; }
+.icon-maya { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.icon-bank { background: rgba(168, 85, 247, 0.12); color: #a855f7; }
+
+.drawer-rail-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.drawer-rail-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.drawer-rail-name {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drawer-rail-share {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted, #94a3b8);
+}
+
+.drawer-rail-amounts {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.drawer-amt-primary {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+}
+
+.drawer-amt-secondary {
+  font-size: 0.7rem;
+  color: var(--text-muted, #94a3b8);
   font-weight: 500;
 }
 
-[data-theme="light"] .tooltip-name {
-  color: #64748b;
+.drawer-rail-meta {
+  font-size: 0.67rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
 }
 
-.tooltip-val {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+/* Footer of Drawer */
+.drawer-footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.val-eth { color: #22c55e; }
-.val-gcash { color: #38bdf8; }
-.val-maya { color: #10b981; }
-.val-bank { color: #a855f7; }
-
-.tooltip-count {
-  font-size: 0.65rem;
-  color: var(--text-muted, #737373);
+[data-theme="light"] .drawer-footer {
+  border-top-color: rgba(0, 0, 0, 0.06);
 }
 
-.tooltip-divider {
-  width: 1px;
-  height: 14px;
-  background: rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
+.drawer-audit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent, #22c55e);
 }
 
-[data-theme="light"] .tooltip-divider {
-  background: rgba(0, 0, 0, 0.1);
+.drawer-audit-badge span {
+  font-size: 13px;
 }
 
-@media (max-width: 520px) {
-  .multi-rail-tooltip {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 4px 10px;
-    padding: 6px 10px;
-  }
-  .tooltip-divider {
-    display: none;
-  }
+.drawer-ledger-link {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.drawer-ledger-link:hover {
+  color: var(--accent, #22c55e);
+  text-decoration: underline;
 }
