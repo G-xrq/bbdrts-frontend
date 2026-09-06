@@ -357,7 +357,7 @@ export default function App() {
       setFetchingCampaigns(true);
       let dbCampaigns = [];
       try {
-        const res = await fetch(`${API_URL}/api/campaigns`);
+        const res = await fetch(`${API_URL}/api/campaigns?_t=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           dbCampaigns = await res.json();
         }
@@ -365,9 +365,10 @@ export default function App() {
         console.error('Offline DB Sync failed:', e);
       }
 
-      // Merge client-side localStorage cached campaigns
+      // Merge client-side localStorage cached campaigns (only enrich existing DB campaigns; do not inject ghost campaigns)
       try {
         const localCreated = JSON.parse(localStorage.getItem('bbdrts_created_campaigns') || '[]');
+        const validLocal = [];
         localCreated.forEach(lc => {
           const lcTitle = (lc.title || '').trim().toLowerCase();
           const dbIndex = dbCampaigns.findIndex(d => (d.title || '').trim().toLowerCase() === lcTitle);
@@ -401,10 +402,11 @@ export default function App() {
               targetDate: dbCampaigns[dbIndex].targetDate || enriched.targetDate,
               documentUrl: dbCampaigns[dbIndex].documentUrl || enriched.documentUrl
             };
-          } else {
-            dbCampaigns.unshift(enriched);
+            validLocal.push(lc);
           }
         });
+        // Prune orphan/stale campaigns from localStorage so ghost causes never persist
+        localStorage.setItem('bbdrts_created_campaigns', JSON.stringify(validLocal));
       } catch (e) {
         console.warn('Failed to load local campaign cache:', e);
       }

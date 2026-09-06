@@ -29,10 +29,10 @@ export default function LandingView({ onConnect, hasMetaMask, contract, onOpenNg
       try {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
         
-        // Fetch real database counts and live campaigns in parallel
+        // Fetch real database counts and live campaigns in parallel with cache-busting
         const [statsRes, campsRes] = await Promise.all([
-          fetch(`${apiUrl}/api/public-stats`).catch(() => null),
-          fetch(`${apiUrl}/api/campaigns`).catch(() => null)
+          fetch(`${apiUrl}/api/public-stats?_t=${Date.now()}`, { cache: 'no-store' }).catch(() => null),
+          fetch(`${apiUrl}/api/campaigns?_t=${Date.now()}`, { cache: 'no-store' }).catch(() => null)
         ]);
 
         let realDbStats = { donors: 0, orgs: 0, campaigns: 0 };
@@ -42,13 +42,14 @@ export default function LandingView({ onConnect, hasMetaMask, contract, onOpenNg
 
         if (campsRes && campsRes.ok) {
           const data = await campsRes.json();
-          setCampaigns(data);
+          const validList = Array.isArray(data) ? data.filter(c => c && (c.title || c.id)) : [];
+          setCampaigns(validList);
 
-          const ethSum = data.reduce((sum, c) => sum + parseFloat(c.currentAmount || 0), 0);
+          const ethSum = validList.reduce((sum, c) => sum + parseFloat(c.currentAmount || 0), 0);
           setStats({
             donors: realDbStats.donors || 0,
             orgs: realDbStats.orgs || 0,
-            campaigns: data.length || realDbStats.campaigns || 0,
+            campaigns: validList.length || realDbStats.campaigns || 0,
             totalEthRaised: ethSum > 0 ? ethSum.toFixed(2) : '0.00'
           });
         }
