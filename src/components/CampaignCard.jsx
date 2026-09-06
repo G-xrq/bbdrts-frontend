@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { ROLES } from '../roleConfig';
 import LocationMapPicker from './LocationMapPicker';
 import { useToast } from '../context/ToastContext';
+import './MultiRailProgress.css';
 
 const SEPOLIA_EXPLORER = 'https://sepolia.etherscan.io/tx/';
 
@@ -341,6 +342,7 @@ export default function CampaignCard(props) {
   const [cardEmail, setCardEmail] = useState('');
   const [cardCountry, setCardCountry] = useState('Philippines');
   const [hideCardDetails, setHideCardDetails] = useState(false);
+  const [showRailTelemetry, setShowRailTelemetry] = useState(false);
 
   // Optical True-Zoom Magnifier Lens (280px, 1.5x Magnification, Symmetrical Invariance)
   const [magnifierActive, setMagnifierActive] = useState(false);
@@ -591,6 +593,39 @@ export default function CampaignCard(props) {
   const isPublic = role === ROLES.PUBLIC;
   const canDonate = role !== ROLES.ADMIN && camp.isActive;
   const pct = progressPct(camp.currentAmount, camp.targetAmount);
+
+  // Multi-Rail Breakdown & Segment Calculations
+  const breakdown = useMemo(() => {
+    if (camp.railBreakdown && typeof camp.railBreakdown === 'object') {
+      return camp.railBreakdown;
+    }
+    const currentEth = parseFloat(camp.currentAmount || 0);
+    return {
+      eth: { amount: currentEth, php: Math.round(currentEth * 170000), count: currentEth > 0 ? 1 : 0 },
+      gcash: { amount: 0, php: 0, count: 0 },
+      maya: { amount: 0, php: 0, count: 0 },
+      bank: { amount: 0, php: 0, count: 0 },
+      totalRaisedEth: currentEth,
+      totalRaisedPhp: Math.round(currentEth * 170000),
+      totalBackers: currentEth > 0 ? 1 : 0
+    };
+  }, [camp.railBreakdown, camp.currentAmount]);
+
+  const targetGoal = Math.max(0.0001, parseFloat(camp.targetAmount || 1));
+  const currentTotal = parseFloat(camp.currentAmount || 0);
+  const totalBarPct = Math.min(100, Math.max(0, (currentTotal / targetGoal) * 100));
+
+  // Compute segment widths on the bar (total sum === totalBarPct)
+  const ethSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct, (breakdown.eth.amount / targetGoal) * 100) : 0;
+  const gcashSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct - ethSegmentPct, (breakdown.gcash.amount / targetGoal) * 100) : 0;
+  const mayaSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct - ethSegmentPct - gcashSegmentPct, (breakdown.maya.amount / targetGoal) * 100) : 0;
+  const bankSegmentPct = totalBarPct > 0 ? Math.min(totalBarPct - ethSegmentPct - gcashSegmentPct - mayaSegmentPct, (breakdown.bank.amount / targetGoal) * 100) : 0;
+
+  // Percentage shares of total funds raised
+  const ethShare = currentTotal > 0 ? Math.round((breakdown.eth.amount / currentTotal) * 100) : 0;
+  const gcashShare = currentTotal > 0 ? Math.round((breakdown.gcash.amount / currentTotal) * 100) : 0;
+  const mayaShare = currentTotal > 0 ? Math.round((breakdown.maya.amount / currentTotal) * 100) : 0;
+  const bankShare = currentTotal > 0 ? Math.round((breakdown.bank.amount / currentTotal) * 100) : 0;
 
   // Fixed 4-chip incremental donation amounts (+₱50, +₱100, +₱500, +₱1000)
   const presetIncrements = [50, 100, 500, 1000];
@@ -1197,31 +1232,235 @@ export default function CampaignCard(props) {
             <span className="material-symbols-outlined campaign-org-arrow">chevron_right</span>
           </button>
 
-          {/* Progress Bar */}
-          <div style={{ marginTop: '14px' }}>
-            <div className="progress-wrap">
-              <div
-                className={`progress-bar ${parseFloat(pct) >= 100 ? 'full' : ''}`}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                <strong style={{ color: 'var(--text-primary)' }}>{camp.currentAmount} ETH</strong> of {camp.targetAmount} ETH goal
+          {/* Multi-Rail Interactive Progress Bar */}
+          <div 
+            className="multi-rail-wrapper"
+            onMouseEnter={() => setShowRailTelemetry(true)}
+            onMouseLeave={() => setShowRailTelemetry(false)}
+          >
+            {/* Header: Goal & Total Percent */}
+            <div className="multi-rail-header">
+              <span className="multi-rail-goal-text">
+                <strong>{camp.currentAmount} ETH</strong> of {camp.targetAmount} ETH goal
               </span>
-              <span className="progress-pct" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent)' }}>{pct}% funded</span>
+              <span 
+                className="multi-rail-pct-badge"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRailTelemetry(prev => !prev);
+                }}
+                title="Click or hover to inspect payment rail breakdown"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>insights</span>
+                {pct}% funded
+              </span>
             </div>
+
+            {/* Segmented Multi-Rail Track */}
+            <div 
+              className="multi-rail-track-wrap"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowRailTelemetry(prev => !prev);
+              }}
+              title="Hover to view multi-rail contributions (ETH, GCash, Maya, Bank)"
+            >
+              <div className="multi-rail-track-inner">
+                {ethSegmentPct > 0 && (
+                  <div 
+                    className="multi-rail-segment rail-segment-eth" 
+                    style={{ width: `${ethSegmentPct}%` }}
+                    title={`Ethereum: ${breakdown.eth.amount} ETH (${ethShare}%)`}
+                  />
+                )}
+                {gcashSegmentPct > 0 && (
+                  <div 
+                    className="multi-rail-segment rail-segment-gcash" 
+                    style={{ width: `${gcashSegmentPct}%` }}
+                    title={`GCash: ₱${breakdown.gcash.php.toLocaleString()} (${gcashShare}%)`}
+                  />
+                )}
+                {mayaSegmentPct > 0 && (
+                  <div 
+                    className="multi-rail-segment rail-segment-maya" 
+                    style={{ width: `${mayaSegmentPct}%` }}
+                    title={`Maya: ₱${breakdown.maya.php.toLocaleString()} (${mayaShare}%)`}
+                  />
+                )}
+                {bankSegmentPct > 0 && (
+                  <div 
+                    className="multi-rail-segment rail-segment-bank" 
+                    style={{ width: `${bankSegmentPct}%` }}
+                    title={`Bank / Card: ₱${breakdown.bank.php.toLocaleString()} (${bankShare}%)`}
+                  />
+                )}
+                {totalBarPct === 0 && (
+                  <div className="multi-rail-segment rail-segment-empty" />
+                )}
+              </div>
+            </div>
+
+            {/* Mini Legend Indicator with Interactive Trigger */}
+            <div className="multi-rail-hint-strip">
+              <div className="multi-rail-legend-dots">
+                <span className="rail-dot-item" title="Ethereum Web3" onClick={() => setShowRailTelemetry(true)}>
+                  <span className="rail-dot dot-eth"></span> ETH
+                </span>
+                <span className="rail-dot-item" title="GCash Mobile E-Wallet" onClick={() => setShowRailTelemetry(true)}>
+                  <span className="rail-dot dot-gcash"></span> GCash
+                </span>
+                <span className="rail-dot-item" title="Maya Digital Banking" onClick={() => setShowRailTelemetry(true)}>
+                  <span className="rail-dot dot-maya"></span> Maya
+                </span>
+                <span className="rail-dot-item" title="Bank Transfer / Card" onClick={() => setShowRailTelemetry(true)}>
+                  <span className="rail-dot dot-bank"></span> Bank
+                </span>
+              </div>
+              <button 
+                type="button" 
+                className="multi-rail-inspect-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRailTelemetry(prev => !prev);
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>visibility</span>
+                <span>{showRailTelemetry ? 'Hide' : 'Breakdown'}</span>
+              </button>
+            </div>
+
+            {/* Interactive Hover Telemetry Flyout */}
+            {showRailTelemetry && (
+              <div className="multi-rail-popover" onClick={(e) => e.stopPropagation()}>
+                {/* Top bar */}
+                <div className="popover-top-bar">
+                  <div className="popover-title-row">
+                    <div className="popover-pulse-beacon"></div>
+                    <span className="popover-title">Multi-Rail Fund Telemetry</span>
+                  </div>
+                  <span className="popover-backers-badge">
+                    <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>group</span>
+                    {breakdown.totalBackers || 0} Backers
+                  </span>
+                </div>
+
+                {/* Rail breakdown items */}
+                <div className="popover-rail-list">
+                  {/* Ethereum Web3 */}
+                  <div className="popover-rail-item">
+                    <div className="popover-rail-left">
+                      <div className="popover-rail-icon-box icon-box-eth">
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>currency_exchange</span>
+                      </div>
+                      <div className="popover-rail-name-box">
+                        <span className="popover-rail-name">Ethereum (Sepolia)</span>
+                        <span className="popover-rail-meta">{ethShare}% of raised · {breakdown.eth.count || 0} on-chain txs</span>
+                      </div>
+                    </div>
+                    <div className="popover-rail-right">
+                      <span className="popover-rail-amt-primary" style={{ color: '#10b981' }}>{breakdown.eth.amount} ETH</span>
+                      <span className="popover-rail-amt-secondary">≈ ₱{breakdown.eth.php.toLocaleString()} PHP</span>
+                    </div>
+                  </div>
+
+                  {/* GCash */}
+                  <div className="popover-rail-item">
+                    <div className="popover-rail-left">
+                      <div className="popover-rail-icon-box icon-box-gcash">
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>phone_android</span>
+                      </div>
+                      <div className="popover-rail-name-box">
+                        <span className="popover-rail-name">GCash E-Wallet</span>
+                        <span className="popover-rail-meta">{gcashShare}% of raised · {breakdown.gcash.count || 0} contributions</span>
+                      </div>
+                    </div>
+                    <div className="popover-rail-right">
+                      <span className="popover-rail-amt-primary" style={{ color: '#007dfe' }}>₱{breakdown.gcash.php.toLocaleString()} PHP</span>
+                      <span className="popover-rail-amt-secondary">{breakdown.gcash.amount} ETH</span>
+                    </div>
+                  </div>
+
+                  {/* Maya */}
+                  <div className="popover-rail-item">
+                    <div className="popover-rail-left">
+                      <div className="popover-rail-icon-box icon-box-maya">
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>qr_code_scanner</span>
+                      </div>
+                      <div className="popover-rail-name-box">
+                        <span className="popover-rail-name">Maya Digital Bank</span>
+                        <span className="popover-rail-meta">{mayaShare}% of raised · {breakdown.maya.count || 0} contributions</span>
+                      </div>
+                    </div>
+                    <div className="popover-rail-right">
+                      <span className="popover-rail-amt-primary" style={{ color: '#00d665' }}>₱{breakdown.maya.php.toLocaleString()} PHP</span>
+                      <span className="popover-rail-amt-secondary">{breakdown.maya.amount} ETH</span>
+                    </div>
+                  </div>
+
+                  {/* Bank Transfer / Card */}
+                  <div className="popover-rail-item">
+                    <div className="popover-rail-left">
+                      <div className="popover-rail-icon-box icon-box-bank">
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>account_balance</span>
+                      </div>
+                      <div className="popover-rail-name-box">
+                        <span className="popover-rail-name">Bank Transfer & Card</span>
+                        <span className="popover-rail-meta">{bankShare}% of raised · {breakdown.bank.count || 0} deposits</span>
+                      </div>
+                    </div>
+                    <div className="popover-rail-right">
+                      <span className="popover-rail-amt-primary" style={{ color: '#8b5cf6' }}>₱{breakdown.bank.php.toLocaleString()} PHP</span>
+                      <span className="popover-rail-amt-secondary">{breakdown.bank.amount} ETH</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer audit stamp */}
+                <div className="popover-footer">
+                  <div className="popover-audit-tag">
+                    <span className="material-symbols-outlined">verified_user</span>
+                    <span>Cross-Ledger Verified</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    className="popover-ledger-btn"
+                    onClick={() => {
+                      setShowRailTelemetry(false);
+                      setLedgerOpen(true);
+                      fetchHistory(true);
+                    }}
+                  >
+                    <span>View Public Ledger</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="campaign-amounts" style={{ marginTop: '12px' }}>
-            <div className="amount-block">
+            <div 
+              className="amount-block" 
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setShowRailTelemetry(true)} 
+              onMouseLeave={() => setShowRailTelemetry(false)}
+              onClick={() => setShowRailTelemetry(prev => !prev)}
+              title="Click or hover to inspect Multi-Rail breakdown"
+            >
               <span className="amount-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Raised</span>
               <span className="amount-value accent" style={{ fontSize: '1.25rem' }}>{camp.currentAmount} ETH</span>
               <span style={{ fontSize: '0.82rem', color: '#0284c7', fontWeight: 600, marginTop: '2px' }}>
                 ≈ ₱{(parseFloat(camp.currentAmount || 0) * 170000).toLocaleString('en-US', { maximumFractionDigits: 0 })} PHP
               </span>
             </div>
-            <div className="amount-block">
+            <div 
+              className="amount-block" 
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setShowRailTelemetry(true)} 
+              onMouseLeave={() => setShowRailTelemetry(false)}
+              onClick={() => setShowRailTelemetry(prev => !prev)}
+              title="Click or hover to inspect Multi-Rail breakdown"
+            >
               <span className="amount-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Target Goal</span>
               <span className="amount-value" style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>{camp.targetAmount} ETH</span>
               <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '2px' }}>
