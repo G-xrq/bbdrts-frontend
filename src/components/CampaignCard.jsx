@@ -1322,124 +1322,232 @@ export default function CampaignCard(props) {
               </div>
               <button 
                 type="button" 
-                className={`multi-rail-expand-btn ${showRailTelemetry ? 'is-active' : ''}`}
+                className="multi-rail-expand-btn"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowRailTelemetry(prev => !prev);
+                  setShowRailTelemetry(true);
                 }}
+                title="Click to inspect Multi-Rail breakdown & telemetry"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>
-                  {showRailTelemetry ? 'expand_less' : 'analytics'}
-                </span>
-                <span>{showRailTelemetry ? 'Hide Rails' : 'Rail Breakdown'}</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>insights</span>
+                <span>Telemetry</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '11px', opacity: 0.7 }}>open_in_new</span>
               </button>
             </div>
 
-            {/* Inline Telemetry Drawer (Seamlessly integrated into card) */}
-            {showRailTelemetry && (
-              <div className="multi-rail-drawer" onClick={(e) => e.stopPropagation()}>
-                <div className="drawer-header">
-                  <div className="drawer-header-left">
-                    <div className="drawer-pulse-dot"></div>
-                    <span>Payment Rail Telemetry</span>
+            {/* Dedicated Telemetry Modal (Rendered via Portal to avoid stretching card) */}
+            {showRailTelemetry && createPortal(
+              <div 
+                className="multi-rail-modal-backdrop fade-in" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRailTelemetry(false);
+                }}
+              >
+                <div 
+                  className="multi-rail-modal-window bounce-in" 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Modal Header */}
+                  <div className="rail-modal-header">
+                    <div className="rail-modal-header-left">
+                      <div className="drawer-pulse-dot"></div>
+                      <div>
+                        <div className="rail-modal-tag">MULTI-RAIL FUND TELEMETRY</div>
+                        <h3 className="rail-modal-title">{displayTitle}</h3>
+                      </div>
+                    </div>
+                    <button 
+                      type="button" 
+                      className="rail-modal-close-btn"
+                      onClick={() => setShowRailTelemetry(false)}
+                      aria-label="Close telemetry modal"
+                    >
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
                   </div>
-                  <span className="drawer-backers-badge">
-                    👥 {breakdown.totalBackers || 0} Backers
-                  </span>
+
+                  {/* Summary & Segmented Track Card */}
+                  <div className="rail-modal-overview-box">
+                    <div className="rail-overview-amounts-row">
+                      <div>
+                        <div className="rail-overview-caption">Total Raised Across All Payment Rails</div>
+                        <div className="rail-overview-num-wrap">
+                          <span className="rail-overview-eth">{formatEthAmt(camp.currentAmount)} ETH</span>
+                          <span className="rail-overview-php">
+                            ≈ ₱{(parseFloat(camp.currentAmount || 0) * 170000).toLocaleString('en-US', { maximumFractionDigits: 0 })} PHP
+                          </span>
+                        </div>
+                      </div>
+                      <div className="rail-overview-pct-box">
+                        <span className="rail-overview-pct">{pct}%</span>
+                        <span className="rail-overview-goal">of {formatEthAmt(camp.targetAmount)} ETH Goal</span>
+                      </div>
+                    </div>
+
+                    <div className="rail-modal-bar-track">
+                      <div className="multi-rail-track-inner">
+                        {ethSegmentPct > 0 && (
+                          <div 
+                            className="multi-rail-segment rail-segment-eth" 
+                            style={{ width: `${ethSegmentPct}%` }}
+                            title={`Ethereum: ${formatEthAmt(breakdown.eth.amount)} ETH (${ethShare}%)`}
+                          />
+                        )}
+                        {gcashSegmentPct > 0 && (
+                          <div 
+                            className="multi-rail-segment rail-segment-gcash" 
+                            style={{ width: `${gcashSegmentPct}%` }}
+                            title={`GCash: ₱${breakdown.gcash.php.toLocaleString()} (${gcashShare}%)`}
+                          />
+                        )}
+                        {mayaSegmentPct > 0 && (
+                          <div 
+                            className="multi-rail-segment rail-segment-maya" 
+                            style={{ width: `${mayaSegmentPct}%` }}
+                            title={`Maya: ₱${breakdown.maya.php.toLocaleString()} (${mayaShare}%)`}
+                          />
+                        )}
+                        {bankSegmentPct > 0 && (
+                          <div 
+                            className="multi-rail-segment rail-segment-bank" 
+                            style={{ width: `${bankSegmentPct}%` }}
+                            title={`Bank / Card: ₱${breakdown.bank.php.toLocaleString()} (${bankShare}%)`}
+                          />
+                        )}
+                        {totalBarPct === 0 && (
+                          <div className="multi-rail-segment" style={{ width: '100%', background: 'transparent' }} />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rail-modal-subtrack-meta">
+                      <span>👥 {breakdown.totalBackers || 0} Total Backers Across All Channels</span>
+                      <span className="rail-badge-verified">
+                        <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>verified</span>
+                        Cross-Ledger Synced
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 2x2 Grid of Channels */}
+                  <div className="drawer-grid">
+                    {/* Ethereum */}
+                    <div className="drawer-rail-card">
+                      <div className="drawer-rail-icon icon-eth">
+                        <span className="material-symbols-outlined">currency_exchange</span>
+                      </div>
+                      <div className="drawer-rail-info">
+                        <div className="drawer-rail-name-row">
+                          <span className="drawer-rail-name">Ethereum (Sepolia)</span>
+                          <span className="drawer-rail-share">{ethShare}%</span>
+                        </div>
+                        <div className="drawer-rail-amounts">
+                          <span className="drawer-amt-primary" style={{ color: '#22c55e' }}>{formatEthAmt(breakdown.eth.amount)} ETH</span>
+                          <span className="drawer-amt-secondary">≈ ₱{breakdown.eth.php.toLocaleString()}</span>
+                        </div>
+                        <span className="drawer-rail-meta">{breakdown.eth.count || 0} on-chain txs</span>
+                      </div>
+                    </div>
+
+                    {/* GCash */}
+                    <div className="drawer-rail-card">
+                      <div className="drawer-rail-icon icon-gcash">
+                        <span className="material-symbols-outlined">phone_android</span>
+                      </div>
+                      <div className="drawer-rail-info">
+                        <div className="drawer-rail-name-row">
+                          <span className="drawer-rail-name">GCash E-Wallet</span>
+                          <span className="drawer-rail-share">{gcashShare}%</span>
+                        </div>
+                        <div className="drawer-rail-amounts">
+                          <span className="drawer-amt-primary" style={{ color: '#38bdf8' }}>₱{breakdown.gcash.php.toLocaleString()}</span>
+                          <span className="drawer-amt-secondary">{formatEthAmt(breakdown.gcash.amount)} ETH</span>
+                        </div>
+                        <span className="drawer-rail-meta">{breakdown.gcash.count || 0} donations</span>
+                      </div>
+                    </div>
+
+                    {/* Maya */}
+                    <div className="drawer-rail-card">
+                      <div className="drawer-rail-icon icon-maya">
+                        <span className="material-symbols-outlined">qr_code_scanner</span>
+                      </div>
+                      <div className="drawer-rail-info">
+                        <div className="drawer-rail-name-row">
+                          <span className="drawer-rail-name">Maya Digital Bank</span>
+                          <span className="drawer-rail-share">{mayaShare}%</span>
+                        </div>
+                        <div className="drawer-rail-amounts">
+                          <span className="drawer-amt-primary" style={{ color: '#10b981' }}>₱{breakdown.maya.php.toLocaleString()}</span>
+                          <span className="drawer-amt-secondary">{formatEthAmt(breakdown.maya.amount)} ETH</span>
+                        </div>
+                        <span className="drawer-rail-meta">{breakdown.maya.count || 0} donations</span>
+                      </div>
+                    </div>
+
+                    {/* Bank Transfer */}
+                    <div className="drawer-rail-card">
+                      <div className="drawer-rail-icon icon-bank">
+                        <span className="material-symbols-outlined">account_balance</span>
+                      </div>
+                      <div className="drawer-rail-info">
+                        <div className="drawer-rail-name-row">
+                          <span className="drawer-rail-name">Bank Transfer / Card</span>
+                          <span className="drawer-rail-share">{bankShare}%</span>
+                        </div>
+                        <div className="drawer-rail-amounts">
+                          <span className="drawer-amt-primary" style={{ color: '#a855f7' }}>₱{breakdown.bank.php.toLocaleString()}</span>
+                          <span className="drawer-amt-secondary">{formatEthAmt(breakdown.bank.amount)} ETH</span>
+                        </div>
+                        <span className="drawer-rail-meta">{breakdown.bank.count || 0} deposits</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Modal Footer Actions */}
+                  <div className="rail-modal-bottom-bar">
+                    <button 
+                      type="button" 
+                      className="drawer-ledger-link"
+                      onClick={() => {
+                        setShowRailTelemetry(false);
+                        setLedgerOpen(true);
+                        fetchHistory(true);
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>history_edu</span>
+                      <span>Inspect Audit Trail →</span>
+                    </button>
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        style={{ padding: '7px 14px', fontSize: '0.82rem' }}
+                        onClick={() => setShowRailTelemetry(false)}
+                      >
+                        Close
+                      </button>
+                      {canDonate && (
+                        <button
+                          type="button"
+                          className="btn btn-primary glow"
+                          style={{ padding: '7px 16px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                          onClick={() => {
+                            setShowRailTelemetry(false);
+                            setModalOpen(true);
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>volunteer_activism</span>
+                          Donate Now
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-
-                <div className="drawer-grid">
-                  {/* Ethereum Card */}
-                  <div className="drawer-rail-card">
-                    <div className="drawer-rail-icon icon-eth">
-                      <span className="material-symbols-outlined">currency_exchange</span>
-                    </div>
-                    <div className="drawer-rail-info">
-                      <div className="drawer-rail-name-row">
-                        <span className="drawer-rail-name">Ethereum (Sepolia)</span>
-                        <span className="drawer-rail-share">{ethShare}%</span>
-                      </div>
-                      <div className="drawer-rail-amounts">
-                        <span className="drawer-amt-primary" style={{ color: '#22c55e' }}>{formatEthAmt(breakdown.eth.amount)} ETH</span>
-                        <span className="drawer-amt-secondary">≈ ₱{breakdown.eth.php.toLocaleString()}</span>
-                      </div>
-                      <span className="drawer-rail-meta">{breakdown.eth.count || 0} on-chain txs</span>
-                    </div>
-                  </div>
-
-                  {/* GCash Card */}
-                  <div className="drawer-rail-card">
-                    <div className="drawer-rail-icon icon-gcash">
-                      <span className="material-symbols-outlined">phone_android</span>
-                    </div>
-                    <div className="drawer-rail-info">
-                      <div className="drawer-rail-name-row">
-                        <span className="drawer-rail-name">GCash E-Wallet</span>
-                        <span className="drawer-rail-share">{gcashShare}%</span>
-                      </div>
-                      <div className="drawer-rail-amounts">
-                        <span className="drawer-amt-primary" style={{ color: '#38bdf8' }}>₱{breakdown.gcash.php.toLocaleString()}</span>
-                        <span className="drawer-amt-secondary">{formatEthAmt(breakdown.gcash.amount)} ETH</span>
-                      </div>
-                      <span className="drawer-rail-meta">{breakdown.gcash.count || 0} donations</span>
-                    </div>
-                  </div>
-
-                  {/* Maya Card */}
-                  <div className="drawer-rail-card">
-                    <div className="drawer-rail-icon icon-maya">
-                      <span className="material-symbols-outlined">qr_code_scanner</span>
-                    </div>
-                    <div className="drawer-rail-info">
-                      <div className="drawer-rail-name-row">
-                        <span className="drawer-rail-name">Maya Digital Bank</span>
-                        <span className="drawer-rail-share">{mayaShare}%</span>
-                      </div>
-                      <div className="drawer-rail-amounts">
-                        <span className="drawer-amt-primary" style={{ color: '#10b981' }}>₱{breakdown.maya.php.toLocaleString()}</span>
-                        <span className="drawer-amt-secondary">{formatEthAmt(breakdown.maya.amount)} ETH</span>
-                      </div>
-                      <span className="drawer-rail-meta">{breakdown.maya.count || 0} donations</span>
-                    </div>
-                  </div>
-
-                  {/* Bank Transfer Card */}
-                  <div className="drawer-rail-card">
-                    <div className="drawer-rail-icon icon-bank">
-                      <span className="material-symbols-outlined">account_balance</span>
-                    </div>
-                    <div className="drawer-rail-info">
-                      <div className="drawer-rail-name-row">
-                        <span className="drawer-rail-name">Bank Transfer / Card</span>
-                        <span className="drawer-rail-share">{bankShare}%</span>
-                      </div>
-                      <div className="drawer-rail-amounts">
-                        <span className="drawer-amt-primary" style={{ color: '#a855f7' }}>₱{breakdown.bank.php.toLocaleString()}</span>
-                        <span className="drawer-amt-secondary">{formatEthAmt(breakdown.bank.amount)} ETH</span>
-                      </div>
-                      <span className="drawer-rail-meta">{breakdown.bank.count || 0} deposits</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="drawer-footer">
-                  <div className="drawer-audit-badge">
-                    <span className="material-symbols-outlined">verified_user</span>
-                    <span>Cross-Ledger Verified</span>
-                  </div>
-                  <button 
-                    type="button" 
-                    className="drawer-ledger-link"
-                    onClick={() => {
-                      setLedgerOpen(true);
-                      fetchHistory(true);
-                    }}
-                  >
-                    <span>View Public Ledger</span>
-                    <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>arrow_forward</span>
-                  </button>
-                </div>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
 
