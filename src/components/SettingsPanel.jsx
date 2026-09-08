@@ -6,6 +6,7 @@ import { shortAddr } from './CampaignCard';
 import { useToast } from '../context/ToastContext';
 
 import EditProfileModal from './EditProfileModal';
+import DonorBadge from './DonorBadge';
 
 export default function SettingsPanel({ 
   contract, 
@@ -18,7 +19,10 @@ export default function SettingsPanel({
   setTheme,
   textSize,
   setTextSize,
-  onProfileUpdated
+  onProfileUpdated,
+  totalDonatedEth = 0,
+  totalDonatedPhp = 0,
+  onOpenHonorsLadder
 }) {
   const { showSuccess, showError } = useToast();
   const [manualWallet, setManualWallet] = useState('');
@@ -192,6 +196,17 @@ export default function SettingsPanel({
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                   <h3 style={{ margin: 0, fontSize: '1.35rem', color: 'var(--text-primary, #fff)', fontWeight: 800 }}>{displayName}</h3>
+                  {!isOrg && (
+                    <DonorBadge
+                      size="md"
+                      walletAddress={walletAddress || currentUser?.wallet_address}
+                      donorId={currentUser?.id}
+                      amountEth={totalDonatedEth}
+                      amountPhp={totalDonatedPhp}
+                      showProgress={false}
+                      onClick={onOpenHonorsLadder}
+                    />
+                  )}
                   <span style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '2px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>verified</span>
                     VERIFIED {isOrg ? 'NGO PROTOCOL ENTITY' : 'RELIEF DONOR'}
@@ -217,6 +232,27 @@ export default function SettingsPanel({
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted, #94a3b8)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Smart Contract</div>
                 <strong style={{ fontSize: '0.9rem', color: '#22c55e' }}>● 100% Online</strong>
               </div>
+              {!isOrg && (
+                <div 
+                  onClick={onOpenHonorsLadder}
+                  style={{ 
+                    background: 'var(--bg-input, rgba(0,0,0,0.3))', 
+                    padding: '10px 16px', 
+                    borderRadius: '10px', 
+                    border: '1px solid var(--border, rgba(255,255,255,0.05))', 
+                    textAlign: 'center', 
+                    minWidth: '120px',
+                    cursor: onOpenHonorsLadder ? 'pointer' : 'default'
+                  }}
+                  title="Click to view 12-Tier Honors Ladder"
+                >
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted, #94a3b8)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Honors Standing</div>
+                  <strong style={{ fontSize: '0.9rem', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>military_tech</span>
+                    <span>Honors</span>
+                  </strong>
+                </div>
+              )}
             </div>
 
           </div>

@@ -1298,8 +1298,8 @@ function DisasterRadarHeatmapInner({
             const currentZ = mapRef.current ? mapRef.current.getZoom() : 6;
             const isZoomedOut = currentZ <= 6.5;
             e.target.setStyle({
-              weight: count > 0 
-                ? (isSat ? (isZoomedOut ? 1.4 : 2.2) : (isZoomedOut ? 1.6 : 2.2)) 
+              weight: count > 0
+                ? (isSat ? (isZoomedOut ? 1.4 : 2.2) : (isZoomedOut ? 1.6 : 2.2))
                 : (isSat ? (isZoomedOut ? 1.0 : 1.8) : (isZoomedOut ? 1.2 : 1.6)),
               color: isSat ? '#ffffff' : '#000000',
               opacity: 1.0
@@ -1408,7 +1408,7 @@ function DisasterRadarHeatmapInner({
   // Living strictly in spotlightPane (zIndex 350), it is BELOW markerPane (zIndex 600) and popupPane (zIndex 700)
   // so the HUD card and mission pins are NEVER darkened or clipped!
   const getOuterRing = (map) => {
-    if (!map) return [[ -35, 75 ], [ -35, 165 ], [ 45, 165 ], [ 45, 75 ]];
+    if (!map) return [[-35, 75], [-35, 165], [45, 165], [45, 75]];
     const b = map.getBounds().pad(2.0);
     return [
       [b.getSouth(), b.getWest()],
@@ -1431,7 +1431,7 @@ function DisasterRadarHeatmapInner({
         const n = (f.properties?.name || '').toLowerCase().trim();
         const alt = (f.properties?.alt_name || '').toLowerCase().trim();
         return targetLower.startsWith(n) || n.startsWith(targetLower) ||
-               (alt && (targetLower.startsWith(alt) || alt.startsWith(targetLower)));
+          (alt && (targetLower.startsWith(alt) || alt.startsWith(targetLower)));
       });
     }
     if (!feat || !feat.geometry) return [];
@@ -1442,7 +1442,7 @@ function DisasterRadarHeatmapInner({
         feat.geometry.coordinates[0].map(([lng, lat]) => [lat, lng])
       ];
     } else if (feat.geometry.type === 'MultiPolygon') {
-      return feat.geometry.coordinates.map(poly => 
+      return feat.geometry.coordinates.map(poly =>
         poly[0].map(([lng, lat]) => [lat, lng])
       );
     }
@@ -1712,7 +1712,7 @@ function DisasterRadarHeatmapInner({
       const raised = parseFloat(camp.currentAmount || camp.raised_eth || 0) || 0;
       const target = parseFloat(camp.targetAmount || camp.target_eth || 0) || 0;
       const pct = target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : 0;
-      
+
       const catMeta = getCampaignCategoryMeta(camp);
       const subLocation = resolveCampaignSubLocation(camp, focusedProvince);
 
@@ -2029,150 +2029,150 @@ function DisasterRadarHeatmapInner({
         />
       )}
       <div className={`bbdrts-radar-command ${isFullscreen ? 'radar-command-fullscreen' : ''} ${className}`}>
-      
-      {/* ── Topbar (Executive Branding, Telemetry, & Radar Master Actions) ── */}
-      <div className="radar-cmd-topbar">
-        <div className="radar-cmd-branding">
-          <div className="radar-icon-frame">
-            <span className="material-symbols-outlined radar-spin-symbol">radar</span>
-          </div>
-          <div>
-            <div className="radar-title-row">
-              <span className="radar-main-title">Philippine Disaster Relief Radar Heatmap</span>
-              <span className="radar-status-badge">
-                <span className="radar-status-dot"></span>
-                LIVE ARCHIPELAGO RADAR
-              </span>
-            </div>
-            <div className="radar-sub-desc">
-              Geospatial Relief Operations & Hotspot Density · Real-Time Disaster Concentration Across Philippine Provinces
-            </div>
-          </div>
-        </div>
 
-        <div className="radar-telemetry-cluster">
-          <div className="radar-telemetry-item">
-            <span className="telemetry-k">Philippine Time (PST / UTC+8)</span>
-            <span className="telemetry-v telemetry-time">{currentTime || '01:00:00'}</span>
-          </div>
-          <div className="radar-telemetry-item">
-            <span className="telemetry-k">Active Causes</span>
-            <div className="telemetry-badge-metric">
-              <span className="telemetry-metric-dot"></span>
-              <span className="telemetry-v text-accent">{totalTrackedCampaigns}</span>
+        {/* ── Topbar (Executive Branding, Telemetry, & Radar Master Actions) ── */}
+        <div className="radar-cmd-topbar">
+          <div className="radar-cmd-branding">
+            <div className="radar-icon-frame">
+              <span className="material-symbols-outlined radar-spin-symbol">radar</span>
+            </div>
+            <div>
+              <div className="radar-title-row">
+                <span className="radar-main-title">Philippine Disaster Relief Radar Heatmap</span>
+                <span className="radar-status-badge">
+                  <span className="radar-status-dot"></span>
+                  LIVE ARCHIPELAGO RADAR
+                </span>
+              </div>
+              <div className="radar-sub-desc">
+                Geospatial Relief Operations & Hotspot Density · Real-Time Disaster Concentration Across Philippine Provinces
+              </div>
             </div>
           </div>
 
-          {/* Density Simulation (1-30 Beacons) Toggle & Re-Roll Control */}
-          <div className="radar-sim-deck-controls">
-            <button
-              type="button"
-              className={`radar-sim-switch ${simulateDensity ? 'is-active' : ''}`}
-              onClick={() => setSimulateDensity(!simulateDensity)}
-              title={simulateDensity ? 'Switch to real campaigns only' : 'Simulate archipelago campaign density (1 to 30)'}
-            >
-              <span className="material-symbols-outlined sim-switch-icon">hub</span>
-              <span className="sim-switch-label">DENSITY SIM (1–30)</span>
-              <span className={`sim-switch-pill ${simulateDensity ? 'on' : 'off'}`}>
-                <span className="sim-pill-dot"></span>
-                {simulateDensity ? 'SIMULATED' : 'REAL ONLY'}
-              </span>
-            </button>
+          <div className="radar-telemetry-cluster">
+            <div className="radar-telemetry-item">
+              <span className="telemetry-k">Philippine Time (PST / UTC+8)</span>
+              <span className="telemetry-v telemetry-time">{currentTime || '01:00:00'}</span>
+            </div>
+            <div className="radar-telemetry-item">
+              <span className="telemetry-k">Active Causes</span>
+              <div className="telemetry-badge-metric">
+                <span className="telemetry-metric-dot"></span>
+                <span className="telemetry-v text-accent">{totalTrackedCampaigns}</span>
+              </div>
+            </div>
 
-            {simulateDensity && (
+            {/* Density Simulation (1-30 Beacons) Toggle & Re-Roll Control */}
+            <div className="radar-sim-deck-controls">
               <button
                 type="button"
-                className="radar-reroll-btn"
-                onClick={() => setSimSeed(prev => prev + 1)}
-                title="Re-roll randomized province campaign counts"
+                className={`radar-sim-switch ${simulateDensity ? 'is-active' : ''}`}
+                onClick={() => setSimulateDensity(!simulateDensity)}
+                title={simulateDensity ? 'Switch to real campaigns only' : 'Simulate archipelago campaign density (1 to 30)'}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>casino</span>
-                <span>Re-roll</span>
-              </button>
-            )}
-          </div>
-
-          {/* Tactical Doppler Sweep Master Switch */}
-          <button
-            type="button"
-            className={`radar-sweep-switch ${radarSweepActive ? 'is-active' : ''}`}
-            onClick={() => setRadarSweepActive(!radarSweepActive)}
-            title={radarSweepActive ? 'Deactivate Doppler Radar Sweep' : 'Activate Doppler Radar Sweep'}
-          >
-            <span className="material-symbols-outlined sweep-switch-icon">sensors</span>
-            <span className="sweep-switch-label">RADAR SWEEP</span>
-            <span className={`sweep-switch-pill ${radarSweepActive ? 'on' : 'off'}`}>
-              <span className="sweep-pill-dot"></span>
-              {radarSweepActive ? 'LIVE' : 'OFF'}
-            </span>
-          </button>
-
-          {allowFullscreen && (
-            <div className="radar-fullscreen-btn-wrap">
-              <button
-                type="button"
-                className={`radar-btn-fullscreen ${isFullscreen ? 'is-active' : ''}`}
-                onClick={toggleFullscreen}
-                title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Fullscreen Map'}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                  {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
+                <span className="material-symbols-outlined sim-switch-icon">hub</span>
+                <span className="sim-switch-label">DENSITY SIM (1–30)</span>
+                <span className={`sim-switch-pill ${simulateDensity ? 'on' : 'off'}`}>
+                  <span className="sim-pill-dot"></span>
+                  {simulateDensity ? 'SIMULATED' : 'REAL ONLY'}
                 </span>
               </button>
-              {isFullscreen && (
+
+              {simulateDensity && (
                 <button
                   type="button"
-                  className="radar-btn-exit-fullscreen"
-                  onClick={toggleFullscreen}
-                  title="Exit Fullscreen (Esc)"
+                  className="radar-reroll-btn"
+                  onClick={() => setSimSeed(prev => prev + 1)}
+                  title="Re-roll randomized province campaign counts"
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
-                  <span>Exit</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>casino</span>
+                  <span>Re-roll</span>
                 </button>
               )}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* ── Unified Command Deck: Sector Quick-Jumps & Active Hotspots (Single Sleek Bar) ── */}
-      <div className="radar-cmd-deck">
-        <div className="deck-group sector-group">
-          <span className="deck-label">Sector:</span>
-          <div className="deck-pill-group">
+            {/* Tactical Doppler Sweep Master Switch */}
             <button
               type="button"
-              className={`deck-btn-pill ${filterRegion === 'ALL' ? 'active' : ''}`}
-              onClick={() => handleJumpRegion('ALL')}
+              className={`radar-sweep-switch ${radarSweepActive ? 'is-active' : ''}`}
+              onClick={() => setRadarSweepActive(!radarSweepActive)}
+              title={radarSweepActive ? 'Deactivate Doppler Radar Sweep' : 'Activate Doppler Radar Sweep'}
             >
-              All Philippines ({clusters.length})
+              <span className="material-symbols-outlined sweep-switch-icon">sensors</span>
+              <span className="sweep-switch-label">RADAR SWEEP</span>
+              <span className={`sweep-switch-pill ${radarSweepActive ? 'on' : 'off'}`}>
+                <span className="sweep-pill-dot"></span>
+                {radarSweepActive ? 'LIVE' : 'OFF'}
+              </span>
             </button>
-            <button
-              type="button"
-              className={`deck-btn-pill ${filterRegion === 'LUZON' ? 'active' : ''}`}
-              onClick={() => handleJumpRegion('LUZON')}
-            >
-              Luzon
-            </button>
-            <button
-              type="button"
-              className={`deck-btn-pill ${filterRegion === 'VISAYAS' ? 'active' : ''}`}
-              onClick={() => handleJumpRegion('VISAYAS')}
-            >
-              Visayas
-            </button>
-            <button
-              type="button"
-              className={`deck-btn-pill ${filterRegion === 'MINDANAO' ? 'active' : ''}`}
-              onClick={() => handleJumpRegion('MINDANAO')}
-            >
-              Mindanao
-            </button>
+
+            {allowFullscreen && (
+              <div className="radar-fullscreen-btn-wrap">
+                <button
+                  type="button"
+                  className={`radar-btn-fullscreen ${isFullscreen ? 'is-active' : ''}`}
+                  onClick={toggleFullscreen}
+                  title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Fullscreen Map'}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                    {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
+                  </span>
+                </button>
+                {isFullscreen && (
+                  <button
+                    type="button"
+                    className="radar-btn-exit-fullscreen"
+                    onClick={toggleFullscreen}
+                    title="Exit Fullscreen (Esc)"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
+                    <span>Exit</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Hotspots temporarily disabled/commented out for the meantime */}
-        {/*
+        {/* ── Unified Command Deck: Sector Quick-Jumps & Active Hotspots (Single Sleek Bar) ── */}
+        <div className="radar-cmd-deck">
+          <div className="deck-group sector-group">
+            <span className="deck-label">Sector:</span>
+            <div className="deck-pill-group">
+              <button
+                type="button"
+                className={`deck-btn-pill ${filterRegion === 'ALL' ? 'active' : ''}`}
+                onClick={() => handleJumpRegion('ALL')}
+              >
+                All Philippines ({clusters.length})
+              </button>
+              <button
+                type="button"
+                className={`deck-btn-pill ${filterRegion === 'LUZON' ? 'active' : ''}`}
+                onClick={() => handleJumpRegion('LUZON')}
+              >
+                Luzon
+              </button>
+              <button
+                type="button"
+                className={`deck-btn-pill ${filterRegion === 'VISAYAS' ? 'active' : ''}`}
+                onClick={() => handleJumpRegion('VISAYAS')}
+              >
+                Visayas
+              </button>
+              <button
+                type="button"
+                className={`deck-btn-pill ${filterRegion === 'MINDANAO' ? 'active' : ''}`}
+                onClick={() => handleJumpRegion('MINDANAO')}
+              >
+                Mindanao
+              </button>
+            </div>
+          </div>
+
+          {/* Hotspots temporarily disabled/commented out for the meantime */}
+          {/*
         <div className="deck-divider" />
 
         <div className="deck-group hotspots-group">
@@ -2207,315 +2207,315 @@ function DisasterRadarHeatmapInner({
           </div>
         </div>
         */}
-      </div>
+        </div>
 
-      {/* ── Viewport ── */}
-      <div className={`radar-map-viewport ${activeLayer === 'provinces' ? 'is-plain-white-mode' : ''} ${focusedProvince ? 'has-focused-province' : ''}`} style={{ height: isFullscreen ? 'calc(100vh - 120px)' : height }}>
-        
-        {/* Tactical Sector Focus Control Strip */}
-        {focusedProvince && (
-          <div className="radar-focus-control-strip">
-            <div className="focus-indicator">
-              <span className="focus-radar-pulse"></span>
-              <span className="focus-label">Sector Focus:</span>
-              <strong className="focus-province-name">{focusedProvince}</strong>
-              <span className="focus-missions-badge">
-                <span className="focus-missions-dot"></span>
-                {getProvinceCampaigns(focusedProvince, activeCampaigns).length} Active Mission{getProvinceCampaigns(focusedProvince, activeCampaigns).length === 1 ? '' : 's'}
-              </span>
-            </div>
-            <div className="focus-actions">
-              {getProvinceCampaigns(focusedProvince, activeCampaigns).length > 0 && (
+        {/* ── Viewport ── */}
+        <div className={`radar-map-viewport ${activeLayer === 'provinces' ? 'is-plain-white-mode' : ''} ${focusedProvince ? 'has-focused-province' : ''}`} style={{ height: isFullscreen ? 'calc(100vh - 120px)' : height }}>
+
+          {/* Tactical Sector Focus Control Strip */}
+          {focusedProvince && (
+            <div className="radar-focus-control-strip">
+              <div className="focus-indicator">
+                <span className="focus-radar-pulse"></span>
+                <span className="focus-label">Sector Focus:</span>
+                <strong className="focus-province-name">{focusedProvince}</strong>
+                <span className="focus-missions-badge">
+                  <span className="focus-missions-dot"></span>
+                  {getProvinceCampaigns(focusedProvince, activeCampaigns).length} Active Mission{getProvinceCampaigns(focusedProvince, activeCampaigns).length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <div className="focus-actions">
+                {getProvinceCampaigns(focusedProvince, activeCampaigns).length > 0 && (
+                  <button
+                    type="button"
+                    className={`focus-dossier-btn ${isDossierOpen ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!selectedCluster && activeDossierCluster) {
+                        setSelectedCluster(activeDossierCluster);
+                      }
+                      setIsDossierOpen(prev => !prev);
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+                      {isDossierOpen ? 'visibility_off' : 'description'}
+                    </span>
+                    <span>{isDossierOpen ? 'Hide Dossier' : `View Dossier (${getProvinceCampaigns(focusedProvince, activeCampaigns).length})`}</span>
+                  </button>
+                )}
                 <button
                   type="button"
-                  className={`focus-dossier-btn ${isDossierOpen ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!selectedCluster && activeDossierCluster) {
-                      setSelectedCluster(activeDossierCluster);
-                    }
-                    setIsDossierOpen(prev => !prev);
-                  }}
+                  className="focus-reset-btn"
+                  onClick={handleResetFocus}
+                  title="Deactivate Sector Focus"
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-                    {isDossierOpen ? 'visibility_off' : 'description'}
-                  </span>
-                  <span>{isDossierOpen ? 'Hide Dossier' : `View Dossier (${getProvinceCampaigns(focusedProvince, activeCampaigns).length})`}</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
+                  <span>Reset Focus</span>
                 </button>
-              )}
-              <button
-                type="button"
-                className="focus-reset-btn"
-                onClick={handleResetFocus}
-                title="Deactivate Sector Focus"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
-                <span>Reset Focus</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Leaflet Map Stage */}
-        <div ref={containerRef} className={`radar-leaflet-stage ${activeLayer === 'provinces' ? 'is-plain-white-mode' : ''} ${activeLayer === 'satellite' ? 'is-satellite-mode' : ''}`} />
-
-        {/* Authentic Circular Doppler Radar Scanner Beam */}
-        {radarSweepActive && (
-          <div className="doppler-sweep-container">
-            <div className="doppler-sweep-scanner"></div>
-          </div>
-        )}
-
-        {/* ── Google Maps-Style Floating Basemap Layer Switcher (Bottom Right beside Zoom Controls) ── */}
-        <div className="radar-floating-basemap-control">
-          <div className="floating-basemap-pill-group">
-            <button
-              type="button"
-              className={`floating-basemap-btn ${activeLayer === 'provinces' ? 'active' : ''}`}
-              onClick={() => setActiveLayer('provinces')}
-              title="Plain Terrain with Provincial Heat Borders"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>grid_view</span>
-              <span>Plain</span>
-            </button>
-            <button
-              type="button"
-              className={`floating-basemap-btn ${activeLayer === 'satellite' ? 'active' : ''}`}
-              onClick={() => setActiveLayer('satellite')}
-              title="High-Resolution Satellite Photography"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>satellite_alt</span>
-              <span>Satellite</span>
-            </button>
-            <button
-              type="button"
-              className={`floating-basemap-btn ${activeLayer === 'terrain' ? 'active' : ''}`}
-              onClick={() => setActiveLayer('terrain')}
-              title="Physical Elevation Topography"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>terrain</span>
-              <span>Terrain</span>
-            </button>
-            <button
-              type="button"
-              className={`floating-basemap-btn ${activeLayer === 'tactical' ? 'active' : ''}`}
-              onClick={() => setActiveLayer('tactical')}
-              title="Tactical Command Canvas"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>contrast</span>
-              <span>Tactical</span>
-            </button>
-            <button
-              type="button"
-              className={`floating-basemap-btn ${activeLayer === 'osm' ? 'active' : ''}`}
-              onClick={() => setActiveLayer('osm')}
-              title="Standard Street Map"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>map</span>
-              <span>Street</span>
-            </button>
-          </div>
-        </div>
-
-        {/* ── Meteorological Doppler Precipitation Legend (Strict Storm News Scale) ── */}
-        <div className={`doppler-storm-legend-card ${legendCollapsed ? 'collapsed' : ''}`}>
-          <div className="storm-legend-header">
-            <div className="storm-legend-title">
-              <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--accent)' }}>crisis_alert</span>
-              <span>Disaster Severity Legend</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {focusedTier !== null && !legendCollapsed && (
-                <button type="button" className="legend-clear-btn" onClick={() => setFocusedTier(null)}>
-                  Clear ✕
-                </button>
-              )}
-              <button
-                type="button"
-                className="legend-collapse-toggle"
-                onClick={() => setLegendCollapsed(!legendCollapsed)}
-                title={legendCollapsed ? 'Expand Legend' : 'Collapse Legend'}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                  {legendCollapsed ? 'expand_less' : 'expand_more'}
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {!legendCollapsed && (
-            <>
-              {/* Continuous Doppler Gradient Meter (7 Tiers from Calm White to Code Black) */}
-              <div className="storm-gradient-bar">
-                <div className="bar-step tier-0" title="0 Causes: Clear"></div>
-                <div className="bar-step tier-1" title="1 Cause: Sky Blue (Light)"></div>
-                <div className="bar-step tier-2" title="2–3 Causes: Yellow (Moderate)"></div>
-                <div className="bar-step tier-3" title="4–6 Causes: Orange (Heavy)"></div>
-                <div className="bar-step tier-4" title="7–11 Causes: Red (Severe)"></div>
-                <div className="bar-step tier-5" title="12–19 Causes: Violet (Crisis)"></div>
-                <div className="bar-step tier-6" title="20+ Causes: Black (Catastrophic)"></div>
               </div>
-
-              {/* Interactive Tier Rows */}
-              <div className="storm-tiers-list">
-                <div className="storm-tier-item clear-tier">
-                  <span className="tier-bullet" style={{ background: '#ffffff', border: '1px solid #94a3b8' }}></span>
-                  <span className="tier-causes-tag">0</span>
-                  <span className="tier-desc-name" style={{ color: currentTheme === 'light' ? '#64748b' : '#94a3b8' }}>
-                    Clear Terrain
-                  </span>
-                </div>
-
-                {[1, 2, 3, 4, 5, 6].map((lvl) => {
-                  const t = DOPPLER_TIERS[lvl];
-                  const isFocused = focusedTier === lvl;
-                  const matches = clusters.filter(c => c.tier.level === lvl).length;
-                  const tagText = t.rangeTag.replace(' Causes', '').replace(' Cause', '');
-
-                  return (
-                    <div
-                      key={lvl}
-                      className={`storm-tier-item ${isFocused ? 'focused' : ''} ${t.badgeClass || ''}`}
-                      onClick={() => setFocusedTier(focusedTier === lvl ? null : lvl)}
-                    >
-                      <span
-                        className="tier-bullet"
-                        style={{
-                          background: t.color,
-                          border: t.borderColor || `1px solid ${t.color}`,
-                          boxShadow: lvl === 6 ? '0 0 4px rgba(0,0,0,0.8)' : 'none'
-                        }}
-                      ></span>
-                      <span className="tier-causes-tag">{tagText}</span>
-                      <span className="tier-desc-name" style={{ color: lvl === 6 ? '#f8fafc' : t.color }}>
-                        {t.label}
-                      </span>
-                      {matches > 0 && <span className="tier-match-count">({matches})</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </>
+            </div>
           )}
-        </div>
 
-        {/* ── Hotspot Dossier HUD Drawer (Guaranteed to work for activeDossierCluster) ── */}
-        {activeDossierCluster && isDossierOpen && (
-          <div className="radar-dossier-panel">
-            <div className="dossier-panel-header">
-              <div className="dossier-header-text">
-                <div
-                  className={`dossier-tier-pill ${activeDossierCluster.tier?.badgeClass || ''}`}
-                  style={{
-                    borderColor: activeDossierCluster.tier?.color || 'var(--accent)',
-                    color: activeDossierCluster.tier?.color || 'var(--accent)'
-                  }}
-                >
-                  <span>{activeDossierCluster.tier?.label || activeDossierCluster.tier?.rainDesc || 'Relief Operations'}</span>
-                </div>
-                <h3 className="dossier-location-title">{activeDossierCluster.name}</h3>
-                <div className="dossier-region-label">{activeDossierCluster.regionName}</div>
-                <div className="dossier-gps-tag">
-                  <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>location_on</span>
-                  <span>{activeDossierCluster.lat?.toFixed(4)}° N, {activeDossierCluster.lng?.toFixed(4)}° E</span>
-                </div>
-              </div>
+          {/* Leaflet Map Stage */}
+          <div ref={containerRef} className={`radar-leaflet-stage ${activeLayer === 'provinces' ? 'is-plain-white-mode' : ''} ${activeLayer === 'satellite' ? 'is-satellite-mode' : ''}`} />
+
+          {/* Authentic Circular Doppler Radar Scanner Beam */}
+          {radarSweepActive && (
+            <div className="doppler-sweep-container">
+              <div className="doppler-sweep-scanner"></div>
+            </div>
+          )}
+
+          {/* ── Google Maps-Style Floating Basemap Layer Switcher (Bottom Right beside Zoom Controls) ── */}
+          <div className="radar-floating-basemap-control">
+            <div className="floating-basemap-pill-group">
               <button
                 type="button"
-                className="dossier-dismiss-btn"
-                onClick={() => setIsDossierOpen(false)}
-                title="Close Dossier"
+                className={`floating-basemap-btn ${activeLayer === 'provinces' ? 'active' : ''}`}
+                onClick={() => setActiveLayer('provinces')}
+                title="Plain Terrain with Provincial Heat Borders"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>grid_view</span>
+                <span>Plain</span>
+              </button>
+              <button
+                type="button"
+                className={`floating-basemap-btn ${activeLayer === 'satellite' ? 'active' : ''}`}
+                onClick={() => setActiveLayer('satellite')}
+                title="High-Resolution Satellite Photography"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>satellite_alt</span>
+                <span>Satellite</span>
+              </button>
+              <button
+                type="button"
+                className={`floating-basemap-btn ${activeLayer === 'terrain' ? 'active' : ''}`}
+                onClick={() => setActiveLayer('terrain')}
+                title="Physical Elevation Topography"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>terrain</span>
+                <span>Terrain</span>
+              </button>
+              <button
+                type="button"
+                className={`floating-basemap-btn ${activeLayer === 'tactical' ? 'active' : ''}`}
+                onClick={() => setActiveLayer('tactical')}
+                title="Tactical Command Canvas"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>contrast</span>
+                <span>Tactical</span>
+              </button>
+              <button
+                type="button"
+                className={`floating-basemap-btn ${activeLayer === 'osm' ? 'active' : ''}`}
+                onClick={() => setActiveLayer('osm')}
+                title="Standard Street Map"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>map</span>
+                <span>Street</span>
               </button>
             </div>
-
-            {/* Metrics */}
-            <div className="dossier-metrics-strip">
-              <div className="dossier-metric-cell">
-                <span className="dossier-num text-accent">{activeDossierCluster.campaigns.length}</span>
-                <span className="dossier-tag-label">Active Causes</span>
-              </div>
-              <div className="dossier-metric-cell">
-                <span className="dossier-num">{((activeDossierCluster.totalRaised ?? 0)).toFixed(2)} ETH</span>
-                <span className="dossier-tag-label">Funds Raised</span>
-              </div>
-              <div className="dossier-metric-cell">
-                <span className="dossier-num">{((activeDossierCluster.totalTarget ?? 0)).toFixed(2)} ETH</span>
-                <span className="dossier-tag-label">Target Goal</span>
-              </div>
-            </div>
-
-            {/* Campaign Cards in this hotspot */}
-            <div className="dossier-campaigns-body">
-              <div className="dossier-subheading">
-                <span>Relief Missions in this Zone ({activeDossierCluster.campaigns.length})</span>
-              </div>
-
-              <div className="dossier-campaigns-scroll">
-                {activeDossierCluster.campaigns.map((c) => {
-                  const raised = parseFloat(c.currentAmount || c.raised_eth || 0);
-                  const target = parseFloat(c.targetAmount || c.target_eth || 0);
-                  const pct = target > 0 ? Math.min(100, (raised / target) * 100).toFixed(1) : 0;
-
-                  return (
-                    <div key={c.id} className="dossier-card">
-                      <div className="dossier-card-tags">
-                        <span className="dossier-badge cat">{c.category || 'RELIEF'}</span>
-                        <span className={`dossier-badge urgency ${c.urgency?.toLowerCase() || 'high'}`}>
-                          {c.urgency || 'HIGH'}
-                        </span>
-                        <span className="dossier-badge org">{c.orgName || 'Accredited NGO'}</span>
-                        {c.isSimulated && (
-                          <span className="dossier-simulated-tag">SIMULATED MISSION</span>
-                        )}
-                      </div>
-
-                      <h4 className="dossier-camp-title">{c.title}</h4>
-                      <p className="dossier-camp-desc">{c.description?.slice(0, 115)}...</p>
-
-                      <div className="dossier-funding-progress">
-                        <div className="dossier-progress-track">
-                          <div className="dossier-progress-bar" style={{ width: `${pct}%` }}></div>
-                        </div>
-                        <div className="dossier-progress-labels">
-                          <span>{raised.toFixed(2)} ETH raised ({pct}%)</span>
-                          <span>Target: {target.toFixed(2)} ETH</span>
-                        </div>
-                      </div>
-
-                      <div className="dossier-action-row">
-                        <button
-                          type="button"
-                          className={`dossier-cta-btn ${c.isSimulated ? 'simulated-btn' : ''}`}
-                          onClick={() => {
-                            if (c.isSimulated) return;
-                            if (onSelectCampaign) {
-                              onSelectCampaign(c);
-                            } else {
-                              const el = document.getElementById(`campaign-${c.id}`) || document.getElementById('campaigns');
-                              if (el) el.scrollIntoView({ behavior: 'smooth' });
-                            }
-                          }}
-                        >
-                          <span>{c.isSimulated ? 'Simulated Preview' : 'Support Mission'}</span>
-                          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-                            {c.isSimulated ? 'visibility' : 'arrow_forward'}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
           </div>
-        )}
+
+          {/* ── Meteorological Doppler Precipitation Legend (Strict Storm News Scale) ── */}
+          <div className={`doppler-storm-legend-card ${legendCollapsed ? 'collapsed' : ''}`}>
+            <div className="storm-legend-header">
+              <div className="storm-legend-title">
+                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--accent)' }}>crisis_alert</span>
+                <span>Disaster Severity Legend</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {focusedTier !== null && !legendCollapsed && (
+                  <button type="button" className="legend-clear-btn" onClick={() => setFocusedTier(null)}>
+                    Clear ✕
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="legend-collapse-toggle"
+                  onClick={() => setLegendCollapsed(!legendCollapsed)}
+                  title={legendCollapsed ? 'Expand Legend' : 'Collapse Legend'}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                    {legendCollapsed ? 'expand_less' : 'expand_more'}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {!legendCollapsed && (
+              <>
+                {/* Continuous Doppler Gradient Meter (7 Tiers from Calm White to Code Black) */}
+                <div className="storm-gradient-bar">
+                  <div className="bar-step tier-0" title="0 Causes: Clear"></div>
+                  <div className="bar-step tier-1" title="1 Cause: Sky Blue (Light)"></div>
+                  <div className="bar-step tier-2" title="2–3 Causes: Yellow (Moderate)"></div>
+                  <div className="bar-step tier-3" title="4–6 Causes: Orange (Heavy)"></div>
+                  <div className="bar-step tier-4" title="7–11 Causes: Red (Severe)"></div>
+                  <div className="bar-step tier-5" title="12–19 Causes: Violet (Crisis)"></div>
+                  <div className="bar-step tier-6" title="20+ Causes: Black (Catastrophic)"></div>
+                </div>
+
+                {/* Interactive Tier Rows */}
+                <div className="storm-tiers-list">
+                  <div className="storm-tier-item clear-tier">
+                    <span className="tier-bullet" style={{ background: '#ffffff', border: '1px solid #94a3b8' }}></span>
+                    <span className="tier-causes-tag">0</span>
+                    <span className="tier-desc-name" style={{ color: currentTheme === 'light' ? '#64748b' : '#94a3b8' }}>
+                      Clear Terrain
+                    </span>
+                  </div>
+
+                  {[1, 2, 3, 4, 5, 6].map((lvl) => {
+                    const t = DOPPLER_TIERS[lvl];
+                    const isFocused = focusedTier === lvl;
+                    const matches = clusters.filter(c => c.tier.level === lvl).length;
+                    const tagText = t.rangeTag.replace(' Causes', '').replace(' Cause', '');
+
+                    return (
+                      <div
+                        key={lvl}
+                        className={`storm-tier-item ${isFocused ? 'focused' : ''} ${t.badgeClass || ''}`}
+                        onClick={() => setFocusedTier(focusedTier === lvl ? null : lvl)}
+                      >
+                        <span
+                          className="tier-bullet"
+                          style={{
+                            background: t.color,
+                            border: t.borderColor || `1px solid ${t.color}`,
+                            boxShadow: lvl === 6 ? '0 0 4px rgba(0,0,0,0.8)' : 'none'
+                          }}
+                        ></span>
+                        <span className="tier-causes-tag">{tagText}</span>
+                        <span className="tier-desc-name" style={{ color: lvl === 6 ? '#f8fafc' : t.color }}>
+                          {t.label}
+                        </span>
+                        {matches > 0 && <span className="tier-match-count">({matches})</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* ── Hotspot Dossier HUD Drawer (Guaranteed to work for activeDossierCluster) ── */}
+          {activeDossierCluster && isDossierOpen && (
+            <div className="radar-dossier-panel">
+              <div className="dossier-panel-header">
+                <div className="dossier-header-text">
+                  <div
+                    className={`dossier-tier-pill ${activeDossierCluster.tier?.badgeClass || ''}`}
+                    style={{
+                      borderColor: activeDossierCluster.tier?.color || 'var(--accent)',
+                      color: activeDossierCluster.tier?.color || 'var(--accent)'
+                    }}
+                  >
+                    <span>{activeDossierCluster.tier?.label || activeDossierCluster.tier?.rainDesc || 'Relief Operations'}</span>
+                  </div>
+                  <h3 className="dossier-location-title">{activeDossierCluster.name}</h3>
+                  <div className="dossier-region-label">{activeDossierCluster.regionName}</div>
+                  <div className="dossier-gps-tag">
+                    <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>location_on</span>
+                    <span>{activeDossierCluster.lat?.toFixed(4)}° N, {activeDossierCluster.lng?.toFixed(4)}° E</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="dossier-dismiss-btn"
+                  onClick={() => setIsDossierOpen(false)}
+                  title="Close Dossier"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+                </button>
+              </div>
+
+              {/* Metrics */}
+              <div className="dossier-metrics-strip">
+                <div className="dossier-metric-cell">
+                  <span className="dossier-num text-accent">{activeDossierCluster.campaigns.length}</span>
+                  <span className="dossier-tag-label">Active Causes</span>
+                </div>
+                <div className="dossier-metric-cell">
+                  <span className="dossier-num">{((activeDossierCluster.totalRaised ?? 0)).toFixed(2)} ETH</span>
+                  <span className="dossier-tag-label">Funds Raised</span>
+                </div>
+                <div className="dossier-metric-cell">
+                  <span className="dossier-num">{((activeDossierCluster.totalTarget ?? 0)).toFixed(2)} ETH</span>
+                  <span className="dossier-tag-label">Target Goal</span>
+                </div>
+              </div>
+
+              {/* Campaign Cards in this hotspot */}
+              <div className="dossier-campaigns-body">
+                <div className="dossier-subheading">
+                  <span>Relief Missions in this Zone ({activeDossierCluster.campaigns.length})</span>
+                </div>
+
+                <div className="dossier-campaigns-scroll">
+                  {activeDossierCluster.campaigns.map((c) => {
+                    const raised = parseFloat(c.currentAmount || c.raised_eth || 0);
+                    const target = parseFloat(c.targetAmount || c.target_eth || 0);
+                    const pct = target > 0 ? Math.min(100, (raised / target) * 100).toFixed(1) : 0;
+
+                    return (
+                      <div key={c.id} className="dossier-card">
+                        <div className="dossier-card-tags">
+                          <span className="dossier-badge cat">{c.category || 'RELIEF'}</span>
+                          <span className={`dossier-badge urgency ${c.urgency?.toLowerCase() || 'high'}`}>
+                            {c.urgency || 'HIGH'}
+                          </span>
+                          <span className="dossier-badge org">{c.orgName || 'Accredited NGO'}</span>
+                          {c.isSimulated && (
+                            <span className="dossier-simulated-tag">SIMULATED MISSION</span>
+                          )}
+                        </div>
+
+                        <h4 className="dossier-camp-title">{c.title}</h4>
+                        <p className="dossier-camp-desc">{c.description?.slice(0, 115)}...</p>
+
+                        <div className="dossier-funding-progress">
+                          <div className="dossier-progress-track">
+                            <div className="dossier-progress-bar" style={{ width: `${pct}%` }}></div>
+                          </div>
+                          <div className="dossier-progress-labels">
+                            <span>{raised.toFixed(2)} ETH raised ({pct}%)</span>
+                            <span>Target: {target.toFixed(2)} ETH</span>
+                          </div>
+                        </div>
+
+                        <div className="dossier-action-row">
+                          <button
+                            type="button"
+                            className={`dossier-cta-btn ${c.isSimulated ? 'simulated-btn' : ''}`}
+                            onClick={() => {
+                              if (c.isSimulated) return;
+                              if (onSelectCampaign) {
+                                onSelectCampaign(c);
+                              } else {
+                                const el = document.getElementById(`campaign-${c.id}`) || document.getElementById('campaigns');
+                                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                              }
+                            }}
+                          >
+                            <span>{c.isSimulated ? 'Simulated Preview' : 'Support Mission'}</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+                              {c.isSimulated ? 'visibility' : 'arrow_forward'}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+        </div>
 
       </div>
-
-    </div>
     </>
   );
 }

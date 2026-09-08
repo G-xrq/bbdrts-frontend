@@ -44,7 +44,26 @@ export default function OrganizationView({
   const [searchQueryLedger, setSearchQueryLedger] = useState('');
   const [currentPageLedger, setCurrentPageLedger] = useState(1);
 
-  const campaignsPerPage = 4;
+  // View Layout Mode for Campaigns: 'list' or 'grid' (2-column option removed per user request)
+  const [viewModeOrg, setViewModeOrg] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bbdrts_campaign_view_mode');
+      if (saved === 'grid' || saved === 'grid-3' || saved === 'grid-2') return 'grid';
+      return 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewModeChangeOrg = (mode) => {
+    const target = mode === 'grid' ? 'grid' : 'list';
+    setViewModeOrg(target);
+    try {
+      localStorage.setItem('bbdrts_campaign_view_mode', target);
+    } catch { }
+  };
+
+  const campaignsPerPage = viewModeOrg === 'list' ? 4 : 6;
 
   // Global Header Navigation Listener
   useEffect(() => {
@@ -108,7 +127,7 @@ export default function OrganizationView({
   const [targetDate, setTargetDate] = useState('');
   const [documentUrl, setDocumentUrl] = useState('');
   const [contactInfo, setContactInfo] = useState('');
-  
+
   // Multi-Channel Payment Settings State
   const [activePaymentChannelTab, setActivePaymentChannelTab] = useState('gcash');
   const [gcashName, setGcashName] = useState('');
@@ -182,7 +201,7 @@ export default function OrganizationView({
     if (currentUser.preferences) {
       try {
         prefs = typeof currentUser.preferences === 'string' ? JSON.parse(currentUser.preferences) : currentUser.preferences;
-      } catch (_) {}
+      } catch (_) { }
     }
 
     const gNum = (currentUser.gcash_number || prefs.gcash_number || '').trim();
@@ -447,7 +466,7 @@ export default function OrganizationView({
     setSecRegNo('SEC-CN2021-08492');
     setDswdNo('DSWD-SB-A-2024-0193');
     setBoardMembersText('Chairman: Richard Gordon | SecGen: Gwendolyn Pang | Trustee: Dr. Benjamin Go');
-    
+
     // Generate realistic Philippine SEC Certificate SVG
     const secCertSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400"><rect width="600" height="400" fill="#fdfbf7" stroke="#b45309" stroke-width="6" rx="8"/><rect x="15" y="15" width="570" height="370" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="8 4"/><text x="300" y="60" font-family="Georgia, serif" font-size="16" font-weight="bold" fill="#78350f" text-anchor="middle">REPUBLIC OF THE PHILIPPINES</text><text x="300" y="85" font-family="Georgia, serif" font-size="20" font-weight="bold" fill="#b45309" text-anchor="middle">SECURITIES AND EXCHANGE COMMISSION</text><text x="300" y="110" font-family="sans-serif" font-size="12" fill="#92400e" text-anchor="middle">SEC Building, EDSA, Greenhills, Mandaluyong City</text><line x1="100" y1="125" x2="500" y2="125" stroke="#b45309" stroke-width="2"/><text x="300" y="160" font-family="Georgia, serif" font-size="22" font-style="italic" fill="#1e293b" text-anchor="middle">CERTIFICATE OF INCORPORATION</text><text x="300" y="195" font-family="sans-serif" font-size="14" fill="#334155" text-anchor="middle">This is to certify that</text><text x="300" y="230" font-family="Georgia, serif" font-size="20" font-weight="bold" fill="#0f172a" text-anchor="middle">PHILIPPINE RED CROSS - SOUTHERN LEYTE CHAPTER</text><text x="300" y="260" font-family="sans-serif" font-size="13" fill="#475569" text-anchor="middle">is registered as a Non-Stock, Non-Profit Humanitarian Corporation</text><text x="300" y="295" font-family="monospace" font-size="15" font-weight="bold" fill="#b45309" text-anchor="middle">COMPANY REG. NO. SEC-CN2021-08492</text><text x="300" y="355" font-family="sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Issued under Republic Act 11232 • Duly Verified & Seal Affixed</text></svg>`;
     setSecCertUrl(`data:image/svg+xml;utf8,${encodeURIComponent(secCertSvg)}`);
@@ -467,9 +486,9 @@ export default function OrganizationView({
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const res = await fetch(`${apiUrl}/api/organization/kyc`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           org_name: orgDisplayName,
@@ -866,8 +885,8 @@ export default function OrganizationView({
                   currentUser?.banner_url && (currentUser.banner_url.startsWith('data:') || currentUser.banner_url.startsWith('http') || currentUser.banner_url.startsWith('/'))
                     ? { backgroundImage: `linear-gradient(rgba(10,12,18,0.72), rgba(10,12,18,0.92)), url(${currentUser.banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
                     : currentUser?.banner_url && currentUser.banner_url.startsWith('linear-gradient')
-                    ? { background: currentUser.banner_url }
-                    : {}
+                      ? { background: currentUser.banner_url }
+                      : {}
                 }
               >
                 <div className="ref-welcome-header">
@@ -928,8 +947,8 @@ export default function OrganizationView({
                       </div>
                     </div>
                   </div>
-                  <button 
-                    className="btn btn-primary btn-sm glow pulse" 
+                  <button
+                    className="btn btn-primary btn-sm glow pulse"
                     onClick={() => { fetchKycData(); setActiveTab('sec-kyc'); }}
                     style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
@@ -1135,6 +1154,28 @@ export default function OrganizationView({
                     <option value="RAISED_HIGH">Highest Raised</option>
                   </select>
                 </div>
+
+                {/* Segmented Layout Mode Controls [List] [Grid] (2-Col removed!) */}
+                <div className="filter-layout-segmented-pill" role="group" aria-label="Layout view mode">
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChangeOrg('list')}
+                    className={`layout-seg-btn ${viewModeOrg === 'list' ? 'active' : ''}`}
+                    title="List View"
+                    aria-label="List View"
+                  >
+                    <span className="material-symbols-outlined">format_list_bulleted</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChangeOrg('grid')}
+                    className={`layout-seg-btn ${viewModeOrg === 'grid' || viewModeOrg === 'grid-3' || viewModeOrg === 'grid-2' ? 'active' : ''}`}
+                    title="Grid View"
+                    aria-label="Grid View"
+                  >
+                    <span className="material-symbols-outlined">grid_view</span>
+                  </button>
+                </div>
               </div>
 
               {filteredAllCampaigns.length === 0 ? (
@@ -1147,7 +1188,7 @@ export default function OrganizationView({
                 </div>
               ) : (
                 <>
-                  <div className="campaigns-list">
+                  <div className={viewModeOrg === 'grid' || viewModeOrg === 'grid-3' || viewModeOrg === 'grid-2' ? 'campaigns-grid' : 'campaigns-list'}>
                     {paginatedAllCampaigns.map((camp) => (
                       <CampaignCard key={camp.id} camp={camp} contract={contract}
                         role={ROLES.ORGANIZATION} walletAddress={walletAddress} onDonated={fetchCampaigns} />
@@ -1315,6 +1356,28 @@ export default function OrganizationView({
                       <option value="RAISED_HIGH">Highest Raised</option>
                     </select>
                   </div>
+
+                  {/* Segmented Layout Mode Controls [List] [Grid] (2-Col removed!) */}
+                  <div className="filter-layout-segmented-pill" role="group" aria-label="Layout view mode">
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChangeOrg('list')}
+                      className={`layout-seg-btn ${viewModeOrg === 'list' ? 'active' : ''}`}
+                      title="List View"
+                      aria-label="List View"
+                    >
+                      <span className="material-symbols-outlined">format_list_bulleted</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChangeOrg('grid')}
+                      className={`layout-seg-btn ${viewModeOrg === 'grid' || viewModeOrg === 'grid-3' || viewModeOrg === 'grid-2' ? 'active' : ''}`}
+                      title="Grid View"
+                      aria-label="Grid View"
+                    >
+                      <span className="material-symbols-outlined">grid_view</span>
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -1336,7 +1399,7 @@ export default function OrganizationView({
                 </div>
               ) : (
                 <>
-                  <div className="campaigns-list">
+                  <div className={viewModeOrg === 'grid' || viewModeOrg === 'grid-3' || viewModeOrg === 'grid-2' ? 'campaigns-grid' : 'campaigns-list'}>
                     {paginatedMyCampaigns.map((camp) => (
                       <CampaignCard key={camp.id} camp={camp} contract={contract}
                         role={ROLES.ORGANIZATION} walletAddress={walletAddress} onDonated={fetchCampaigns} />
@@ -2691,11 +2754,11 @@ export default function OrganizationView({
                   </div>
 
                   {/* Step 2 */}
-                  <div style={{ 
-                    background: (secRegNo || secCertUrl) ? 'rgba(34, 197, 94, 0.08)' : 'rgba(234, 179, 8, 0.08)', 
-                    border: (secRegNo || secCertUrl) ? '1px solid rgba(34, 197, 94, 0.25)' : '1px solid rgba(234, 179, 8, 0.25)', 
-                    padding: '12px', 
-                    borderRadius: '10px' 
+                  <div style={{
+                    background: (secRegNo || secCertUrl) ? 'rgba(34, 197, 94, 0.08)' : 'rgba(234, 179, 8, 0.08)',
+                    border: (secRegNo || secCertUrl) ? '1px solid rgba(34, 197, 94, 0.25)' : '1px solid rgba(234, 179, 8, 0.25)',
+                    padding: '12px',
+                    borderRadius: '10px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: (secRegNo || secCertUrl) ? '#22c55e' : '#facc15', fontSize: '0.78rem', fontWeight: 700 }}>
                       <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
@@ -2709,11 +2772,11 @@ export default function OrganizationView({
                   </div>
 
                   {/* Step 3 */}
-                  <div style={{ 
-                    background: (kycStatusData?.Verification_Status === 'Approved') ? 'rgba(34, 197, 94, 0.08)' : 'rgba(56, 189, 248, 0.08)', 
-                    border: (kycStatusData?.Verification_Status === 'Approved') ? '1px solid rgba(34, 197, 94, 0.25)' : '1px solid rgba(56, 189, 248, 0.25)', 
-                    padding: '12px', 
-                    borderRadius: '10px' 
+                  <div style={{
+                    background: (kycStatusData?.Verification_Status === 'Approved') ? 'rgba(34, 197, 94, 0.08)' : 'rgba(56, 189, 248, 0.08)',
+                    border: (kycStatusData?.Verification_Status === 'Approved') ? '1px solid rgba(34, 197, 94, 0.25)' : '1px solid rgba(56, 189, 248, 0.25)',
+                    padding: '12px',
+                    borderRadius: '10px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: (kycStatusData?.Verification_Status === 'Approved') ? '#22c55e' : '#38bdf8', fontSize: '0.78rem', fontWeight: 700 }}>
                       <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
@@ -2727,11 +2790,11 @@ export default function OrganizationView({
                   </div>
 
                   {/* Step 4 */}
-                  <div style={{ 
-                    background: (kycStatusData?.Verification_Status === 'Approved') ? 'rgba(34, 197, 94, 0.08)' : 'rgba(255, 255, 255, 0.03)', 
-                    border: (kycStatusData?.Verification_Status === 'Approved') ? '1px solid rgba(34, 197, 94, 0.25)' : '1px solid rgba(255, 255, 255, 0.08)', 
-                    padding: '12px', 
-                    borderRadius: '10px' 
+                  <div style={{
+                    background: (kycStatusData?.Verification_Status === 'Approved') ? 'rgba(34, 197, 94, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                    border: (kycStatusData?.Verification_Status === 'Approved') ? '1px solid rgba(34, 197, 94, 0.25)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    padding: '12px',
+                    borderRadius: '10px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: (kycStatusData?.Verification_Status === 'Approved') ? '#22c55e' : '#64748b', fontSize: '0.78rem', fontWeight: 700 }}>
                       <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
@@ -2945,17 +3008,17 @@ export default function OrganizationView({
                     <span className="material-symbols-outlined">verified</span>
                     Official SEC Certificate of Incorporation Document
                   </h3>
-                  <button 
+                  <button
                     onClick={() => setViewingKycCert(false)}
                     style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}
                   >
                     ✕
                   </button>
                 </div>
-                <img 
-                  src={secCertUrl} 
-                  alt="SEC Certificate" 
-                  style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }} 
+                <img
+                  src={secCertUrl}
+                  alt="SEC Certificate"
+                  style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}
                 />
                 <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
                   <button className="btn btn-outline btn-sm" onClick={() => setViewingKycCert(false)}>Close Document</button>
