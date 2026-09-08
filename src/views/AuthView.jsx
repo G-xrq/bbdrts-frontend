@@ -1349,7 +1349,7 @@ export default function AuthView({ onLoginSuccess, onBack, theme }) {
                 {otpLoginDevCode && (
                   <div className="dev-otp-pill">
                     <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>terminal</span>
-                    <span>Dev Helper Code: <strong>{otpLoginDevCode}</strong></span>
+                    {/*<span>Dev Helper Code: <strong>{otpLoginDevCode}</strong></span>*/}
                   </div>
                 )}
 
@@ -1479,7 +1479,7 @@ export default function AuthView({ onLoginSuccess, onBack, theme }) {
                 regVerifyDevCode && (
                   <div className="dev-otp-pill">
                     <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>terminal</span>
-                    <span>Dev Helper Code: <strong>{regVerifyDevCode}</strong></span>
+                    {/*<span>Dev Helper Code: <strong>{regVerifyDevCode}</strong></span>*/}
                   </div>
                 )
               )}
@@ -1756,7 +1756,7 @@ export default function AuthView({ onLoginSuccess, onBack, theme }) {
                 {forgotDevCode && (
                   <div className="dev-otp-pill">
                     <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>terminal</span>
-                    <span>Dev Helper Code: <strong>{forgotDevCode}</strong></span>
+                    {/*<span>Dev Helper Code: <strong>{forgotDevCode}</strong></span>*/}
                   </div>
                 )}
 
