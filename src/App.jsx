@@ -11,6 +11,7 @@ import SettingsPanel from './components/SettingsPanel';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import NgoProfileModal from './components/NgoProfileModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -376,6 +377,7 @@ export default function App() {
           const enriched = {
             title: lc.title,
             targetAmount: lc.targetAmount || lc.target_amount,
+            tags: lc.tags || lc.tags_json || lc.tagsJson,
             locationRegion: lc.locationRegion || lc.location_region,
             gpsCoordinates: lc.gpsCoordinates || lc.gps_coordinates,
             beneficiariesImpact: lc.beneficiariesImpact || lc.beneficiaries_impact,
@@ -392,6 +394,7 @@ export default function App() {
             // Overwrite any empty DB fields with local cache
             dbCampaigns[dbIndex] = {
               ...dbCampaigns[dbIndex],
+              tags: dbCampaigns[dbIndex].tags || enriched.tags,
               locationRegion: dbCampaigns[dbIndex].locationRegion || enriched.locationRegion,
               gpsCoordinates: dbCampaigns[dbIndex].gpsCoordinates || enriched.gpsCoordinates,
               beneficiariesImpact: dbCampaigns[dbIndex].beneficiariesImpact || enriched.beneficiariesImpact,
@@ -513,52 +516,54 @@ export default function App() {
         onOpenNgoProfile={(id) => setSelectedNgoForProfile(id || 3)}
       />
 
-      {/* ── Unauthenticated Views: Default Landing Page vs Auth Portal ── */}
-      {!dbUser && !showAuth && (
-        <LandingView
-          onConnect={() => setShowAuth(true)}
-          hasMetaMask={hasMetaMask}
-          contract={activeContract}
-          onOpenNgoProfile={(id) => setSelectedNgoForProfile(id || 3)}
-          theme={theme}
-        />
-      )}
+      <ErrorBoundary>
+        {/* ── Unauthenticated Views: Default Landing Page vs Auth Portal ── */}
+        {!dbUser && !showAuth && (
+          <LandingView
+            onConnect={() => setShowAuth(true)}
+            hasMetaMask={hasMetaMask}
+            contract={activeContract}
+            onOpenNgoProfile={(id) => setSelectedNgoForProfile(id || 3)}
+            theme={theme}
+          />
+        )}
 
-      {!dbUser && showAuth && (
-        <AuthView
-          onLoginSuccess={handleLoginSuccess}
-          onConnectWallet={handleConnectWallet}
-          hasMetaMask={hasMetaMask}
-          onBack={() => setShowAuth(false)}
-          theme={theme}
-        />
-      )}
+        {!dbUser && showAuth && (
+          <AuthView
+            onLoginSuccess={handleLoginSuccess}
+            onConnectWallet={handleConnectWallet}
+            hasMetaMask={hasMetaMask}
+            onBack={() => setShowAuth(false)}
+            theme={theme}
+          />
+        )}
 
-      {/* ── Role-based Dashboards (Require Wallet for Actions) ── */}
-      {dbUser && (
-        <div className="dashboard-enter-reveal">
-          {/* Global requirement to connect wallet if they are signed into the DB but have no active Web3 session */}
-          {!walletAddress && (
-            <div className="container" style={{ marginTop: '20px' }}>
-              <div className="metamask-alert-banner">
-                <span className="material-symbols-outlined metamask-icon">warning</span>
-                <div className="metamask-alert-content">
-                  <strong>MetaMask Required for Financial Actions</strong>
-                  <span>You are signed securely into your account ({dbUser.email}), but to deploy campaigns or make donations, you must connect your Web3 wallet.</span>
+        {/* ── Role-based Dashboards (Require Wallet for Actions) ── */}
+        {dbUser && (
+          <div className="dashboard-enter-reveal">
+            {/* Global requirement to connect wallet if they are signed into the DB but have no active Web3 session */}
+            {!walletAddress && (
+              <div className="container" style={{ marginTop: '20px' }}>
+                <div className="metamask-alert-banner">
+                  <span className="material-symbols-outlined metamask-icon">warning</span>
+                  <div className="metamask-alert-content">
+                    <strong>MetaMask Required for Financial Actions</strong>
+                    <span>You are signed securely into your account ({dbUser.email}), but to deploy campaigns or make donations, you must connect your Web3 wallet.</span>
+                  </div>
+                  <button className="btn btn-primary btn-sm metamask-connect-btn" onClick={handleConnectWallet}>
+                    <span className="material-symbols-outlined icon-sm">link</span>
+                    Connect MetaMask
+                  </button>
                 </div>
-                <button className="btn btn-primary btn-sm metamask-connect-btn" onClick={handleConnectWallet}>
-                  <span className="material-symbols-outlined icon-sm">link</span>
-                  Connect MetaMask
-                </button>
               </div>
-            </div>
-          )}
+            )}
 
-          {uiRole === ROLES.ADMIN && <AdminView {...sharedProps} />}
-          {uiRole === ROLES.ORGANIZATION && <OrganizationView {...sharedProps} />}
-          {uiRole === ROLES.DONOR && <DonorView {...sharedProps} />}
-        </div>
-      )}
+            {uiRole === ROLES.ADMIN && <AdminView {...sharedProps} />}
+            {uiRole === ROLES.ORGANIZATION && <OrganizationView {...sharedProps} />}
+            {uiRole === ROLES.DONOR && <DonorView {...sharedProps} />}
+          </div>
+        )}
+      </ErrorBoundary>
 
       {/* ── Account Settings Modal Overlay ── */}
       {showSettingsModal && (
