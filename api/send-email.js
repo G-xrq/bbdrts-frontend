@@ -5,7 +5,7 @@ const SMTP_USER = process.env.SMTP_USER || 'gestermacaldo@gmail.com';
 const SMTP_PASS = process.env.SMTP_PASS || 'vlijrjrvwonjjmwe';
 
 export default async function handler(req, res) {
-  // CORS configuration for cross-origin dispatch from Render or testing
+  // CORS configuration for cross-origin dispatch from backend
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -20,6 +20,10 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  }
+
+  if (!EMAIL_RELAY_SECRET || !SMTP_USER || !SMTP_PASS) {
+    return res.status(500).json({ error: 'Email relay service is unconfigured. Required environment variables (EMAIL_RELAY_SECRET, SMTP_USER, SMTP_PASS) are missing.' });
   }
 
   const clientSecret = req.headers['x-relay-secret'] || req.body?.secret;
