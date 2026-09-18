@@ -775,9 +775,12 @@ export default function OrganizationView({
   const [pendingDonations, setPendingDonations] = useState([]);
   const [loadingPending, setLoadingPending] = useState(false);
 
-  const myCampaigns = campaigns.filter(
-    (c) => c.orgAddress?.toLowerCase() === walletAddress?.toLowerCase()
-  );
+  const myCampaigns = campaigns.filter((c) => {
+    if (currentUser?.id && c.orgId) {
+      return Number(c.orgId) === Number(currentUser.id);
+    }
+    return Boolean(walletAddress) && c.orgAddress?.toLowerCase() === walletAddress?.toLowerCase();
+  });
 
   const totalRaisedByMe = myCampaigns
     .reduce((s, c) => s + parseFloat(c.currentAmount || 0), 0);
@@ -1834,6 +1837,7 @@ export default function OrganizationView({
                         contract={contract}
                         role={ROLES.ORGANIZATION}
                         walletAddress={walletAddress}
+                        currentUser={currentUser}
                         onDonated={fetchCampaigns}
                         onDeactivated={fetchCampaigns}
                         onCampaignUpdated={fetchCampaigns}
@@ -2217,7 +2221,7 @@ export default function OrganizationView({
                   <div className={viewModeOrg === 'grid' || viewModeOrg === 'grid-3' || viewModeOrg === 'grid-2' ? 'campaigns-grid' : 'campaigns-list'}>
                     {paginatedAllCampaigns.map((camp) => (
                       <CampaignCard key={camp.id} camp={camp} contract={contract}
-                        role={ROLES.ORGANIZATION} walletAddress={walletAddress}
+                        role={ROLES.ORGANIZATION} walletAddress={walletAddress} currentUser={currentUser}
                         onDonated={fetchCampaigns} onDeactivated={fetchCampaigns} onCampaignUpdated={fetchCampaigns} />
                     ))}
                   </div>
@@ -2651,7 +2655,7 @@ export default function OrganizationView({
                   <div className={viewModeOrg === 'grid' || viewModeOrg === 'grid-3' || viewModeOrg === 'grid-2' ? 'campaigns-grid' : 'campaigns-list'}>
                     {paginatedMyCampaigns.map((camp) => (
                       <CampaignCard key={camp.id} camp={camp} contract={contract}
-                        role={ROLES.ORGANIZATION} walletAddress={walletAddress}
+                        role={ROLES.ORGANIZATION} walletAddress={walletAddress} currentUser={currentUser}
                         onDonated={fetchCampaigns} onDeactivated={fetchCampaigns} onCampaignUpdated={fetchCampaigns} />
                     ))}
                   </div>

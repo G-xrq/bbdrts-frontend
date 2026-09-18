@@ -349,7 +349,7 @@ export default function App() {
     // Smooth exit
     setAuthTransition(prev => ({ ...prev, closing: true }));
     setDbUser(null);
-    setShowAuth(false);
+    setShowAuth(true);
 
     setTimeout(() => {
       setAuthTransition({

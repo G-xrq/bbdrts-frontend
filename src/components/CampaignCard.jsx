@@ -1146,7 +1146,7 @@ export default function CampaignCard(props) {
 
   const isPublic = role === ROLES.PUBLIC;
 
-  // Robust Campaign Ownership Detection
+  // Robust Campaign Ownership Detection (Strictly authenticated to the current NGO)
   const campOrgAddr = camp.orgAddress || camp.org_address || camp.organization_wallet;
   let loggedInUser = null;
   try {
@@ -1154,11 +1154,13 @@ export default function CampaignCard(props) {
     if (stored) loggedInUser = JSON.parse(stored);
   } catch (_) {}
 
+  const currentOrgId = props.currentUser?.id || loggedInUser?.id || props.currentUser?.orgId;
+
   // A Donor, Public/guest, or Admin can NEVER be an owner of a campaign
-  const isOwner = role === ROLES.ORGANIZATION && (
-    (Boolean(walletAddress) && Boolean(campOrgAddr) && walletAddress.toLowerCase() === campOrgAddr.toLowerCase()) ||
-    (loggedInUser && loggedInUser.role === 'organization' && camp.orgId && Number(camp.orgId) === Number(loggedInUser.id)) ||
-    (loggedInUser && loggedInUser.role === 'organization' && loggedInUser.wallet_address && Boolean(campOrgAddr) && loggedInUser.wallet_address.toLowerCase() === campOrgAddr.toLowerCase())
+  // An NGO can ONLY be an owner if the campaign's orgId strictly matches this NGO
+  const isOwner = role === ROLES.ORGANIZATION && Boolean(
+    (currentOrgId && camp.orgId && Number(camp.orgId) === Number(currentOrgId)) ||
+    (!camp.orgId && Boolean(walletAddress) && Boolean(campOrgAddr) && walletAddress.toLowerCase() === campOrgAddr.toLowerCase())
   );
   const isNgoViewer = role === ROLES.ORGANIZATION;
 
@@ -2152,25 +2154,17 @@ export default function CampaignCard(props) {
 
         {/* ── Center: Info ── */}
         <div className="campaign-info">
-          {/* Top Meta Row: Category Pill + Monetary Pill + Status Badge */}
+          {/* Top Meta Row: Clean, Uncrowded Badges */}
           <div className="campaign-header-top">
             <div className={`campaign-category-pill ${catInfo.colorClass}`}>
               <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>{catInfo.icon}</span>
               <span>{catInfo.prefix}-00{camp.id} • {catInfo.label}</span>
             </div>
 
-            <span 
-              className="campaign-monetary-badge" 
-              title="Monetary Calamity Relief: 100% of contributions are processed as digital monetary assistance directly to accredited field operations. In-kind physical goods are not collected."
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>payments</span>
-              <span>Monetary Relief Fund</span>
-            </span>
-
             {isTargetFromUrl && (
               <span className="campaign-targeted-badge" title="You were directed directly to this campaign via a shared link">
                 <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>share_location</span>
-                <span>Shared Relief Link</span>
+                <span>Shared Link</span>
               </span>
             )}
 
@@ -2185,19 +2179,7 @@ export default function CampaignCard(props) {
             ) : (
               <span className={`badge ${camp.isActive ? 'badge-active' : 'badge-closed'}`} title={deliveryDateStatus.tooltip}>
                 <span className="status-dot" />
-                {camp.isActive ? 'Active' : 'Concluded'}
-              </span>
-            )}
-
-            {formattedDeliveryDate && (
-              <span 
-                className={`campaign-date-pill ${deliveryDateStatus.isOverdue ? 'date-pill-completed' : ''}`} 
-                title={`Target Relief Delivery Date: ${formattedDeliveryDate}${deliveryDateStatus.isOverdue ? ' (Milestone reached • Ongoing field aid)' : ''}`}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>
-                  {deliveryDateStatus.isOverdue ? 'task_alt' : 'event'}
-                </span>
-                <span>{deliveryDateStatus.isOverdue ? `Target Reached (${formattedDeliveryDate})` : `Due ${formattedDeliveryDate}`}</span>
+                <span>{camp.isActive ? (formattedDeliveryDate ? `Active • Due ${formattedDeliveryDate}` : 'Active') : 'Concluded'}</span>
               </span>
             )}
 
@@ -2471,86 +2453,7 @@ export default function CampaignCard(props) {
             );
           })()}
 
-          {/* Proof of Fund Allocation & Budget Breakdown Trigger & Drawer */}
-          <div className="campaign-allocation-section">
-            <button
-              type="button"
-              className={`campaign-allocation-toggle-btn ${showAllocationDrawer ? 'is-expanded' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowAllocationDrawer(prev => !prev);
-              }}
-              title="Inspect itemized fund allocation percentages, surplus reserve rollover, and partial funding policies"
-            >
-              <div className="allocation-btn-left">
-                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--accent, #22c55e)' }}>pie_chart</span>
-                <span className="allocation-btn-title">Proof of Fund Allocation</span>
-                <span className="allocation-btn-badge">Budget & Policies</span>
-              </div>
-              <span className="material-symbols-outlined allocation-toggle-caret">
-                {showAllocationDrawer ? 'expand_less' : 'expand_more'}
-              </span>
-            </button>
 
-            {showAllocationDrawer && (() => {
-              const audit = getCampaignAuditDetails(camp.id, camp.title, camp);
-              const targetPhp = parseFloat(camp.targetAmount || 0) * 170000;
-              return (
-                <div className="campaign-allocation-drawer-body fade-in">
-                  <div className="allocation-drawer-header">
-                    <span className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--accent, #22c55e)' }}>analytics</span>
-                    <span>Itemized Calamity Allocation Breakdown</span>
-                  </div>
-
-                  <div className="allocation-items-list">
-                    {(audit.allocations || []).map((item, idx) => {
-                      const cleanLabel = (item.label || '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
-                      const itemPhp = (targetPhp * (item.pct / 100)).toLocaleString('en-US', { maximumFractionDigits: 0 });
-                      return (
-                        <div key={idx} className="allocation-item-row">
-                          <div className="allocation-item-top">
-                            <span className="allocation-item-label">
-                              <span className="material-symbols-outlined allocation-item-icon">{item.icon || 'arrow_right'}</span>
-                              {cleanLabel}
-                            </span>
-                            <span className="allocation-item-amt">
-                              <strong>₱{itemPhp}</strong> ({item.pct}%)
-                            </span>
-                          </div>
-                          <div className="allocation-item-progress-track">
-                            <div className="allocation-item-progress-fill" style={{ width: `${item.pct}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Operational Policy Disclosures as requested by panel in Transcript 3 */}
-                  <div className="allocation-policies-grid">
-                    <div className="allocation-policy-card policy-surplus">
-                      <div className="policy-card-title">
-                        <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#22c55e' }}>savings</span>
-                        <span>Surplus Reserve Policy</span>
-                      </div>
-                      <p className="policy-card-desc">
-                        Contributions exceeding 100% of the goal are automatically reserved for the <strong>Calamity Response Reserve Fund</strong> to support post-disaster rehabilitation and upcoming emergency campaigns.
-                      </p>
-                    </div>
-
-                    <div className="allocation-policy-card policy-partial">
-                      <div className="policy-card-title">
-                        <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#38bdf8' }}>priority_high</span>
-                        <span>Partial Funding Priority Rule</span>
-                      </div>
-                      <p className="policy-card-desc">
-                        If the campaign deadline arrives before reaching the full target, accumulated funds are immediately disbursed to <strong>immediate survival necessities (food packs, clean water & medical aid)</strong> first.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
 
           {/* Campaign Tags Row */}
           {campaignTags && campaignTags.length > 0 && (

@@ -712,12 +712,14 @@ export default function DonorView({ contract, walletAddress, campaigns, fetchCam
             >
               <div className="ref-accordion-title-group">
                 <span className="ref-status-dot"></span>
-                <span className="ref-widget-title">Blockchain Audit Status</span>
-                <span className="ref-status-live-chip">Synchronized</span>
+                <span className="ref-widget-title">Audit Status</span>
               </div>
-              <span className={`material-symbols-outlined ref-accordion-caret ${showTechDetails ? 'expanded' : ''}`}>
-                expand_more
-              </span>
+              <div className="ref-accordion-badge-group">
+                <span className="ref-status-live-chip">Synchronized</span>
+                <span className={`material-symbols-outlined ref-accordion-caret ${showTechDetails ? 'expanded' : ''}`}>
+                  expand_more
+                </span>
+              </div>
             </button>
 
             {showTechDetails && (
